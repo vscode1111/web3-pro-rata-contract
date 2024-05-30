@@ -16,10 +16,8 @@ export interface Users {
   owner2Address: string;
   coldWallet: Signer;
   coldWalletAddress: string;
-  depositVerifier: Signer;
-  depositVerifierAddress: string;
-  withdrawVerifier: Signer;
-  withdrawVerifierAddress: string;
+  verifier: Signer;
+  verifierAddress: string;
 }
 
 export interface ERC20TokenContext {

@@ -1,9 +1,4 @@
-import {
-  ChangeBalanceLimitEvent,
-  DepositEvent,
-  ForceWithdrawEvent,
-  WithdrawEvent,
-} from '~typechain-types/contracts/SQRpProRata';
+import { ChangeBalanceLimitEvent, DepositEvent } from '~typechain-types/contracts/SQRpProRata';
 import { ContextBase } from '~types';
 
 type Fixture<T> = () => Promise<T>;
@@ -21,7 +16,3 @@ export interface EventArgs<T> {
 export type ChangeBalanceLimitArgs = ChangeBalanceLimitEvent.Event & EventArgs<[string, bigint]>;
 
 export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, number]>;
-
-export type WithdrawEventArgs = WithdrawEvent.Event & EventArgs<[string, string, number]>;
-
-export type ForceWithdrawEventArgs = ForceWithdrawEvent.Event & EventArgs<[string, string, number]>;

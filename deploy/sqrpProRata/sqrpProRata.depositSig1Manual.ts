@@ -13,20 +13,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
     const erc20TokenAddress = contractConfig.erc20Token;
     const context = await getContext(erc20TokenAddress, sqrpProRataAddress);
-    const {
-      depositVerifier,
-      user1Address,
-      user2ERC20Token,
-      user1SQRpProRata,
-      sqrpProRataFactory,
-    } = context;
+    const { verifier, user1Address, user2ERC20Token, user1SQRpProRata, sqrpProRataFactory } =
+      context;
 
     const decimals = Number(await user2ERC20Token.decimals());
 
-    const currentAllowance = await user2ERC20Token.allowance(
-      user1Address,
-      sqrpProRataAddress,
-    );
+    const currentAllowance = await user2ERC20Token.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
 
     //From Postman
@@ -34,10 +26,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       contractType: 'fcfs',
       // "contractAddress": "0x57c11ef0f8fDbdc376444DE64a03d488BD3b09B8",
       contractAddress: '0x5D27C778759e078BBe6D11A6cd802E41459Fe852',
-      userId: 'tu1-f75c73b1-0f13-46ae-88f8-2048765c5ad4',
-      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+20',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
       // "amount": 0.1234567890123456789
+      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+20',
       amount: 0.002,
       // "amount": 0.123456789
     };
@@ -67,7 +58,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       return;
     }
 
-    const nonce = await user1SQRpProRata.getDepositNonce(body.userId);
+    const nonce = await user1SQRpProRata.getNonce(body.account);
     console.log(`User nonce: ${nonce}`);
     if (response.nonce !== Number(nonce)) {
       console.error(`Nonce is not correct`);
@@ -75,12 +66,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     }
 
     const signature = await signMessageForDeposit(
-      depositVerifier,
-      body.userId,
-      body.transactionId,
+      verifier,
       account,
       BigInt(response.amountInWei),
       response.nonce,
+      body.transactionId,
       response.timestampLimit,
     );
 
@@ -90,10 +80,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     }
 
     const params = {
-      userId: body.userId,
-      transactionId: body.transactionId,
       account,
       amount: BigInt(response.amountInWei),
+      transactionId: body.transactionId,
       timestampLimit: response.timestampLimit,
       signature: response.signature,
     };
@@ -105,10 +94,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
         'approve',
       );
       console.log(
-        `${toNumberDecimals(
-          askAllowance,
-          decimals,
-        )} SQR was approved to ${sqrpProRataAddress}`,
+        `${toNumberDecimals(askAllowance, decimals)} SQR was approved to ${sqrpProRataAddress}`,
       );
     }
 
@@ -118,10 +104,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     await waitTx(
       user1SQRpProRata.depositSig(
-        params.userId,
-        params.transactionId,
         account,
         params.amount,
+        params.transactionId,
         params.timestampLimit,
         params.signature,
         TX_OVERRIDES,

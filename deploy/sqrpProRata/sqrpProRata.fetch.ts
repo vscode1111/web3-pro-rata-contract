@@ -2,22 +2,14 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { callWithTimerHre, printDate, printToken } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME } from '~constants';
-import {
-  getAddressesFromHre,
-  getERC20TokenContext,
-  getSQRpProRataContext,
-  getUsers,
-} from '~utils';
+import { getAddressesFromHre, getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = await getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is fetching...`);
     const users = await getUsers();
-    const { ownerSQRpProRata } = await getSQRpProRataContext(
-      users,
-      sqrpProRataAddress,
-    );
+    const { ownerSQRpProRata } = await getSQRpProRataContext(users, sqrpProRataAddress);
 
     const erc20Token = await ownerSQRpProRata.erc20Token();
 
@@ -29,10 +21,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const result = {
       owner: await ownerSQRpProRata.owner(),
       erc20Token,
-      depositVerifier: await ownerSQRpProRata.depositVerifier(),
-      depositGoal: printToken(await ownerSQRpProRata.depositGoal(), decimals, tokenName),
-      withdrawVerifier: await ownerSQRpProRata.withdrawVerifier(),
-      withdrawGoal: printToken(await ownerSQRpProRata.withdrawGoal(), decimals, tokenName),
+      verifier: await ownerSQRpProRata.verifier(),
+      goal: printToken(await ownerSQRpProRata.goal(), decimals, tokenName),
       startDate: printDate(await ownerSQRpProRata.startDate()),
       closeDate: printDate(await ownerSQRpProRata.closeDate()),
       coldWallet: await ownerSQRpProRata.coldWallet(),
@@ -42,11 +32,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table(result);
 
-    const fundItem = await ownerSQRpProRata.fetchFundItem(
-      'f80f623b-4e53-4769-9fe7-93d0901c7261',
-    );
+    const fundItem = await ownerSQRpProRata.fetchFundItem('f80f623b-4e53-4769-9fe7-93d0901c7261');
     console.log(fundItem);
-    const depositNonce = await ownerSQRpProRata.getDepositNonce(users.user2Address);
+    const depositNonce = await ownerSQRpProRata.getNonce(users.user2Address);
     console.log(depositNonce);
   }, hre);
 };

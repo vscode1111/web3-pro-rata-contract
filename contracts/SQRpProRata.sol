@@ -22,12 +22,10 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   function initialize(
     address _newOwner,
     address _erc20Token,
-    address _depositVerifier, //could be zero address
-    uint256 _depositGoal, //0 - skip
-    address _withdrawVerifier, //could be zero address
-    uint256 _withdrawGoal, //0 - skip
+    address _verifier,
+    uint256 _goal,
     uint32 _startDate, //0 - skip
-    uint32 _closeDate, //0 - skip
+    uint32 _closeDate,
     address _coldWallet,
     uint256 _balanceLimit
   ) public initializer {
@@ -39,11 +37,18 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       revert ERC20TokenNotZeroAddress();
     }
 
+    if (_verifier == address(0)) {
+      revert VerifierNotZeroAddress();
+    }
+    if (_goal == 0) {
+      revert GoalNotZero();
+    }
+
     if (0 < _startDate && _startDate < uint32(block.timestamp)) {
       revert StartDateMustBeGreaterThanCurrentTime();
     }
 
-    if (0 < _closeDate && _closeDate < uint32(block.timestamp)) {
+    if (_closeDate < uint32(block.timestamp)) {
       revert CloseDateMustBeGreaterThanCurrentTime();
     }
 
@@ -59,10 +64,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     __UUPSUpgradeable_init();
 
     erc20Token = IERC20(_erc20Token);
-    depositVerifier = _depositVerifier;
-    depositGoal = _depositGoal;
-    withdrawVerifier = _withdrawVerifier;
-    withdrawGoal = _withdrawGoal;
+    verifier = _verifier;
+    goal = _goal;
     startDate = _startDate;
     closeDate = _closeDate;
     coldWallet = _coldWallet;
@@ -73,29 +76,28 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.5";
-  uint256 public constant MAX_INT = type(uint256).max;
+  string public constant VERSION = "1.0";
 
   IERC20 public erc20Token;
   address public coldWallet;
-  address public depositVerifier;
-  uint256 public depositGoal;
-  address public withdrawVerifier;
-  uint256 public withdrawGoal;
+  address public verifier;
+  uint256 public goal;
   uint32 public startDate;
   uint32 public closeDate;
   uint256 public balanceLimit;
   uint256 public totalDeposited;
   uint256 public totalWithdrew;
 
-  mapping(bytes32 => FundItem) private _balances;
+  mapping(address => FundItem) private _balances;
+  // mapping(address => uint32) private _nonces;
   mapping(bytes32 => TransactionItem) private _transactionIds;
-  mapping(bytes32 => uint32) private _depositNonces;
-  mapping(bytes32 => uint32) private _withdrawNonces;
+  address[] private _userAddresses;
+  uint32 private _processedUserIndex;
 
   struct FundItem {
     uint256 depositedAmount;
-    uint256 withdrewAmount;
+    uint256 contributionAmount;
+    uint32 nonce;
   }
 
   struct TransactionItem {
@@ -104,6 +106,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   error NewOwnerNotZeroAddress();
   error ERC20TokenNotZeroAddress();
+  error VerifierNotZeroAddress();
+  error GoalNotZero();
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanStartDate();
@@ -112,12 +116,9 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   error AmountNotZero();
   error InvalidSignature();
   error UsedTransactionId();
-  error ContractMustHaveSufficientFunds();
   error UserMustAllowToUseFunds();
   error UserMustHaveFunds();
   error InvalidNonce();
-  error AchievedDepositGoal();
-  error AchievedWithdrawGoal();
   error TooEarly();
   error TooLate();
 
@@ -136,10 +137,17 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   modifier periodBlocker() {
-    if (isTooEarly()) {
+    if (isBeforeStartDate()) {
       revert TooEarly();
     }
-    if (isTooLate()) {
+    if (isAfterCloseDate()) {
+      revert TooLate();
+    }
+    _;
+  }
+
+  modifier afterCloseDate() {
+    if (isAfterCloseDate()) {
       revert TooLate();
     }
     _;
@@ -147,85 +155,76 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   event ChangeBalanceLimit(address indexed sender, uint256 balanceLimit);
   event Deposit(address indexed account, uint256 amount);
-  event Withdraw(address indexed account, address indexed to, uint256 amount);
-  event ForceWithdraw(address indexed token, address indexed to, uint256 amount);
+  event WithdrawExcessReward(address indexed to, uint256 amount);
 
   //Read methods-------------------------------------------
 
-  function isTooEarly() public view returns (bool) {
+  function isBeforeStartDate() public view returns (bool) {
     return startDate > 0 && block.timestamp < startDate;
   }
 
-  function isTooLate() public view returns (bool) {
-    return closeDate > 0 && block.timestamp > closeDate;
+  function isAfterCloseDate() public view returns (bool) {
+    return block.timestamp > closeDate;
   }
 
   function isReady() public view returns (bool) {
-    return !isTooEarly() && !isTooLate();
+    return !isBeforeStartDate() && !isAfterCloseDate();
   }
 
-  function fetchFundItem(string memory userId) external view returns (FundItem memory) {
-    return _balances[getHash(userId)];
+  function fetchFundItem(address account) external view returns (FundItem memory) {
+    return _balances[account];
   }
 
   function getBalance() public view returns (uint256) {
     return erc20Token.balanceOf(address(this));
   }
 
-  function balanceOf(string memory userId) external view returns (uint256) {
-    FundItem memory fund = _balances[getHash(userId)];
-    if (fund.depositedAmount > fund.withdrewAmount) {
-      return fund.depositedAmount - fund.withdrewAmount;
+  function balanceOf(address account) external view returns (uint256) {
+    FundItem memory fund = _balances[account];
+    if (fund.depositedAmount > fund.contributionAmount) {
+      return fund.depositedAmount - fund.contributionAmount;
     }
     return 0;
   }
 
-  function getHash(string memory value) private pure returns (bytes32) {
+  function getHash(string calldata value) private pure returns (bytes32) {
     return keccak256(abi.encodePacked(value));
   }
 
-  function getDepositNonce(string memory userId) public view returns (uint32) {
-    return _depositNonces[getHash(userId)];
-  }
-
-  function getWithdrawNonce(string memory userId) public view returns (uint32) {
-    return _withdrawNonces[getHash(userId)];
+  function getNonce(address account) public view returns (uint32) {
+    return _balances[account].nonce;
   }
 
   function calculateRemainDeposit() external view returns (uint256) {
     if (!isReady()) {
       return 0;
     }
-    if (depositGoal > 0) {
-      return depositGoal - totalDeposited;
-    }
-    return MAX_INT;
+
+    return goal - totalDeposited;
   }
 
-  function calculateRemainWithdraw() external view returns (uint256) {
-    if (!isReady()) {
-      return 0;
+  function calculateExcessReward() public view returns (uint256) {
+    uint256 contractBalance = getBalance();
+    if (contractBalance > goal) {
+      return contractBalance - goal;
     }
-    if (withdrawGoal > 0) {
-      return withdrawGoal - totalWithdrew;
-    }
-    return MAX_INT;
+    return 0;
   }
 
   function fetchTransactionItem(
-    string memory transactionId
+    string calldata transactionId
   ) external view returns (TransactionItem memory) {
     return _transactionIds[getHash(transactionId)];
   }
 
   function getTransactionItem(
-    string memory transactionId
+    string calldata transactionId
   ) private view returns (bytes32, TransactionItem memory) {
     bytes32 transactionIdHash = getHash(transactionId);
     return (transactionIdHash, _transactionIds[transactionIdHash]);
   }
 
-  function _setTransactionId(uint256 amount, string memory transactionId) private {
+  function _setTransactionId(uint256 amount, string calldata transactionId) private {
     (bytes32 transactionIdHash, TransactionItem memory transactionItem) = getTransactionItem(
       transactionId
     );
@@ -238,11 +237,10 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   //Write methods-------------------------------------------
 
   function _deposit(
-    string memory userId,
-    string memory transactionId,
     address account,
     uint256 amount,
     uint32 nonce,
+    string calldata transactionId,
     uint32 timestampLimit
   ) private nonReentrant amountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
     if (erc20Token.allowance(account, address(this)) < amount) {
@@ -253,22 +251,20 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       revert UserMustHaveFunds();
     }
 
-    if (depositGoal > 0 && totalDeposited + amount > depositGoal) {
-      revert AchievedDepositGoal();
-    }
-
     _setTransactionId(amount, transactionId);
 
-    bytes32 userHash = getHash(userId);
+    FundItem storage fund = _balances[account];
 
-    if (_depositNonces[userHash] != nonce) {
+    if (fund.nonce != nonce) {
       revert InvalidNonce();
     }
 
-    _depositNonces[userHash] += 1;
+    if (fund.nonce == 0) {
+      _userAddresses.push(account);
+    }
 
-    FundItem storage fund = _balances[userHash];
     fund.depositedAmount += amount;
+    fund.nonce += 1;
     totalDeposited += amount;
 
     uint256 contractBalance = getBalance();
@@ -302,141 +298,59 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     emit Deposit(account, amount);
   }
 
-  function deposit(
-    string memory userId,
-    string memory transactionId,
-    address account,
-    uint256 amount,
-    uint32 nonce,
-    uint32 timestampLimit
-  ) external onlyOwner {
-    _deposit(userId, transactionId, account, amount, nonce, timestampLimit);
-  }
-
   function verifyDepositSignature(
-    string memory userId,
-    string memory transactionId,
     address account,
     uint256 amount,
     uint32 nonce,
+    string calldata transactionId,
     uint32 timestampLimit,
-    bytes memory signature
+    bytes calldata signature
   ) private view returns (bool) {
     bytes32 messageHash = keccak256(
-      abi.encode(userId, transactionId, account, amount, nonce, timestampLimit)
+      abi.encode(account, amount, nonce, transactionId, timestampLimit)
     );
     address recover = messageHash.toEthSignedMessageHash().recover(signature);
-    return recover == owner() || recover == depositVerifier;
+    return recover == owner() || recover == verifier;
   }
 
   function depositSig(
-    string memory userId,
-    string memory transactionId,
     address account,
     uint256 amount,
+    string calldata transactionId,
     uint32 timestampLimit,
-    bytes memory signature
+    bytes calldata signature
   ) external {
-    uint32 nonce = getDepositNonce(userId);
-    if (
-      !verifyDepositSignature(
-        userId,
-        transactionId,
-        account,
-        amount,
-        nonce,
-        timestampLimit,
-        signature
-      )
-    ) {
+    uint32 nonce = getNonce(account);
+    if (!verifyDepositSignature(account, amount, nonce, transactionId, timestampLimit, signature)) {
       revert InvalidSignature();
     }
-    _deposit(userId, transactionId, account, amount, nonce, timestampLimit);
+    _deposit(account, amount, nonce, transactionId, timestampLimit);
   }
 
-  function _withdraw(
-    string memory userId,
-    string memory transactionId,
-    address to,
-    uint256 amount,
-    uint32 nonce,
-    uint32 timestampLimit
-  ) private nonReentrant amountChecker(amount) timeoutBlocker(timestampLimit) {
-    if (erc20Token.balanceOf(address(this)) < amount) {
-      revert ContractMustHaveSufficientFunds();
+  function refund(uint32 usersCount) external nonReentrant onlyOwner {
+    uint32 userLength = (uint32)(_userAddresses.length);
+    if (usersCount > userLength - _processedUserIndex) {
+      usersCount = userLength - _processedUserIndex;
     }
 
-    if (withdrawGoal > 0 && totalWithdrew + amount > withdrawGoal) {
-      revert AchievedWithdrawGoal();
+    require(usersCount > 0, "all users processed");
+    // require(expired || raiseConditionsNotMet, "not refundable");
+
+    uint32 endIndex = _processedUserIndex + usersCount;
+    for (uint i = _processedUserIndex; i < endIndex; i++) {
+      address userAddress = _userAddresses[i];
+      // User storage user = users[userAddress];
+      // depositToken.safeTransfer(userAddress, user.contributionAmount);
+      // emit Refund(userAddress, offeringId, user.contributionAmount);
     }
+    _processedUserIndex = endIndex;
+  }
 
-    _setTransactionId(amount, transactionId);
-
-    bytes32 userHash = getHash(userId);
-
-    if (_withdrawNonces[userHash] != nonce) {
-      revert InvalidNonce();
-    }
-
-    _withdrawNonces[userHash] += 1;
-
-    FundItem storage fund = _balances[userHash];
-    fund.withdrewAmount += amount;
-    totalWithdrew += amount;
-
+  function withdrawExcessReward() external nonReentrant onlyOwner {
+    uint256 amount = calculateExcessReward();
+    address to = owner();
     erc20Token.safeTransfer(to, amount);
-
-    emit Withdraw(_msgSender(), to, amount);
-  }
-
-  function withdraw(
-    string memory userId,
-    string memory transactionId,
-    address to,
-    uint256 amount,
-    uint32 nonce,
-    uint32 timestampLimit
-  ) external onlyOwner {
-    _withdraw(userId, transactionId, to, amount, nonce, timestampLimit);
-  }
-
-  function verifyWithdrawSignature(
-    string memory userId,
-    string memory transactionId,
-    address to,
-    uint256 amount,
-    uint32 nonce,
-    uint32 timestampLimit,
-    bytes memory signature
-  ) private view returns (bool) {
-    bytes32 messageHash = keccak256(
-      abi.encode(userId, transactionId, to, amount, nonce, timestampLimit)
-    );
-    address recover = messageHash.toEthSignedMessageHash().recover(signature);
-    return recover == owner() || recover == withdrawVerifier;
-  }
-
-  function withdrawSig(
-    string memory userId,
-    string memory transactionId,
-    address to,
-    uint256 amount,
-    uint32 timestampLimit,
-    bytes memory signature
-  ) external {
-    uint32 nonce = getWithdrawNonce(userId);
-    if (
-      !verifyWithdrawSignature(userId, transactionId, to, amount, nonce, timestampLimit, signature)
-    ) {
-      revert InvalidSignature();
-    }
-    _withdraw(userId, transactionId, to, amount, nonce, timestampLimit);
-  }
-
-  function forceWithdraw(address token, address to, uint256 amount) external onlyOwner {
-    IERC20 _token = IERC20(token);
-    _token.safeTransfer(to, amount);
-    emit ForceWithdraw(token, to, amount);
+    emit WithdrawExcessReward(to, amount);
   }
 
   function changeBalanceLimit(uint256 _balanceLimit) external onlyOwner {

@@ -1,16 +1,14 @@
-import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { Dayjs } from 'dayjs';
 import { ZeroAddress } from 'ethers';
 import { waitTx } from '~common-contract';
-import { MAX_INT, ZERO } from '~constants';
+import { ZERO } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import {
   addSecondsToUnixTime,
   getSQRpProRataContext,
   getUsers,
   signMessageForDeposit,
-  signMessageForWithdraw,
 } from '~utils';
 import { ChangeBalanceLimitArgs, customError } from '.';
 import { findEvent, loadSQRpProRataFixture } from './utils';
@@ -28,10 +26,7 @@ export function shouldBehaveCorrectDeployment(): void {
 
     it('user1 tries to change balanceLimit', async function () {
       await expect(this.user1SQRpProRata.changeBalanceLimit(seedData.balanceLimit))
-        .revertedWithCustomError(
-          this.user1SQRpProRata,
-          customError.ownableUnauthorizedAccount,
-        )
+        .revertedWithCustomError(this.user1SQRpProRata, customError.ownableUnauthorizedAccount)
         .withArgs(this.user1Address);
     });
 
@@ -90,7 +85,7 @@ export function shouldBehaveCorrectDeployment(): void {
 
       await loadSQRpProRataFixture(this, {
         startDate: 0,
-        depositVerifier: user3Address,
+        verifier: user3Address,
       });
 
       await this.owner2ERC20Token.transfer(this.user1Address, seedData.userInitBalance);
@@ -98,50 +93,17 @@ export function shouldBehaveCorrectDeployment(): void {
 
       const signature = await signMessageForDeposit(
         this.user3,
-        seedData.userId1,
-        seedData.depositTransactionId1,
         this.user1Address,
         seedData.deposit1,
         seedData.depositNonce1_0,
+        seedData.depositTransactionId1,
         seedData.startDatePlus1m,
       );
 
       await this.user1SQRpProRata.depositSig(
-        seedData.userId1,
-        seedData.depositTransactionId1,
         this.user1Address,
         seedData.deposit1,
-        seedData.startDatePlus1m,
-        signature,
-      );
-    });
-
-    it('owner deployed contract using specific withdraw verifier', async function () {
-      const users = await getUsers();
-      const { user3Address } = users;
-
-      await loadSQRpProRataFixture(this, {
-        startDate: 0,
-        withdrawVerifier: user3Address,
-      });
-
-      await this.owner2ERC20Token.transfer(this.sqrpProRataAddress, seedData.deposit1);
-
-      const signature = await signMessageForWithdraw(
-        this.user3,
-        seedData.userId1,
-        seedData.withdrawTransactionId1_0,
-        this.user1Address,
-        seedData.withdraw1,
-        seedData.withdrawNonce1_0,
-        seedData.startDatePlus1m,
-      );
-
-      await this.user1SQRpProRata.withdrawSig(
-        seedData.userId1,
-        seedData.withdrawTransactionId1_0,
-        this.user1Address,
-        seedData.withdraw1,
+        seedData.depositTransactionId1,
         seedData.startDatePlus1m,
         signature,
       );
@@ -165,12 +127,22 @@ export function shouldBehaveCorrectDeployment(): void {
       await expect(
         getSQRpProRataContext(users, {
           ...contractConfig,
-          closeDate: 1,
+          closeDate: 0,
         }),
       ).revertedWithCustomError(
         this.owner2SQRpProRata,
         customError.closeDateMustBeGreaterThanCurrentTime,
       );
+    });
+
+    it('owner tries to deploy with zero verifier address', async function () {
+      const users = await getUsers();
+      await expect(
+        getSQRpProRataContext(users, {
+          ...contractConfig,
+          verifier: ZeroAddress,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.verifierNotZeroAddress);
     });
 
     it('owner tries to deploy with zero cold wallet address', async function () {
@@ -183,28 +155,14 @@ export function shouldBehaveCorrectDeployment(): void {
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.coldWalletNotZeroAddress);
     });
 
-    it('owner deployed with zero deposit goal', async function () {
+    it('owner tries to deploy with zero deposit goal', async function () {
       const users = await getUsers();
-      const { ownerSQRpProRata } = await getSQRpProRataContext(users, {
-        ...contractConfig,
-        depositGoal: ZERO,
-      });
-
-      expect(await ownerSQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
-      await time.increaseTo(addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift));
-      expect(await ownerSQRpProRata.calculateRemainDeposit()).eq(MAX_INT);
-    });
-
-    it('owner deployed with zero withdraw goal', async function () {
-      const users = await getUsers();
-      const { ownerSQRpProRata } = await getSQRpProRataContext(users, {
-        ...contractConfig,
-        withdrawGoal: ZERO,
-      });
-
-      expect(await ownerSQRpProRata.calculateRemainWithdraw()).eq(seedData.zero);
-      await time.increaseTo(addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift));
-      expect(await ownerSQRpProRata.calculateRemainWithdraw()).eq(MAX_INT);
+      await expect(
+        getSQRpProRataContext(users, {
+          ...contractConfig,
+          goal: ZERO,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.goalNotZero);
     });
   });
 }

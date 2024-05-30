@@ -35,8 +35,7 @@ export function getAddressesFromHre(hre: HardhatRuntimeEnvironment) {
 }
 
 export async function getUsers(): Promise<Users> {
-  const [owner, user1, user2, user3, owner2, coldWallet, depositVerifier, withdrawVerifier] =
-    await ethers.getSigners();
+  const [owner, user1, user2, user3, owner2, coldWallet, verifier] = await ethers.getSigners();
 
   const ownerAddress = await owner.getAddress();
   const user1Address = await user1.getAddress();
@@ -44,8 +43,7 @@ export async function getUsers(): Promise<Users> {
   const user3Address = await user3.getAddress();
   const owner2Address = await owner2.getAddress();
   const coldWalletAddress = await coldWallet.getAddress();
-  const depositVerifierAddress = await depositVerifier.getAddress();
-  const withdrawVerifierAddress = await withdrawVerifier.getAddress();
+  const verifierAddress = await verifier.getAddress();
 
   return {
     owner,
@@ -60,10 +58,8 @@ export async function getUsers(): Promise<Users> {
     owner2Address,
     coldWallet,
     coldWalletAddress,
-    depositVerifier,
-    depositVerifierAddress,
-    withdrawVerifier,
-    withdrawVerifierAddress,
+    verifier,
+    verifierAddress,
   };
 }
 
@@ -122,9 +118,7 @@ export async function getSQRpProRataContext(
   let ownerSQRpProRata: SQRpProRata;
 
   if (typeof deployData === 'string') {
-    ownerSQRpProRata = sqrpProRataFactory
-      .connect(owner)
-      .attach(deployData) as SQRpProRata;
+    ownerSQRpProRata = sqrpProRataFactory.connect(owner).attach(deployData) as SQRpProRata;
   } else {
     ownerSQRpProRata = (await upgrades.deployProxy(
       sqrpProRataFactory,
@@ -160,10 +154,7 @@ export async function getContext(
 ): Promise<ContextBase> {
   const users = await getUsers();
   const erc20TokenContext = await getERC20TokenContext(users, erc20TokenAddress);
-  const sqrpProRataContext = await getSQRpProRataContext(
-    users,
-    sqrpProRataAddress,
-  );
+  const sqrpProRataContext = await getSQRpProRataContext(users, sqrpProRataAddress);
 
   return {
     ...users,

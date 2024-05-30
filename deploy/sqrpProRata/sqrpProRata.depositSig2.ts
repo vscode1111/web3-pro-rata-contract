@@ -13,27 +13,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
     const erc20TokenAddress = contractConfig.erc20Token;
     const context = await getContext(erc20TokenAddress, sqrpProRataAddress);
-    const {
-      user2Address,
-      user2ERC20Token,
-      user2SQRpProRata,
-      sqrpProRataFactory,
-      depositVerifier,
-    } = context;
+    const { user2Address, user2ERC20Token, user2SQRpProRata, sqrpProRataFactory, verifier } =
+      context;
 
     const decimals = Number(await user2ERC20Token.decimals());
 
-    const currentAllowance = await user2ERC20Token.allowance(
-      user2Address,
-      sqrpProRataAddress,
-    );
+    const currentAllowance = await user2ERC20Token.allowance(user2Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
 
-    const userId = deployData.userId2;
-    const nonce = await user2SQRpProRata.getDepositNonce(userId);
+    const nonce = await user2SQRpProRata.getNonce(user2Address);
 
     const params = {
-      userId: deployData.userId2,
       transactionId: seedData.depositTransactionId2,
       amount: deployData.deposit2,
       account: user2Address,
@@ -43,12 +33,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     };
 
     params.signature = await signMessageForDeposit(
-      depositVerifier,
-      params.userId,
-      params.transactionId,
+      verifier,
       params.account,
       params.amount,
       params.nonce,
+      params.transactionId,
       params.timestampLimit,
     );
 
@@ -56,10 +45,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       const askAllowance = seedData.allowance;
       await waitTx(user2ERC20Token.approve(sqrpProRataAddress, askAllowance), 'approve');
       console.log(
-        `${toNumberDecimals(
-          askAllowance,
-          decimals,
-        )} SQR was approved to ${sqrpProRataAddress}`,
+        `${toNumberDecimals(askAllowance, decimals)} SQR was approved to ${sqrpProRataAddress}`,
       );
     }
 
@@ -67,10 +53,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     await waitTx(
       user2SQRpProRata.depositSig(
-        params.userId,
-        params.transactionId,
         params.account,
         params.amount,
+        params.transactionId,
         params.timestampLimit,
         params.signature,
         TX_OVERRIDES,

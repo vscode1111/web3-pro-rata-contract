@@ -18,21 +18,15 @@ export function shouldBehaveCorrectFetching(): void {
       expect(await this.ownerSQRpProRata.coldWallet()).eq(this.coldWalletAddress);
       expect(await this.ownerSQRpProRata.balanceLimit()).eq(contractConfig.balanceLimit);
 
-      expect(await this.ownerSQRpProRata.isTooEarly()).eq(true);
-      expect(await this.ownerSQRpProRata.isTooLate()).eq(false);
+      expect(await this.ownerSQRpProRata.isBeforeStartDate()).eq(true);
+      expect(await this.ownerSQRpProRata.isAfterCloseDate()).eq(false);
       expect(await this.ownerSQRpProRata.isReady()).eq(false);
 
       expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
-      expect(await this.ownerSQRpProRata.calculateRemainWithdraw()).eq(seedData.zero);
 
       await time.increaseTo(addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift));
 
-      expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(
-        contractConfig.depositGoal,
-      );
-      expect(await this.ownerSQRpProRata.calculateRemainWithdraw()).eq(
-        contractConfig.withdrawGoal,
-      );
+      expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(contractConfig.goal);
     });
 
     it('should be correct balances', async function () {
