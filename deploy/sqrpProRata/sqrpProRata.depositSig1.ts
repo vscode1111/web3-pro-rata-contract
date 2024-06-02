@@ -11,14 +11,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
-    const erc20TokenAddress = contractConfig.erc20Token;
-    const context = await getContext(erc20TokenAddress, sqrpProRataAddress);
-    const { verifier, user1Address, user1ERC20Token, user1SQRpProRata, sqrpProRataFactory } =
+    const baseTokenAddress = contractConfig.baseToken;
+    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { verifier, user1Address, user1BaseToken, user1SQRpProRata, sqrpProRataFactory } =
       context;
 
-    const decimals = Number(await user1ERC20Token.decimals());
+    const decimals = Number(await user1BaseToken.decimals());
 
-    const currentAllowance = await user1ERC20Token.allowance(user1Address, sqrpProRataAddress);
+    const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} token was allowed`);
 
     const nonce = await user1SQRpProRata.getNonce(user1Address);
@@ -45,7 +45,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     if (params.amount > currentAllowance) {
       const askAllowance = seedData.allowance;
       await waitTx(
-        user1ERC20Token.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
+        user1BaseToken.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
         'approve',
       );
       console.log(

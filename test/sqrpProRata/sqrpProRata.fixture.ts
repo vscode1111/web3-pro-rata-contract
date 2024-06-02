@@ -1,29 +1,28 @@
 import { ContractConfig, contractConfig } from '~seeds';
 import { ContextBase } from '~types';
-import { getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
+import { getBaseTokenContext, getSQRpProRataContext, getUsers } from '~utils';
 
 export async function deploySQRpProRataContractFixture(
   contractConfigParam?: Partial<ContractConfig>,
 ): Promise<ContextBase> {
   const users = await getUsers();
-  const { owner2Address, coldWalletAddress } = users;
+  const { owner2Address } = users;
 
-  const erc20TokenContext = await getERC20TokenContext(users);
-  const { erc20TokenAddress } = erc20TokenContext;
+  const baseTokenContext = await getBaseTokenContext(users);
+  const { baseTokenAddress } = baseTokenContext;
 
   const config: ContractConfig = {
     ...contractConfig,
     ...contractConfigParam,
     newOwner: owner2Address,
-    erc20Token: erc20TokenAddress,
-    coldWallet: coldWalletAddress,
+    baseToken: baseTokenAddress,
   };
 
   const sqrpProRataContext = await getSQRpProRataContext(users, config);
 
   return {
     ...users,
-    ...erc20TokenContext,
+    ...baseTokenContext,
     ...sqrpProRataContext,
   };
 }

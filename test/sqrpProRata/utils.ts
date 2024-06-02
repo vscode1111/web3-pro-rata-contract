@@ -8,8 +8,8 @@ import { ContextBase } from '~types';
 import { loadFixture } from './loadFixture';
 import { deploySQRpProRataContractFixture } from './sqrpProRata.fixture';
 
-export async function getERC20TokenBalance(that: ContextBase, address: string) {
-  return that.owner2ERC20Token.balanceOf(address);
+export async function getBaseTokenBalance(that: ContextBase, address: string) {
+  return that.owner2BaseToken.balanceOf(address);
 }
 
 export async function checkTotalSQRBalance(that: ContextBase) {
@@ -20,16 +20,15 @@ export async function checkTotalSQRBalance(that: ContextBase) {
       that.user3Address,
       that.ownerAddress,
       that.owner2Address,
-      that.coldWalletAddress,
       that.verifierAddress,
-      that.erc20TokenAddress,
+      that.baseTokenAddress,
       that.sqrpProRataAddress,
     ]),
   ).eq(seedData.totalAccountBalance);
 }
 
 export async function getTotalSQRBalance(that: ContextBase, accounts: string[]): Promise<bigint> {
-  const result = await Promise.all(accounts.map((address) => getERC20TokenBalance(that, address)));
+  const result = await Promise.all(accounts.map((address) => getBaseTokenBalance(that, address)));
   return result.reduce((acc, cur) => acc + cur, seedData.zero);
 }
 

@@ -1,5 +1,5 @@
 import { Signer } from 'ethers';
-import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
+import { BaseToken } from '~typechain-types/contracts/BaseToken';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { SQRpProRata__factory } from '~typechain-types/factories/contracts/SQRpProRata__factory';
 
@@ -14,20 +14,17 @@ export interface Users {
   user3Address: string;
   owner2: Signer;
   owner2Address: string;
-  coldWallet: Signer;
-  coldWalletAddress: string;
   verifier: Signer;
   verifierAddress: string;
 }
 
-export interface ERC20TokenContext {
-  erc20TokenAddress: string;
-  ownerERC20Token: ERC20Token;
-  user1ERC20Token: ERC20Token;
-  user2ERC20Token: ERC20Token;
-  user3ERC20Token: ERC20Token;
-  owner2ERC20Token: ERC20Token;
-  coldWalletERC20Token: ERC20Token;
+export interface BaseTokenContext {
+  baseTokenAddress: string;
+  ownerBaseToken: BaseToken;
+  user1BaseToken: BaseToken;
+  user2BaseToken: BaseToken;
+  user3BaseToken: BaseToken;
+  owner2BaseToken: BaseToken;
 }
 
 export interface SQRpProRataContext {
@@ -39,7 +36,6 @@ export interface SQRpProRataContext {
   user2SQRpProRata: SQRpProRata;
   user3SQRpProRata: SQRpProRata;
   owner2SQRpProRata: SQRpProRata;
-  coldWalletSQRpProRata: SQRpProRata;
 }
 
-export type ContextBase = Users & ERC20TokenContext & SQRpProRataContext;
+export type ContextBase = Users & BaseTokenContext & SQRpProRataContext;

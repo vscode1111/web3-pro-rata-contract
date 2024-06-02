@@ -7,13 +7,13 @@ import { getContractArgsEx } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
-    const { sqrpProRataAddress: erc20TokenAddress } = getAddressesFromHre(hre);
-    console.log(`${SQR_P_PRO_RATA_NAME} ${erc20TokenAddress} is verify...`);
+    const { sqrpProRataAddress } = getAddressesFromHre(hre);
+    console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is verify...`);
     const contractArg = getContractArgsEx();
     if (contractArg) {
       console.table(contractArg);
     }
-    await verifyContract(erc20TokenAddress, hre, contractArg);
+    await verifyContract(sqrpProRataAddress, hre, contractArg);
   }, hre);
 };
 

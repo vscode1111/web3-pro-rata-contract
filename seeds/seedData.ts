@@ -28,22 +28,22 @@ export const { address: tokenAddress, decimals: tokenDecimals } =
   chainTokenDescription[defaultNetwork];
 
 const priceDiv = BigInt(1);
-const userDiv = BigInt(2);
+const userDiv = BigInt(3);
 export const now = dayjs();
 
 export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>> = {
   test: {
-    newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
-    verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    coldWallet: '0x21D73A5dF25DAB8AcB73E782f71678c3b00A198F', //My s-coldWallet
-    balanceLimit: toWei(1000, tokenDecimals) / priceDiv,
+    newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
+    baseToken: tokenAddress,
+    verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
+    goal: toWei(1_200, tokenDecimals) / priceDiv,
+    startDate: toUnixTime(now.add(1, 'days').toDate()),
+    closeDate: toUnixTime(now.add(2, 'days').toDate()),
   },
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     goal: toWei(15_000_000, tokenDecimals),
-    coldWallet: '0x21D73A5dF25DAB8AcB73E782f71678c3b00A198F', //My s-coldWallet
-    balanceLimit: toWei(100, tokenDecimals) / priceDiv,
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     closeDate: 0,
@@ -51,10 +51,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
-    coldWallet: '0x79734Db10D301C257093E594A8A245D384E22c68', //Andrey MultiSig
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     goal: toWei(15, tokenDecimals),
-    balanceLimit: toWei(1_000_000, tokenDecimals),
     // startDate: 0,
     startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
     // closeDate: 0,
@@ -62,10 +60,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   },
   prod: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
-    coldWallet: '0x79734Db10D301C257093E594A8A245D384E22c68', //Andrey MultiSig
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     goal: toWei(15, tokenDecimals),
-    balanceLimit: toWei(1_000_000, tokenDecimals),
     // startDate: 0,
     startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
     // closeDate: 0,
@@ -77,38 +73,17 @@ const extContractConfig = contractConfigDeployMap[deployType];
 
 export const contractConfig: ContractConfig = {
   newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  erc20Token: tokenAddress,
+  baseToken: tokenAddress,
   verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  goal: toWei(4_000, tokenDecimals) / priceDiv,
+  goal: toWei(1_200, tokenDecimals) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
-  coldWallet: '0x21D73A5dF25DAB8AcB73E782f71678c3b00A198F',
-  balanceLimit: toWei(1000, tokenDecimals),
   ...extContractConfig,
 };
 
 export function getContractArgs(contractConfig: ContractConfig): DeployContractArgs {
-  const {
-    newOwner,
-    erc20Token,
-    verifier,
-    goal: depositGoal,
-    startDate,
-    closeDate,
-    coldWallet,
-    balanceLimit,
-  } = contractConfig;
-
-  return [
-    newOwner,
-    erc20Token,
-    verifier,
-    depositGoal,
-    startDate,
-    closeDate,
-    coldWallet,
-    balanceLimit,
-  ];
+  const { newOwner, baseToken, verifier, goal, startDate, closeDate } = contractConfig;
+  return [newOwner, baseToken, verifier, goal, startDate, closeDate];
 }
 
 export const tokenConfig: TokenConfig = {
@@ -130,10 +105,8 @@ export function getTokenArgs(newOwner: string): DeployTokenArgs {
 }
 
 const userInitBalance = toWei(10_000, tokenDecimals) / priceDiv;
-const deposit1 = toWei(100, tokenDecimals) / priceDiv;
-const extraDeposit1 = toWei(2500, tokenDecimals) / priceDiv;
-const withdraw1 = toWei(30, tokenDecimals) / priceDiv;
-const extraWithdraw1 = toWei(3000, tokenDecimals) / priceDiv;
+const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
+const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
 
 const depositTransactionId1 = uuidv4();
 const depositTransactionId2 = uuidv4();
@@ -148,18 +121,12 @@ export const seedData = {
   deposit1,
   deposit2: deposit1 / userDiv,
   deposit3: deposit1 / userDiv / userDiv,
+  deposit12: deposit1 + deposit1 / userDiv,
   extraDeposit1,
   extraDeposit2: extraDeposit1 / userDiv,
   extraDeposit3: extraDeposit1 / userDiv / userDiv,
-  withdraw1,
-  withdraw2: withdraw1 / userDiv,
-  withdraw3: withdraw1 / userDiv / userDiv,
-  extraWithdraw1,
-  extraWithdraw2: extraWithdraw1 / userDiv,
-  extraWithdraw3: extraWithdraw1 / userDiv / userDiv,
-  balanceLimit: toWei(100, tokenDecimals),
   allowance: toWei(1000000, tokenDecimals),
-  balanceDelta: toWei(0.01, tokenDecimals),
+  balanceDelta: toWei(0.000001, tokenDecimals),
   nowPlus1m: toUnixTime(now.add(1, 'minute').toDate()),
   startDatePlus1m: addSecondsToUnixTime(contractConfig.startDate, 1 * MINUTES),
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),

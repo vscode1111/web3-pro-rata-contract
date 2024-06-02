@@ -1,4 +1,4 @@
-import { ChangeBalanceLimitEvent, DepositEvent } from '~typechain-types/contracts/SQRpProRata';
+import { DepositEvent } from '~typechain-types/contracts/SQRpProRata';
 import { ContextBase } from '~types';
 
 type Fixture<T> = () => Promise<T>;
@@ -12,7 +12,5 @@ declare module 'mocha' {
 export interface EventArgs<T> {
   args: T;
 }
-
-export type ChangeBalanceLimitArgs = ChangeBalanceLimitEvent.Event & EventArgs<[string, bigint]>;
 
 export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, number]>;

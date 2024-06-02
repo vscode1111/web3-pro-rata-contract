@@ -9,3 +9,11 @@ export function getTokenDescription(address: string): TokenAddressDescription {
     address,
   };
 }
+
+export function calculateAccountRefundAmount(
+  goal: bigint,
+  userDeposited: bigint,
+  totalDeposited: bigint,
+): bigint {
+  return ((totalDeposited - goal) * userDeposited) / totalDeposited;
+}

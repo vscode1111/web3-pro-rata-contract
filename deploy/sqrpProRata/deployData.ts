@@ -10,7 +10,6 @@ export const deployData = {
   userMintAmount: 100000,
   deposit1: toWei(0.001, tokenDecimals),
   deposit2: toWei(0.002, tokenDecimals),
-  balanceLimit: toWei(1, tokenDecimals),
 };
 
 export const deployParams = {

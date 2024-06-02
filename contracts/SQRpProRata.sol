@@ -21,25 +21,24 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   function initialize(
     address _newOwner,
-    address _erc20Token,
+    address _baeToken,
     address _verifier,
     uint256 _goal,
     uint32 _startDate, //0 - skip
-    uint32 _closeDate,
-    address _coldWallet,
-    uint256 _balanceLimit
+    uint32 _closeDate
   ) public initializer {
     if (_newOwner == address(0)) {
       revert NewOwnerNotZeroAddress();
     }
 
-    if (_erc20Token == address(0)) {
-      revert ERC20TokenNotZeroAddress();
+    if (_baeToken == address(0)) {
+      revert BaseTokenNotZeroAddress();
     }
 
     if (_verifier == address(0)) {
       revert VerifierNotZeroAddress();
     }
+
     if (_goal == 0) {
       revert GoalNotZero();
     }
@@ -56,20 +55,14 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       revert CloseDateMustBeGreaterThanStartDate();
     }
 
-    if (_coldWallet == address(0)) {
-      revert ColdWalletNotZeroAddress();
-    }
-
     __Ownable_init(_newOwner);
     __UUPSUpgradeable_init();
 
-    erc20Token = IERC20(_erc20Token);
+    baseToken = IERC20(_baeToken);
     verifier = _verifier;
     goal = _goal;
     startDate = _startDate;
     closeDate = _closeDate;
-    coldWallet = _coldWallet;
-    balanceLimit = _balanceLimit;
   }
 
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -78,23 +71,20 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   string public constant VERSION = "1.0";
 
-  IERC20 public erc20Token;
-  address public coldWallet;
+  IERC20 public baseToken;
   address public verifier;
   uint256 public goal;
   uint32 public startDate;
   uint32 public closeDate;
-  uint256 public balanceLimit;
   uint256 public totalDeposited;
   uint256 public totalWithdrew;
 
-  mapping(address => FundItem) private _balances;
-  // mapping(address => uint32) private _nonces;
+  mapping(address => User) private _users;
   mapping(bytes32 => TransactionItem) private _transactionIds;
   address[] private _userAddresses;
   uint32 private _processedUserIndex;
 
-  struct FundItem {
+  struct User {
     uint256 depositedAmount;
     uint256 contributionAmount;
     uint32 nonce;
@@ -105,13 +95,12 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   error NewOwnerNotZeroAddress();
-  error ERC20TokenNotZeroAddress();
+  error BaseTokenNotZeroAddress();
   error VerifierNotZeroAddress();
   error GoalNotZero();
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanStartDate();
-  error ColdWalletNotZeroAddress();
   error TimeoutBlocker();
   error AmountNotZero();
   error InvalidSignature();
@@ -121,6 +110,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   error InvalidNonce();
   error TooEarly();
   error TooLate();
+  error GoalUnreached();
+  error AllUsersProcessed();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
     if (block.timestamp > timestampLimit) {
@@ -147,15 +138,15 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   modifier afterCloseDate() {
-    if (isAfterCloseDate()) {
-      revert TooLate();
+    if (!isAfterCloseDate()) {
+      revert TooEarly();
     }
     _;
   }
 
-  event ChangeBalanceLimit(address indexed sender, uint256 balanceLimit);
   event Deposit(address indexed account, uint256 amount);
-  event WithdrawExcessReward(address indexed to, uint256 amount);
+  event WithdrawGoal(address indexed to, uint256 amount);
+  event Refund(address account, uint256 amount);
 
   //Read methods-------------------------------------------
 
@@ -171,16 +162,20 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     return !isBeforeStartDate() && !isAfterCloseDate();
   }
 
-  function fetchFundItem(address account) external view returns (FundItem memory) {
-    return _balances[account];
+  function getUserCount() public view returns (uint32) {
+    return (uint32)(_userAddresses.length);
+  }
+
+  function fetchUser(address account) external view returns (User memory) {
+    return _users[account];
   }
 
   function getBalance() public view returns (uint256) {
-    return erc20Token.balanceOf(address(this));
+    return baseToken.balanceOf(address(this));
   }
 
   function balanceOf(address account) external view returns (uint256) {
-    FundItem memory fund = _balances[account];
+    User memory fund = _users[account];
     if (fund.depositedAmount > fund.contributionAmount) {
       return fund.depositedAmount - fund.contributionAmount;
     }
@@ -192,7 +187,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   function getNonce(address account) public view returns (uint32) {
-    return _balances[account].nonce;
+    return _users[account].nonce;
   }
 
   function calculateRemainDeposit() external view returns (uint256) {
@@ -200,15 +195,34 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       return 0;
     }
 
-    return goal - totalDeposited;
+    if (goal > totalDeposited) {
+      return goal - totalDeposited;
+    }
+
+    return 0;
   }
 
-  function calculateExcessReward() public view returns (uint256) {
-    uint256 contractBalance = getBalance();
-    if (contractBalance > goal) {
-      return contractBalance - goal;
+  function calculateOverfundAmount() public view returns (uint256) {
+    if (totalDeposited > goal) {
+      return totalDeposited - goal;
     }
     return 0;
+  }
+
+  function calculateAccountRefundAmount(address account) public view returns (uint256) {
+    if (!isAfterCloseDate()) {
+      return 0;
+    }
+
+    uint256 overfundAmount = calculateOverfundAmount();
+
+    User memory user = _users[account];
+
+    if (overfundAmount > 0) {
+      return (overfundAmount * user.depositedAmount) / totalDeposited;
+    } else {
+      return user.depositedAmount;
+    }
   }
 
   function fetchTransactionItem(
@@ -234,6 +248,10 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     _transactionIds[transactionIdHash] = TransactionItem(amount);
   }
 
+  function getProcessedUserIndex() external view returns (uint32) {
+    return _processedUserIndex;
+  }
+
   //Write methods-------------------------------------------
 
   function _deposit(
@@ -243,58 +261,31 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     string calldata transactionId,
     uint32 timestampLimit
   ) private nonReentrant amountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
-    if (erc20Token.allowance(account, address(this)) < amount) {
+    if (baseToken.allowance(account, address(this)) < amount) {
       revert UserMustAllowToUseFunds();
     }
 
-    if (erc20Token.balanceOf(account) < amount) {
+    if (baseToken.balanceOf(account) < amount) {
       revert UserMustHaveFunds();
     }
 
     _setTransactionId(amount, transactionId);
 
-    FundItem storage fund = _balances[account];
+    User storage user = _users[account];
 
-    if (fund.nonce != nonce) {
+    if (user.nonce != nonce) {
       revert InvalidNonce();
     }
 
-    if (fund.nonce == 0) {
+    if (user.nonce == 0) {
       _userAddresses.push(account);
     }
 
-    fund.depositedAmount += amount;
-    fund.nonce += 1;
+    user.depositedAmount += amount;
+    user.nonce += 1;
     totalDeposited += amount;
 
-    uint256 contractBalance = getBalance();
-    uint256 supposedBalance = contractBalance + amount;
-
-    if (supposedBalance > balanceLimit) {
-      uint256 userToContractAmount = 0;
-      uint256 userToColdWalletAmount = supposedBalance - balanceLimit;
-      uint256 contractToColdWalletAmount = 0;
-
-      if (amount > userToColdWalletAmount) {
-        userToContractAmount = amount - userToColdWalletAmount;
-      } else {
-        userToColdWalletAmount = amount;
-        contractToColdWalletAmount = contractBalance - balanceLimit;
-      }
-
-      if (userToContractAmount > 0) {
-        erc20Token.safeTransferFrom(account, address(this), userToContractAmount);
-      }
-      if (userToColdWalletAmount > 0) {
-        erc20Token.safeTransferFrom(account, coldWallet, userToColdWalletAmount);
-      }
-      if (contractToColdWalletAmount > 0) {
-        erc20Token.safeTransfer(coldWallet, contractToColdWalletAmount);
-      }
-    } else {
-      erc20Token.safeTransferFrom(account, address(this), amount);
-    }
-
+    baseToken.safeTransferFrom(account, address(this), amount);
     emit Deposit(account, amount);
   }
 
@@ -327,34 +318,37 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     _deposit(account, amount, nonce, transactionId, timestampLimit);
   }
 
-  function refund(uint32 usersCount) external nonReentrant onlyOwner {
-    uint32 userLength = (uint32)(_userAddresses.length);
-    if (usersCount > userLength - _processedUserIndex) {
-      usersCount = userLength - _processedUserIndex;
+  function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
+    uint32 userCount = getUserCount();
+    if (_batchSize > userCount - _processedUserIndex) {
+      _batchSize = userCount - _processedUserIndex;
     }
 
-    require(usersCount > 0, "all users processed");
-    // require(expired || raiseConditionsNotMet, "not refundable");
+    if (_batchSize == 0) {
+      revert AllUsersProcessed();
+    }
 
-    uint32 endIndex = _processedUserIndex + usersCount;
+    uint32 endIndex = _processedUserIndex + _batchSize;
     for (uint i = _processedUserIndex; i < endIndex; i++) {
       address userAddress = _userAddresses[i];
-      // User storage user = users[userAddress];
-      // depositToken.safeTransfer(userAddress, user.contributionAmount);
-      // emit Refund(userAddress, offeringId, user.contributionAmount);
+      uint256 accountRefundAmount = calculateAccountRefundAmount(userAddress);
+      baseToken.safeTransfer(userAddress, accountRefundAmount);
+      emit Refund(userAddress, accountRefundAmount);
     }
     _processedUserIndex = endIndex;
   }
 
-  function withdrawExcessReward() external nonReentrant onlyOwner {
-    uint256 amount = calculateExcessReward();
-    address to = owner();
-    erc20Token.safeTransfer(to, amount);
-    emit WithdrawExcessReward(to, amount);
+  function refundAll() external {
+    refund(getUserCount());
   }
 
-  function changeBalanceLimit(uint256 _balanceLimit) external onlyOwner {
-    balanceLimit = _balanceLimit;
-    emit ChangeBalanceLimit(_msgSender(), _balanceLimit);
+  function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {
+    if (getBalance() < goal) {
+      revert GoalUnreached();
+    }
+
+    address to = owner();
+    baseToken.safeTransfer(to, goal);
+    emit WithdrawGoal(to, goal);
   }
 }

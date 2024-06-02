@@ -11,14 +11,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
-    const erc20TokenAddress = contractConfig.erc20Token;
-    const context = await getContext(erc20TokenAddress, sqrpProRataAddress);
-    const { verifier, user1Address, user2ERC20Token, user1SQRpProRata, sqrpProRataFactory } =
+    const baseTokenAddress = contractConfig.baseToken;
+    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { verifier, user1Address, user2BaseToken, user1SQRpProRata, sqrpProRataFactory } =
       context;
 
-    const decimals = Number(await user2ERC20Token.decimals());
+    const decimals = Number(await user2BaseToken.decimals());
 
-    const currentAllowance = await user2ERC20Token.allowance(user1Address, sqrpProRataAddress);
+    const currentAllowance = await user2BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
 
     //From Postman
@@ -51,7 +51,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       return;
     }
 
-    const balance = await user2ERC20Token.balanceOf(account);
+    const balance = await user2BaseToken.balanceOf(account);
     console.log(`User balance: ${toNumberDecimals(balance, decimals)}`);
     if (Number(response.amountInWei) > Number(balance)) {
       console.error(`User balance is lower`);
@@ -90,7 +90,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     if (params.amount > currentAllowance) {
       const askAllowance = seedData.allowance;
       await waitTx(
-        user2ERC20Token.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
+        user2BaseToken.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
         'approve',
       );
       console.log(

@@ -1,10 +1,9 @@
 export const customError = {
   ownableUnauthorizedAccount: 'OwnableUnauthorizedAccount',
   newOwnerNotZeroAddress: 'NewOwnerNotZeroAddress',
-  erc20TokenNotZeroAddress: 'ERC20TokenNotZeroAddress',
+  baseTokenNotZeroAddress: 'BaseTokenNotZeroAddress',
   verifierNotZeroAddress: 'VerifierNotZeroAddress',
   goalNotZero: 'GoalNotZero',
-  coldWalletNotZeroAddress: 'ColdWalletNotZeroAddress',
   amountNotZero: 'AmountNotZero',
   timeoutBlocker: 'TimeoutBlocker',
   invalidSignature: 'InvalidSignature',

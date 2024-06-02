@@ -2,14 +2,14 @@ import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE } from '~common';
 import { waitTx } from '~common-contract';
-import { contractConfig, seedData } from '~seeds';
-import { addSecondsToUnixTime, signMessageForDeposit } from '~utils';
+import { contractConfig, seedData, tokenConfig } from '~seeds';
+import { addSecondsToUnixTime, calculateAccountRefundAmount, signMessageForDeposit } from '~utils';
 import { customError } from './testData';
 import { DepositEventArgs } from './types';
 import {
   checkTotalSQRBalance,
   findEvent,
-  getERC20TokenBalance,
+  getBaseTokenBalance,
   loadSQRpProRataFixture,
 } from './utils';
 
@@ -24,9 +24,25 @@ export function shouldBehaveCorrectFunding(): void {
       await checkTotalSQRBalance(this);
     });
 
-    it('user1 tries to call depositSig too early', async function () {
-      expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
+    it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+      expect(await getBaseTokenBalance(this, this.owner2Address)).eq(tokenConfig.initMint);
+      expect(await getBaseTokenBalance(this, this.user1Address)).eq(seedData.zero);
+      expect(await getBaseTokenBalance(this, this.user2Address)).eq(seedData.zero);
+      expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).eq(seedData.zero);
 
+      expect(await this.owner2SQRpProRata.getUserCount()).eq(seedData.zero);
+      expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
+      expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
+      expect(await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address)).eq(
+        seedData.zero,
+      );
+      expect(await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user2Address)).eq(
+        seedData.zero,
+      );
+      expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(0);
+    });
+
+    it('user1 tries to call depositSig too early', async function () {
       const signature = await signMessageForDeposit(
         this.owner2,
         this.user1Address,
@@ -170,7 +186,7 @@ export function shouldBehaveCorrectFunding(): void {
       });
 
       it('user1 tries to call depositSig with allowance but no funds', async function () {
-        await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
+        await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
 
         const signature = await signMessageForDeposit(
           this.owner2,
@@ -213,18 +229,22 @@ export function shouldBehaveCorrectFunding(): void {
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.userMustAllowToUseFunds);
       });
 
-      describe('user1 and user2 have tokens and approved contract to use these', () => {
+      describe('user1 and user2 have tokens and approved contract to use these tokens', () => {
         beforeEach(async function () {
-          await this.owner2ERC20Token.transfer(this.user1Address, seedData.userInitBalance);
-          await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.deposit1);
+          await this.owner2BaseToken.transfer(this.user1Address, seedData.userInitBalance);
+          await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.deposit1);
 
-          await this.owner2ERC20Token.transfer(this.user2Address, seedData.userInitBalance);
-          await this.user2ERC20Token.approve(this.sqrpProRataAddress, seedData.deposit2);
+          await this.owner2BaseToken.transfer(this.user2Address, seedData.userInitBalance);
+          await this.user2BaseToken.approve(this.sqrpProRataAddress, seedData.deposit2);
         });
 
         it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-          expect(await getERC20TokenBalance(this, this.user1Address)).eq(seedData.userInitBalance);
-          expect(await getERC20TokenBalance(this, this.user2Address)).eq(seedData.userInitBalance);
+          expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
+            tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
+            seedData.balanceDelta,
+          );
+          expect(await getBaseTokenBalance(this, this.user1Address)).eq(seedData.userInitBalance);
+          expect(await getBaseTokenBalance(this, this.user2Address)).eq(seedData.userInitBalance);
         });
 
         it('user1 is allowed to deposit (check event)', async function () {
@@ -254,121 +274,6 @@ export function shouldBehaveCorrectFunding(): void {
           expect(amount).eq(seedData.deposit1);
         });
 
-        it('user1 deposit extrafunds', async function () {
-          expect(await getERC20TokenBalance(this, this.coldWalletAddress)).eq(seedData.zero);
-
-          await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
-
-          const signature = await signMessageForDeposit(
-            this.owner2,
-            this.user1Address,
-            seedData.extraDeposit1,
-            seedData.depositNonce1_0,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-          );
-
-          await this.user1SQRpProRata.depositSig(
-            this.user1Address,
-            seedData.extraDeposit1,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-            signature,
-          );
-
-          const balanceLimit = await this.owner2SQRpProRata.balanceLimit();
-
-          expect(await getERC20TokenBalance(this, this.coldWalletAddress)).eq(
-            seedData.extraDeposit1 - balanceLimit,
-          );
-
-          expect(await this.owner2SQRpProRata.getBalance()).eq(balanceLimit);
-
-          expect(await getERC20TokenBalance(this, this.user1Address)).eq(
-            seedData.userInitBalance - seedData.extraDeposit1,
-          );
-          expect(await getERC20TokenBalance(this, this.sqrpProRataAddress)).eq(balanceLimit);
-
-          expect(await this.owner2SQRpProRata.balanceOf(this.user1Address)).eq(
-            seedData.extraDeposit1,
-          );
-
-          const fundItem = await this.user1SQRpProRata.fetchFundItem(this.user1Address);
-          expect(fundItem.depositedAmount).eq(seedData.extraDeposit1);
-
-          expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.extraDeposit1);
-
-          expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(
-            contractConfig.goal - seedData.extraDeposit1,
-          );
-        });
-
-        it('user1 deposited extra funds', async function () {
-          const extraDeposit = seedData.extraDeposit1 * BigInt(2);
-
-          await this.user1ERC20Token.approve(this.sqrpProRataAddress, extraDeposit);
-
-          const signature = await signMessageForDeposit(
-            this.owner2,
-            this.user1Address,
-            extraDeposit,
-            seedData.depositNonce1_0,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-          );
-
-          await this.user1SQRpProRata.depositSig(
-            this.user1Address,
-            extraDeposit,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-            signature,
-          );
-        });
-
-        it('user1 deposits when user2 transferred tokens to contract directly', async function () {
-          await this.user2ERC20Token.transfer(this.sqrpProRataAddress, seedData.extraDeposit2);
-
-          await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
-
-          const signature = await signMessageForDeposit(
-            this.owner2,
-            this.user1Address,
-            seedData.deposit1,
-            seedData.depositNonce1_0,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-          );
-
-          await this.user1SQRpProRata.depositSig(
-            this.user1Address,
-            seedData.deposit1,
-            seedData.depositTransactionId1,
-            seedData.startDatePlus1m,
-            signature,
-          );
-
-          expect(await this.owner2SQRpProRata.getBalance()).eq(
-            await this.owner2SQRpProRata.balanceLimit(),
-          );
-
-          expect(await getERC20TokenBalance(this, this.user1Address)).eq(
-            seedData.userInitBalance - seedData.deposit1,
-          );
-
-          expect(await this.owner2SQRpProRata.balanceOf(this.user1Address)).eq(seedData.deposit1);
-
-          const fundItem = await this.user1SQRpProRata.fetchFundItem(this.user1Address);
-          expect(fundItem.depositedAmount).eq(seedData.deposit1);
-
-          expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.deposit1);
-
-          const transactionItem = await this.user1SQRpProRata.fetchTransactionItem(
-            seedData.depositTransactionId1,
-          );
-          expect(transactionItem.amount).eq(seedData.deposit1);
-        });
-
         describe('user1 deposit funds', () => {
           beforeEach(async function () {
             const nonce = await this.user1SQRpProRata.getNonce(this.user1Address);
@@ -392,14 +297,18 @@ export function shouldBehaveCorrectFunding(): void {
           });
 
           it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-            expect(await getERC20TokenBalance(this, this.user1Address)).eq(
+            expect(await this.owner2SQRpProRata.getUserCount()).eq(1);
+            expect(await getBaseTokenBalance(this, this.user1Address)).eq(
               seedData.userInitBalance - seedData.deposit1,
             );
-
             expect(await this.owner2SQRpProRata.balanceOf(this.user1Address)).eq(seedData.deposit1);
+            expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
+            expect(await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address)).eq(
+              seedData.zero,
+            );
 
-            const fundItem = await this.user1SQRpProRata.fetchFundItem(this.user1Address);
-            expect(fundItem.depositedAmount).eq(seedData.deposit1);
+            const user = await this.user1SQRpProRata.fetchUser(this.user1Address);
+            expect(user.depositedAmount).eq(seedData.deposit1);
 
             expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.deposit1);
 
@@ -413,7 +322,7 @@ export function shouldBehaveCorrectFunding(): void {
           });
 
           it('user1 tries to call depositSig with the same transactionId', async function () {
-            await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
+            await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
 
             const signature = await signMessageForDeposit(
               this.owner2,
@@ -433,6 +342,141 @@ export function shouldBehaveCorrectFunding(): void {
                 signature,
               ),
             ).revertedWithCustomError(this.owner2SQRpProRata, customError.usedTransactionId);
+          });
+
+          describe('user2 deposit funds', () => {
+            beforeEach(async function () {
+              const nonce = await this.user1SQRpProRata.getNonce(this.user2Address);
+
+              const signature = await signMessageForDeposit(
+                this.owner2,
+                this.user2Address,
+                seedData.deposit2,
+                Number(nonce),
+                seedData.depositTransactionId2,
+                seedData.startDatePlus1m,
+              );
+
+              await this.user1SQRpProRata.depositSig(
+                this.user2Address,
+                seedData.deposit2,
+                seedData.depositTransactionId2,
+                seedData.startDatePlus1m,
+                signature,
+              );
+            });
+
+            it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+              expect(await this.owner2SQRpProRata.getUserCount()).eq(2);
+              expect(await getBaseTokenBalance(this, this.user2Address)).eq(
+                seedData.userInitBalance - seedData.deposit2,
+              );
+              expect(await this.owner2SQRpProRata.balanceOf(this.user2Address)).eq(
+                seedData.deposit2,
+              );
+              expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(
+                seedData.deposit1 + seedData.deposit2 - contractConfig.goal,
+              );
+              expect(
+                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
+              ).eq(seedData.zero);
+
+              const user = await this.user1SQRpProRata.fetchUser(this.user1Address);
+              expect(user.depositedAmount).eq(seedData.deposit1);
+
+              expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.deposit12);
+
+              const transactionItem = await this.user1SQRpProRata.fetchTransactionItem(
+                seedData.depositTransactionId1,
+              );
+              expect(transactionItem.amount).eq(seedData.deposit1);
+
+              expect(await this.user1SQRpProRata.getNonce(this.user1Address)).eq(1);
+              expect(await this.user2SQRpProRata.getNonce(this.user2Address)).eq(1);
+            });
+
+            describe('set time after close date', () => {
+              beforeEach(async function () {
+                await time.increaseTo(
+                  addSecondsToUnixTime(contractConfig.closeDate, seedData.timeShift),
+                );
+              });
+
+              it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+                expect(
+                  await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
+                ).closeTo(
+                  calculateAccountRefundAmount(
+                    contractConfig.goal,
+                    seedData.deposit1,
+                    seedData.deposit12,
+                  ),
+                  seedData.balanceDelta,
+                );
+                expect(
+                  await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user2Address),
+                ).closeTo(
+                  calculateAccountRefundAmount(
+                    contractConfig.goal,
+                    seedData.deposit2,
+                    seedData.deposit12,
+                  ),
+                  seedData.balanceDelta,
+                );
+              });
+
+              describe('owner2 refunded for all user', () => {
+                beforeEach(async function () {
+                  await this.owner2SQRpProRata.refundAll();
+                });
+
+                it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+                  expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(2);
+
+                  expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
+                    contractConfig.goal,
+                    seedData.balanceDelta,
+                  );
+
+                  const refundAmount1 = calculateAccountRefundAmount(
+                    contractConfig.goal,
+                    seedData.deposit1,
+                    seedData.deposit12,
+                  );
+                  expect(await getBaseTokenBalance(this, this.user1Address)).closeTo(
+                    seedData.userInitBalance - seedData.deposit1 + refundAmount1,
+                    seedData.balanceDelta,
+                  );
+
+                  const refundAmount2 = calculateAccountRefundAmount(
+                    contractConfig.goal,
+                    seedData.deposit2,
+                    seedData.deposit12,
+                  );
+                  expect(await getBaseTokenBalance(this, this.user2Address)).closeTo(
+                    seedData.userInitBalance - seedData.deposit2 + refundAmount2,
+                    seedData.balanceDelta,
+                  );
+                });
+
+                describe('owner2 withdrew goal', () => {
+                  beforeEach(async function () {
+                    await this.owner2SQRpProRata.withdrawGoal();
+                  });
+
+                  it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+                    expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
+                      tokenConfig.initMint -
+                        BigInt(2) * seedData.userInitBalance +
+                        contractConfig.goal,
+                      seedData.balanceDelta,
+                    );
+                  });
+
+                  it('test', async function () {});
+                });
+              });
+            });
           });
         });
       });

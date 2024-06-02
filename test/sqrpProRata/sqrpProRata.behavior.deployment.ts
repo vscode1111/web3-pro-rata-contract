@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { Dayjs } from 'dayjs';
 import { ZeroAddress } from 'ethers';
-import { waitTx } from '~common-contract';
 import { ZERO } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import {
@@ -10,8 +9,8 @@ import {
   getUsers,
   signMessageForDeposit,
 } from '~utils';
-import { ChangeBalanceLimitArgs, customError } from '.';
-import { findEvent, loadSQRpProRataFixture } from './utils';
+import { customError } from '.';
+import { loadSQRpProRataFixture } from './utils';
 
 export function shouldBehaveCorrectDeployment(): void {
   describe('deployment', () => {
@@ -22,27 +21,6 @@ export function shouldBehaveCorrectDeployment(): void {
         chainTime = _chainTime;
         return config;
       });
-    });
-
-    it('user1 tries to change balanceLimit', async function () {
-      await expect(this.user1SQRpProRata.changeBalanceLimit(seedData.balanceLimit))
-        .revertedWithCustomError(this.user1SQRpProRata, customError.ownableUnauthorizedAccount)
-        .withArgs(this.user1Address);
-    });
-
-    it('owner2 changes balanceLimit', async function () {
-      await this.owner2SQRpProRata.changeBalanceLimit(seedData.balanceLimit);
-
-      const receipt = await waitTx(
-        this.owner2SQRpProRata.changeBalanceLimit(seedData.balanceLimit),
-      );
-      const eventLog = findEvent<ChangeBalanceLimitArgs>(receipt);
-      expect(eventLog).not.undefined;
-      const [account, amount] = eventLog?.args;
-      expect(account).eq(this.owner2Address);
-      expect(amount).eq(seedData.balanceLimit);
-
-      expect(await this.owner2SQRpProRata.balanceLimit()).eq(seedData.balanceLimit);
     });
 
     it('owner tries to deploy with zero new owner address', async function () {
@@ -60,9 +38,9 @@ export function shouldBehaveCorrectDeployment(): void {
       await expect(
         getSQRpProRataContext(users, {
           ...contractConfig,
-          erc20Token: ZeroAddress,
+          baseToken: ZeroAddress,
         }),
-      ).revertedWithCustomError(this.owner2SQRpProRata, customError.erc20TokenNotZeroAddress);
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.baseTokenNotZeroAddress);
     });
 
     it('owner tries to deploy when start date is later than close one', async function () {
@@ -88,8 +66,8 @@ export function shouldBehaveCorrectDeployment(): void {
         verifier: user3Address,
       });
 
-      await this.owner2ERC20Token.transfer(this.user1Address, seedData.userInitBalance);
-      await this.user1ERC20Token.approve(this.sqrpProRataAddress, seedData.deposit1);
+      await this.owner2BaseToken.transfer(this.user1Address, seedData.userInitBalance);
+      await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.deposit1);
 
       const signature = await signMessageForDeposit(
         this.user3,
@@ -143,16 +121,6 @@ export function shouldBehaveCorrectDeployment(): void {
           verifier: ZeroAddress,
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.verifierNotZeroAddress);
-    });
-
-    it('owner tries to deploy with zero cold wallet address', async function () {
-      const users = await getUsers();
-      await expect(
-        getSQRpProRataContext(users, {
-          ...contractConfig,
-          coldWallet: ZeroAddress,
-        }),
-      ).revertedWithCustomError(this.owner2SQRpProRata, customError.coldWalletNotZeroAddress);
     });
 
     it('owner tries to deploy with zero deposit goal', async function () {
