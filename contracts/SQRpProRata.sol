@@ -9,6 +9,8 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+// import "hardhat/console.sol";
+
 contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
   using SafeERC20 for IERC20;
   using MessageHashUtils for bytes32;
@@ -21,7 +23,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   function initialize(
     address _newOwner,
-    address _baeToken,
+    address _baseToken,
+    address _boostToken,
     address _verifier,
     uint256 _goal,
     uint32 _startDate, //0 - skip
@@ -31,8 +34,12 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       revert NewOwnerNotZeroAddress();
     }
 
-    if (_baeToken == address(0)) {
+    if (_baseToken == address(0)) {
       revert BaseTokenNotZeroAddress();
+    }
+
+    if (_boostToken == address(0)) {
+      revert BoostTokenNotZeroAddress();
     }
 
     if (_verifier == address(0)) {
@@ -58,7 +65,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     __Ownable_init(_newOwner);
     __UUPSUpgradeable_init();
 
-    baseToken = IERC20(_baeToken);
+    baseToken = IERC20(_baseToken);
+    boostToken = IERC20(_boostToken);
     verifier = _verifier;
     goal = _goal;
     startDate = _startDate;
@@ -72,6 +80,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   string public constant VERSION = "1.0";
 
   IERC20 public baseToken;
+  IERC20 public boostToken;
   address public verifier;
   uint256 public goal;
   uint32 public startDate;
@@ -96,6 +105,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   error NewOwnerNotZeroAddress();
   error BaseTokenNotZeroAddress();
+  error BoostTokenNotZeroAddress();
   error VerifierNotZeroAddress();
   error GoalNotZero();
   error StartDateMustBeGreaterThanCurrentTime();
@@ -292,13 +302,14 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   function verifyDepositSignature(
     address account,
     uint256 amount,
+    bool boost,
     uint32 nonce,
     string calldata transactionId,
     uint32 timestampLimit,
     bytes calldata signature
   ) private view returns (bool) {
     bytes32 messageHash = keccak256(
-      abi.encode(account, amount, nonce, transactionId, timestampLimit)
+      abi.encode(account, amount, boost, nonce, transactionId, timestampLimit)
     );
     address recover = messageHash.toEthSignedMessageHash().recover(signature);
     return recover == owner() || recover == verifier;
@@ -307,12 +318,23 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   function depositSig(
     address account,
     uint256 amount,
+    bool boost,
     string calldata transactionId,
     uint32 timestampLimit,
     bytes calldata signature
   ) external {
     uint32 nonce = getNonce(account);
-    if (!verifyDepositSignature(account, amount, nonce, transactionId, timestampLimit, signature)) {
+    if (
+      !verifyDepositSignature(
+        account,
+        amount,
+        boost,
+        nonce,
+        transactionId,
+        timestampLimit,
+        signature
+      )
+    ) {
       revert InvalidSignature();
     }
     _deposit(account, amount, nonce, transactionId, timestampLimit);

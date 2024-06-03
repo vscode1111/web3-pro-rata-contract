@@ -37,6 +37,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       verifier,
       params.account,
       params.amount,
+      false,
       params.nonce,
       params.transactionId,
       params.timestampLimit,
@@ -59,6 +60,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       user1SQRpProRata.depositSig(
         params.account,
         params.amount,
+        false,
         params.transactionId,
         params.timestampLimit,
         params.signature,

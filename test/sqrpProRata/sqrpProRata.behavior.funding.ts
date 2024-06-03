@@ -5,13 +5,15 @@ import { waitTx } from '~common-contract';
 import { contractConfig, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, calculateAccountRefundAmount, signMessageForDeposit } from '~utils';
 import { customError } from './testData';
-import { DepositEventArgs } from './types';
+import { DepositEventArgs, WithdrawGoalEventArgs } from './types';
 import {
   checkTotalSQRBalance,
   findEvent,
   getBaseTokenBalance,
   loadSQRpProRataFixture,
 } from './utils';
+
+//ToDo: add Refund event
 
 export function shouldBehaveCorrectFunding(): void {
   describe('funding', () => {
@@ -42,11 +44,26 @@ export function shouldBehaveCorrectFunding(): void {
       expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(0);
     });
 
+    it('user1 tries to call withdrawGoal without permission', async function () {
+      await expect(this.user1SQRpProRata.withdrawGoal()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.ownableUnauthorizedAccount,
+      );
+    });
+
+    it('owner tries to call withdrawGoal to early', async function () {
+      await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.tooEarly,
+      );
+    });
+
     it('user1 tries to call depositSig too early', async function () {
       const signature = await signMessageForDeposit(
         this.owner2,
         this.user1Address,
         seedData.deposit1,
+        false,
         seedData.depositNonce1_0,
         seedData.depositTransactionId1,
         seedData.startDatePlus1m,
@@ -56,6 +73,7 @@ export function shouldBehaveCorrectFunding(): void {
         this.user1SQRpProRata.depositSig(
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositTransactionId1,
           seedData.startDatePlus1m,
           signature,
@@ -72,6 +90,7 @@ export function shouldBehaveCorrectFunding(): void {
         this.owner2,
         this.user1Address,
         seedData.deposit1,
+        false,
         seedData.depositNonce1_0,
         seedData.depositTransactionId1,
         seedData.closeDatePlus1m,
@@ -81,6 +100,7 @@ export function shouldBehaveCorrectFunding(): void {
         this.user1SQRpProRata.depositSig(
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositTransactionId1,
           seedData.closeDatePlus1m,
           signature,
@@ -104,6 +124,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user1Address,
           seedData.zero,
+          false,
           seedData.depositNonce1_0,
           seedData.depositTransactionId1,
           seedData.startDatePlus1m,
@@ -113,6 +134,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user1SQRpProRata.depositSig(
             this.user1Address,
             seedData.zero,
+            false,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -125,6 +147,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositNonce1_0,
           seedData.depositTransactionId1,
           seedData.startDatePlus1m,
@@ -134,6 +157,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user1SQRpProRata.depositSig(
             this.user1Address,
             seedData.deposit1,
+            false,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -148,6 +172,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositNonce1_0,
           seedData.depositTransactionId1,
           seedData.startDatePlus1m,
@@ -157,6 +182,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user1SQRpProRata.depositSig(
             this.user1Address,
             seedData.deposit1,
+            false,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -169,6 +195,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositNonce1_0,
           seedData.depositTransactionIdWrong,
           seedData.startDatePlus1m,
@@ -178,6 +205,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user1SQRpProRata.depositSig(
             this.user1Address,
             seedData.deposit1,
+            false,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
             wrongSignature,
@@ -192,6 +220,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user1Address,
           seedData.deposit1,
+          false,
           seedData.depositNonce1_0,
           seedData.depositTransactionId1,
           seedData.startDatePlus1m,
@@ -201,6 +230,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user1SQRpProRata.depositSig(
             this.user1Address,
             seedData.deposit1,
+            false,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -213,6 +243,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.owner2,
           this.user2Address,
           seedData.deposit2,
+          false,
           seedData.depositNonce2_0,
           seedData.depositTransactionId2,
           seedData.startDatePlus1m,
@@ -222,6 +253,7 @@ export function shouldBehaveCorrectFunding(): void {
           this.user2SQRpProRata.depositSig(
             this.user2Address,
             seedData.deposit2,
+            false,
             seedData.depositTransactionId2,
             seedData.startDatePlus1m,
             signature,
@@ -247,11 +279,41 @@ export function shouldBehaveCorrectFunding(): void {
           expect(await getBaseTokenBalance(this, this.user2Address)).eq(seedData.userInitBalance);
         });
 
+        it('user1 tries to call twice with the same time and signature', async function () {
+          await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
+
+          const signature = await signMessageForDeposit(
+            this.owner2,
+            this.user1Address,
+            seedData.deposit1,
+            false,
+            seedData.depositNonce1_0,
+            seedData.depositTransactionId1,
+            seedData.startDatePlus1m,
+          );
+
+          const depositSig = () =>
+            this.user1SQRpProRata.depositSig(
+              this.user1Address,
+              seedData.deposit1,
+              false,
+              seedData.depositTransactionId1,
+              seedData.startDatePlus1m,
+              signature,
+            );
+
+          await expect(Promise.all([depositSig(), depositSig()])).revertedWithCustomError(
+            this.owner2SQRpProRata,
+            customError.invalidSignature,
+          );
+        });
+
         it('user1 is allowed to deposit (check event)', async function () {
           const signature = await signMessageForDeposit(
             this.owner2,
             this.user1Address,
             seedData.deposit1,
+            false,
             seedData.depositNonce1_0,
             seedData.depositTransactionId1,
             seedData.startDatePlus1m,
@@ -261,6 +323,7 @@ export function shouldBehaveCorrectFunding(): void {
             this.user1SQRpProRata.depositSig(
               this.user1Address,
               seedData.deposit1,
+              false,
               seedData.depositTransactionId1,
               seedData.startDatePlus1m,
               signature,
@@ -282,6 +345,7 @@ export function shouldBehaveCorrectFunding(): void {
               this.owner2,
               this.user1Address,
               seedData.deposit1,
+              false,
               Number(nonce),
               seedData.depositTransactionId1,
               seedData.startDatePlus1m,
@@ -290,6 +354,7 @@ export function shouldBehaveCorrectFunding(): void {
             await this.user1SQRpProRata.depositSig(
               this.user1Address,
               seedData.deposit1,
+              false,
               seedData.depositTransactionId1,
               seedData.startDatePlus1m,
               signature,
@@ -319,6 +384,64 @@ export function shouldBehaveCorrectFunding(): void {
 
             expect(await this.user1SQRpProRata.getNonce(this.user1Address)).eq(1);
             expect(await this.user2SQRpProRata.getNonce(this.user2Address)).eq(0);
+
+            expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(
+              contractConfig.goal - seedData.deposit1,
+            );
+          });
+
+          it('user1 deposited again', async function () {
+            await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.deposit1);
+
+            const nonce = await this.user1SQRpProRata.getNonce(this.user1Address);
+
+            const signature = await signMessageForDeposit(
+              this.owner2,
+              this.user1Address,
+              seedData.deposit1,
+              false,
+              Number(nonce),
+              seedData.depositTransactionId1_2,
+              seedData.startDatePlus1m,
+            );
+
+            await this.user1SQRpProRata.depositSig(
+              this.user1Address,
+              seedData.deposit1,
+              false,
+              seedData.depositTransactionId1_2,
+              seedData.startDatePlus1m,
+              signature,
+            );
+
+            expect(await this.owner2SQRpProRata.getUserCount()).eq(1);
+            expect(await this.owner2SQRpProRata.totalDeposited()).eq(BigInt(2) * seedData.deposit1);
+          });
+
+          describe(`set time after close date when goal wasn't reached`, () => {
+            beforeEach(async function () {
+              await time.increaseTo(
+                addSecondsToUnixTime(contractConfig.closeDate, seedData.timeShift),
+              );
+            });
+
+            it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+              expect(
+                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
+              ).eq(seedData.deposit1);
+              expect(
+                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user2Address),
+              ).eq(seedData.zero);
+
+              expect(await this.owner2SQRpProRata.isReady()).eq(false);
+            });
+
+            it('owner2 tries to withdraw unreached goal', async function () {
+              await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+                this.owner2SQRpProRata,
+                customError.goalUnreached,
+              );
+            });
           });
 
           it('user1 tries to call depositSig with the same transactionId', async function () {
@@ -328,6 +451,7 @@ export function shouldBehaveCorrectFunding(): void {
               this.owner2,
               this.user1Address,
               seedData.deposit1,
+              false,
               seedData.depositNonce1_1,
               seedData.depositTransactionId1,
               seedData.startDatePlus1m,
@@ -337,6 +461,7 @@ export function shouldBehaveCorrectFunding(): void {
               this.user1SQRpProRata.depositSig(
                 this.user1Address,
                 seedData.deposit1,
+                false,
                 seedData.depositTransactionId1,
                 seedData.startDatePlus1m,
                 signature,
@@ -352,6 +477,7 @@ export function shouldBehaveCorrectFunding(): void {
                 this.owner2,
                 this.user2Address,
                 seedData.deposit2,
+                false,
                 Number(nonce),
                 seedData.depositTransactionId2,
                 seedData.startDatePlus1m,
@@ -360,6 +486,7 @@ export function shouldBehaveCorrectFunding(): void {
               await this.user1SQRpProRata.depositSig(
                 this.user2Address,
                 seedData.deposit2,
+                false,
                 seedData.depositTransactionId2,
                 seedData.startDatePlus1m,
                 signature,
@@ -393,9 +520,18 @@ export function shouldBehaveCorrectFunding(): void {
 
               expect(await this.user1SQRpProRata.getNonce(this.user1Address)).eq(1);
               expect(await this.user2SQRpProRata.getNonce(this.user2Address)).eq(1);
+
+              expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
             });
 
-            describe('set time after close date', () => {
+            it('owner2 tries to refund tokens for first user to early', async function () {
+              await expect(this.owner2SQRpProRata.refund(1)).revertedWithCustomError(
+                this.owner2SQRpProRata,
+                customError.tooEarly,
+              );
+            });
+
+            describe('set time after close date when goal was reached', () => {
               beforeEach(async function () {
                 await time.increaseTo(
                   addSecondsToUnixTime(contractConfig.closeDate, seedData.timeShift),
@@ -423,9 +559,23 @@ export function shouldBehaveCorrectFunding(): void {
                   ),
                   seedData.balanceDelta,
                 );
+
+                expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
               });
 
-              describe('owner2 refunded for all user', () => {
+              it('owner2 refunded tokens for first user', async function () {
+                await this.owner2SQRpProRata.refund(1);
+                expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(1);
+              });
+
+              it('user1 tries to refund tokens for first user', async function () {
+                await expect(this.user1SQRpProRata.refund(1)).revertedWithCustomError(
+                  this.owner2SQRpProRata,
+                  customError.ownableUnauthorizedAccount,
+                );
+              });
+
+              describe('owner2 refunded tokens for all user', () => {
                 beforeEach(async function () {
                   await this.owner2SQRpProRata.refundAll();
                 });
@@ -459,6 +609,23 @@ export function shouldBehaveCorrectFunding(): void {
                   );
                 });
 
+                it('owner2 tries to call withdrawGoal again', async function () {
+                  await expect(this.owner2SQRpProRata.refundAll()).revertedWithCustomError(
+                    this.owner2SQRpProRata,
+                    customError.allUsersProcessed,
+                  );
+                });
+
+                it('owner is allowed to withdraw goal (check event)', async function () {
+                  const receipt = await waitTx(this.owner2SQRpProRata.withdrawGoal());
+                  const eventLog = findEvent<WithdrawGoalEventArgs>(receipt);
+
+                  expect(eventLog).not.undefined;
+                  const [account, amount] = eventLog?.args;
+                  expect(account).eq(this.owner2Address);
+                  expect(amount).eq(contractConfig.goal);
+                });
+
                 describe('owner2 withdrew goal', () => {
                   beforeEach(async function () {
                     await this.owner2SQRpProRata.withdrawGoal();
@@ -472,8 +639,6 @@ export function shouldBehaveCorrectFunding(): void {
                       seedData.balanceDelta,
                     );
                   });
-
-                  it('test', async function () {});
                 });
               });
             });

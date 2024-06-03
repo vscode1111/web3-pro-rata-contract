@@ -33,7 +33,7 @@ export function shouldBehaveCorrectDeployment(): void {
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.newOwnerNotZeroAddress);
     });
 
-    it('owner tries to deploy with zero ERC20 token address', async function () {
+    it('owner tries to deploy with zero base token address', async function () {
       const users = await getUsers();
       await expect(
         getSQRpProRataContext(users, {
@@ -41,6 +41,16 @@ export function shouldBehaveCorrectDeployment(): void {
           baseToken: ZeroAddress,
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.baseTokenNotZeroAddress);
+    });
+
+    it('owner tries to deploy with zero boost token address', async function () {
+      const users = await getUsers();
+      await expect(
+        getSQRpProRataContext(users, {
+          ...contractConfig,
+          boostToken: ZeroAddress,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.boostTokenNotZeroAddress);
     });
 
     it('owner tries to deploy when start date is later than close one', async function () {
@@ -73,6 +83,7 @@ export function shouldBehaveCorrectDeployment(): void {
         this.user3,
         this.user1Address,
         seedData.deposit1,
+        false,
         seedData.depositNonce1_0,
         seedData.depositTransactionId1,
         seedData.startDatePlus1m,
@@ -81,6 +92,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await this.user1SQRpProRata.depositSig(
         this.user1Address,
         seedData.deposit1,
+        false,
         seedData.depositTransactionId1,
         seedData.startDatePlus1m,
         signature,

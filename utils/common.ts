@@ -6,15 +6,16 @@ export async function signMessageForDeposit(
   signer: Signer,
   account: string,
   amount: bigint,
+  boost: boolean,
   nonce: number,
   transactionId: string,
   timestampLimit: number,
 ) {
   return signEncodedMessage(
     signer,
-    //  account, amount, nonce, transactionId, timestampLimit
-    ['address', 'uint256', 'uint32', 'string', 'uint32'],
-    [account, amount, nonce, transactionId, timestampLimit],
+    //  account, amount, boost, nonce, transactionId, timestampLimit
+    ['address', 'uint256', 'bool', 'uint32', 'string', 'uint32'],
+    [account, amount, boost, nonce, transactionId, timestampLimit],
   );
 }
 

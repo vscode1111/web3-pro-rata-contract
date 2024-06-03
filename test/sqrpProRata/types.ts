@@ -1,4 +1,4 @@
-import { DepositEvent } from '~typechain-types/contracts/SQRpProRata';
+import { DepositEvent, WithdrawGoalEvent } from '~typechain-types/contracts/SQRpProRata';
 import { ContextBase } from '~types';
 
 type Fixture<T> = () => Promise<T>;
@@ -14,3 +14,5 @@ export interface EventArgs<T> {
 }
 
 export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, number]>;
+
+export type WithdrawGoalEventArgs = WithdrawGoalEvent.Event & EventArgs<[string, number]>;

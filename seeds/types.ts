@@ -3,6 +3,7 @@ import { BigNumberish } from 'ethers';
 export interface ContractConfig {
   newOwner: string;
   baseToken: string;
+  boostToken: string;
   verifier: string;
   goal: bigint;
   startDate: number;
@@ -12,6 +13,7 @@ export interface ContractConfig {
 export type DeployContractArgs = [
   newOwner: string,
   baseToken: string,
+  boostToken: string,
   verifier: string,
   goal: BigNumberish,
   startDate: number,

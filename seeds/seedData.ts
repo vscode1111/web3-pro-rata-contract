@@ -10,7 +10,7 @@ import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from
 
 type DeployType = 'test' | 'main' | 'stage' | 'prod';
 
-const deployType: DeployType = (process.env.ENV as DeployType) ?? 'prod';
+const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
 
 const isSqr = ['test', 'main'].includes(deployType);
 // const isSqr = false;
@@ -43,11 +43,11 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(15_000_000, tokenDecimals),
+    goal: toWei(15_000, tokenDecimals),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
-    closeDate: 0,
-    // closeDate: toUnixTime(new Date(2024, 3, 30)),
+    // closeDate: 0,
+    closeDate: toUnixTimeUtc(new Date(2024, 5, 7, 0, 0, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -74,6 +74,7 @@ const extContractConfig = contractConfigDeployMap[deployType];
 export const contractConfig: ContractConfig = {
   newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   baseToken: tokenAddress,
+  boostToken: tokenAddress,
   verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   goal: toWei(1_200, tokenDecimals) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
@@ -82,8 +83,8 @@ export const contractConfig: ContractConfig = {
 };
 
 export function getContractArgs(contractConfig: ContractConfig): DeployContractArgs {
-  const { newOwner, baseToken, verifier, goal, startDate, closeDate } = contractConfig;
-  return [newOwner, baseToken, verifier, goal, startDate, closeDate];
+  const { newOwner, baseToken, boostToken, verifier, goal, startDate, closeDate } = contractConfig;
+  return [newOwner, baseToken, boostToken, verifier, goal, startDate, closeDate];
 }
 
 export const tokenConfig: TokenConfig = {
@@ -109,6 +110,7 @@ const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
 const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
 
 const depositTransactionId1 = uuidv4();
+const depositTransactionId1_2 = uuidv4();
 const depositTransactionId2 = uuidv4();
 const withdrawTransactionId1_0 = uuidv4();
 const withdrawTransactionId1_1 = uuidv4();
@@ -132,6 +134,7 @@ export const seedData = {
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),
   timeShift: 10,
   depositTransactionId1,
+  depositTransactionId1_2,
   depositTransactionId2,
   depositTransactionIdWrong: 'wrong',
   withdrawTransactionId1_0,
