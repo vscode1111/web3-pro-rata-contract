@@ -73,7 +73,6 @@ export function shouldBehaveCorrectFunding(): void {
 
       await expect(
         this.user1SQRpProRata.depositSig(
-          this.user1Address,
           seedData.deposit1,
           false,
           seedData.depositTransactionId1,
@@ -100,7 +99,6 @@ export function shouldBehaveCorrectFunding(): void {
 
       await expect(
         this.user1SQRpProRata.depositSig(
-          this.user1Address,
           seedData.deposit1,
           false,
           seedData.depositTransactionId1,
@@ -134,7 +132,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user1SQRpProRata.depositSig(
-            this.user1Address,
             seedData.zero,
             false,
             seedData.depositTransactionId1,
@@ -157,7 +154,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user1SQRpProRata.depositSig(
-            this.user1Address,
             seedData.deposit1,
             false,
             seedData.depositTransactionId1,
@@ -182,7 +178,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user1SQRpProRata.depositSig(
-            this.user1Address,
             seedData.deposit1,
             false,
             seedData.depositTransactionId1,
@@ -205,7 +200,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user1SQRpProRata.depositSig(
-            this.user1Address,
             seedData.deposit1,
             false,
             seedData.depositTransactionId1,
@@ -230,7 +224,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user1SQRpProRata.depositSig(
-            this.user1Address,
             seedData.deposit1,
             false,
             seedData.depositTransactionId1,
@@ -253,7 +246,6 @@ export function shouldBehaveCorrectFunding(): void {
 
         await expect(
           this.user2SQRpProRata.depositSig(
-            this.user2Address,
             seedData.deposit2,
             false,
             seedData.depositTransactionId2,
@@ -296,7 +288,6 @@ export function shouldBehaveCorrectFunding(): void {
 
           const depositSig = () =>
             this.user1SQRpProRata.depositSig(
-              this.user1Address,
               seedData.deposit1,
               false,
               seedData.depositTransactionId1,
@@ -323,7 +314,6 @@ export function shouldBehaveCorrectFunding(): void {
 
           const receipt = await waitTx(
             this.user1SQRpProRata.depositSig(
-              this.user1Address,
               seedData.deposit1,
               false,
               seedData.depositTransactionId1,
@@ -354,7 +344,6 @@ export function shouldBehaveCorrectFunding(): void {
             );
 
             await this.user1SQRpProRata.depositSig(
-              this.user1Address,
               seedData.deposit1,
               false,
               seedData.depositTransactionId1,
@@ -408,7 +397,6 @@ export function shouldBehaveCorrectFunding(): void {
             );
 
             await this.user1SQRpProRata.depositSig(
-              this.user1Address,
               seedData.deposit1,
               false,
               seedData.depositTransactionId1_2,
@@ -461,7 +449,6 @@ export function shouldBehaveCorrectFunding(): void {
 
             await expect(
               this.user1SQRpProRata.depositSig(
-                this.user1Address,
                 seedData.deposit1,
                 false,
                 seedData.depositTransactionId1,
@@ -485,8 +472,7 @@ export function shouldBehaveCorrectFunding(): void {
                 seedData.startDatePlus1m,
               );
 
-              await this.user1SQRpProRata.depositSig(
-                this.user2Address,
+              await this.user2SQRpProRata.depositSig(
                 seedData.deposit2,
                 false,
                 seedData.depositTransactionId2,

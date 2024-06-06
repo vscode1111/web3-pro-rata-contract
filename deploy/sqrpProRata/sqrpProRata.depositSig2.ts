@@ -54,7 +54,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     await waitTx(
       user2SQRpProRata.depositSig(
-        params.account,
         params.amount,
         false,
         params.transactionId,

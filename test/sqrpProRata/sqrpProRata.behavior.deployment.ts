@@ -90,7 +90,6 @@ export function shouldBehaveCorrectDeployment(): void {
       );
 
       await this.user1SQRpProRata.depositSig(
-        this.user1Address,
         seedData.deposit1,
         false,
         seedData.depositTransactionId1,

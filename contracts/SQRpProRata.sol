@@ -317,13 +317,14 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   function depositSig(
-    address account,
     uint256 amount,
     bool boost,
     string calldata transactionId,
     uint32 timestampLimit,
     bytes calldata signature
   ) external {
+    address account = _msgSender();
+
     uint32 nonce = getNonce(account);
     if (
       !verifyDepositSignature(
