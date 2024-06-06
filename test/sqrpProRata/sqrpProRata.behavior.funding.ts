@@ -9,7 +9,7 @@ import {
   signMessageForSQRpProRataDeposit,
 } from '~utils';
 import { customError } from './testData';
-import { DepositEventArgs, WithdrawGoalEventArgs } from './types';
+import { DepositEventArgs, RefundEventArgs, WithdrawGoalEventArgs } from './types';
 import {
   checkTotalSQRBalance,
   findEvent,
@@ -567,8 +567,32 @@ export function shouldBehaveCorrectFunding(): void {
                 expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
               });
 
-              it('owner2 refunded tokens for first user', async function () {
-                await this.owner2SQRpProRata.refund(1);
+              it('owner is allowed to withdraw goal (check event)', async function () {
+                const receipt = await waitTx(this.owner2SQRpProRata.withdrawGoal());
+                const eventLog = findEvent<WithdrawGoalEventArgs>(receipt);
+
+                expect(eventLog).not.undefined;
+                const [account, amount] = eventLog?.args;
+                expect(account).eq(this.owner2Address);
+                expect(amount).eq(contractConfig.goal);
+              });
+
+              it('owner2 refunded tokens for first user (check event)', async function () {
+                const receipt = await waitTx(this.owner2SQRpProRata.refund(1));
+
+                const eventLog = findEvent<RefundEventArgs>(receipt);
+
+                expect(eventLog).not.undefined;
+                const [account, amount] = eventLog?.args;
+                expect(account).eq(this.user1Address);
+
+                const refundAmount1 = calculateAccountRefundAmount(
+                  contractConfig.goal,
+                  seedData.deposit1,
+                  seedData.deposit12,
+                );
+                expect(amount).eq(refundAmount1);
+
                 expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(1);
               });
 

@@ -77,7 +77,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.1";
+  string public constant VERSION = "1.2";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -95,7 +95,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   struct User {
     uint256 depositedAmount;
-    uint256 contributionAmount;
+    // uint256 contributionAmount;
     uint32 nonce;
   }
 
@@ -155,8 +155,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   }
 
   event Deposit(address indexed account, uint256 amount);
-  event WithdrawGoal(address indexed to, uint256 amount);
   event Refund(address account, uint256 amount);
+  event WithdrawGoal(address indexed to, uint256 amount);
 
   //Read methods-------------------------------------------
 
@@ -186,10 +186,11 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   function balanceOf(address account) external view returns (uint256) {
     User memory fund = _users[account];
-    if (fund.depositedAmount > fund.contributionAmount) {
-      return fund.depositedAmount - fund.contributionAmount;
-    }
-    return 0;
+    // if (fund.depositedAmount > fund.contributionAmount) {
+    //   return fund.depositedAmount - fund.contributionAmount;
+    // }
+    // return 0;
+    return fund.depositedAmount;
   }
 
   function getHash(string calldata value) private pure returns (bytes32) {
