@@ -4,7 +4,7 @@ import { toNumberDecimals } from '~common';
 import { callWithTimerHre, waitTx } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, signMessageForDeposit } from '~utils';
+import { getAddressesFromHre, getContext, signMessageForSQRpProRataDeposit } from '~utils';
 import { deployParams } from './deployData';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -23,24 +23,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From Postman
     const body = {
-      contractType: 'fcfs',
-      // "contractAddress": "0x57c11ef0f8fDbdc376444DE64a03d488BD3b09B8",
-      contractAddress: '0x5D27C778759e078BBe6D11A6cd802E41459Fe852',
+      contractAddress: '0x44fA6D9Ca99b6bECFc23166dA06fFf320Cb20A92',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
-      // "amount": 0.1234567890123456789
-      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+20',
-      amount: 0.002,
-      // "amount": 0.123456789
+      amount: 0.1234567890123456789,
+      // "amount": 0.001,
+      // "amount": 0.123456789,
+      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+22',
+      boost: false,
     };
 
     const response = {
       signature:
-        '0xa65a07780fea87006c42c7f602d08d8a7104fea9d716e2f2a327313ed150477f1f3aca0f2a36759f7320ae718b1f9e28d17dec17641605a1a07470e86a99c88c1c',
-      amountInWei: '200000',
-      nonce: 11,
-      timestampNow: 1716299709,
-      timestampLimit: 1716300129,
-      dateLimit: '2024-05-21T14:03:14.398Z',
+        '0x6de792047b8ae00abdf323c94762c5a9511a357b0c0ac155d08f7cb1fcc554d82135e164e94015d6febec5a274e6c9917774b8fbd9239f9253ffaa85ec8ec6651c',
+      amountInWei: '12345679',
+      nonce: 4,
+      timestampNow: 1717540859,
+      timestampLimit: 1717541159,
+      dateLimit: '2024-06-04T22:51:01.414Z',
     };
 
     //Checks
@@ -65,7 +64,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       // return;
     }
 
-    const signature = await signMessageForDeposit(
+    const signature = await signMessageForSQRpProRataDeposit(
       verifier,
       account,
       BigInt(response.amountInWei),

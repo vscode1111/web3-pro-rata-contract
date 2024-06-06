@@ -2,7 +2,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Signer } from 'ethers';
 import { signEncodedMessage, toUnixTime } from '~common';
 
-export async function signMessageForDeposit(
+export async function signMessageForSQRpProRataDeposit(
   signer: Signer,
   account: string,
   amount: bigint,

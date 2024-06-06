@@ -3,7 +3,11 @@ import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE } from '~common';
 import { waitTx } from '~common-contract';
 import { contractConfig, seedData, tokenConfig } from '~seeds';
-import { addSecondsToUnixTime, calculateAccountRefundAmount, signMessageForDeposit } from '~utils';
+import {
+  addSecondsToUnixTime,
+  calculateAccountRefundAmount,
+  signMessageForSQRpProRataDeposit,
+} from '~utils';
 import { customError } from './testData';
 import { DepositEventArgs, WithdrawGoalEventArgs } from './types';
 import {
@@ -59,7 +63,7 @@ export function shouldBehaveCorrectFunding(): void {
     });
 
     it('user1 tries to call depositSig too early', async function () {
-      const signature = await signMessageForDeposit(
+      const signature = await signMessageForSQRpProRataDeposit(
         this.owner2,
         this.user1Address,
         seedData.deposit1,
@@ -86,7 +90,7 @@ export function shouldBehaveCorrectFunding(): void {
 
       expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
 
-      const signature = await signMessageForDeposit(
+      const signature = await signMessageForSQRpProRataDeposit(
         this.owner2,
         this.user1Address,
         seedData.deposit1,
@@ -120,7 +124,7 @@ export function shouldBehaveCorrectFunding(): void {
       });
 
       it('user1 tries to call depositSig with zero amount', async function () {
-        const signature = await signMessageForDeposit(
+        const signature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user1Address,
           seedData.zero,
@@ -143,7 +147,7 @@ export function shouldBehaveCorrectFunding(): void {
       });
 
       it('user1 tries to call depositSig without allowance', async function () {
-        const signature = await signMessageForDeposit(
+        const signature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user1Address,
           seedData.deposit1,
@@ -168,7 +172,7 @@ export function shouldBehaveCorrectFunding(): void {
       it('user1 tries to call depositSig in timeout case 1m', async function () {
         await time.increaseTo(seedData.startDatePlus1m);
 
-        const signature = await signMessageForDeposit(
+        const signature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user1Address,
           seedData.deposit1,
@@ -191,7 +195,7 @@ export function shouldBehaveCorrectFunding(): void {
       });
 
       it('user1 tries to call depositSig with wrong signature', async function () {
-        const wrongSignature = await signMessageForDeposit(
+        const wrongSignature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user1Address,
           seedData.deposit1,
@@ -216,7 +220,7 @@ export function shouldBehaveCorrectFunding(): void {
       it('user1 tries to call depositSig with allowance but no funds', async function () {
         await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
 
-        const signature = await signMessageForDeposit(
+        const signature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user1Address,
           seedData.deposit1,
@@ -239,7 +243,7 @@ export function shouldBehaveCorrectFunding(): void {
       });
 
       it('user2 tries to call depositSig without allowance', async function () {
-        const signature = await signMessageForDeposit(
+        const signature = await signMessageForSQRpProRataDeposit(
           this.owner2,
           this.user2Address,
           seedData.deposit2,
@@ -282,7 +286,7 @@ export function shouldBehaveCorrectFunding(): void {
         it('user1 tries to call twice with the same time and signature', async function () {
           await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
 
-          const signature = await signMessageForDeposit(
+          const signature = await signMessageForSQRpProRataDeposit(
             this.owner2,
             this.user1Address,
             seedData.deposit1,
@@ -309,7 +313,7 @@ export function shouldBehaveCorrectFunding(): void {
         });
 
         it('user1 is allowed to deposit (check event)', async function () {
-          const signature = await signMessageForDeposit(
+          const signature = await signMessageForSQRpProRataDeposit(
             this.owner2,
             this.user1Address,
             seedData.deposit1,
@@ -341,7 +345,7 @@ export function shouldBehaveCorrectFunding(): void {
           beforeEach(async function () {
             const nonce = await this.user1SQRpProRata.getNonce(this.user1Address);
 
-            const signature = await signMessageForDeposit(
+            const signature = await signMessageForSQRpProRataDeposit(
               this.owner2,
               this.user1Address,
               seedData.deposit1,
@@ -395,7 +399,7 @@ export function shouldBehaveCorrectFunding(): void {
 
             const nonce = await this.user1SQRpProRata.getNonce(this.user1Address);
 
-            const signature = await signMessageForDeposit(
+            const signature = await signMessageForSQRpProRataDeposit(
               this.owner2,
               this.user1Address,
               seedData.deposit1,
@@ -447,7 +451,7 @@ export function shouldBehaveCorrectFunding(): void {
           it('user1 tries to call depositSig with the same transactionId', async function () {
             await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.extraDeposit1);
 
-            const signature = await signMessageForDeposit(
+            const signature = await signMessageForSQRpProRataDeposit(
               this.owner2,
               this.user1Address,
               seedData.deposit1,
@@ -473,7 +477,7 @@ export function shouldBehaveCorrectFunding(): void {
             beforeEach(async function () {
               const nonce = await this.user1SQRpProRata.getNonce(this.user2Address);
 
-              const signature = await signMessageForDeposit(
+              const signature = await signMessageForSQRpProRataDeposit(
                 this.owner2,
                 this.user2Address,
                 seedData.deposit2,

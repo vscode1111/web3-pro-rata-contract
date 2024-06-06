@@ -7,7 +7,7 @@ import {
   addSecondsToUnixTime,
   getSQRpProRataContext,
   getUsers,
-  signMessageForDeposit,
+  signMessageForSQRpProRataDeposit,
 } from '~utils';
 import { customError } from '.';
 import { loadSQRpProRataFixture } from './utils';
@@ -79,7 +79,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await this.owner2BaseToken.transfer(this.user1Address, seedData.userInitBalance);
       await this.user1BaseToken.approve(this.sqrpProRataAddress, seedData.deposit1);
 
-      const signature = await signMessageForDeposit(
+      const signature = await signMessageForSQRpProRataDeposit(
         this.user3,
         this.user1Address,
         seedData.deposit1,
