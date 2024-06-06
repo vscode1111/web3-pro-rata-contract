@@ -1,7 +1,7 @@
 import { TransactionRequest } from 'ethers';
 import { TokenDescription } from '~types';
 
-export const VERSION = '1.0';
+export const VERSION = '1.1';
 
 export const TX_OVERRIDES: TransactionRequest = {
   // gasPrice: 3_000_000_000,

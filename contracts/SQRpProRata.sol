@@ -77,7 +77,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.0";
+  string public constant VERSION = "1.1";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
