@@ -17,8 +17,6 @@ import {
   loadSQRpProRataFixture,
 } from './utils';
 
-//ToDo: add Refund event
-
 export function shouldBehaveCorrectFunding(): void {
   describe('funding', () => {
     beforeEach(async function () {
