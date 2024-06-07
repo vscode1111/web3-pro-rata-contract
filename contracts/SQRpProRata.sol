@@ -8,10 +8,16 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IDepositable} from "./IDepositable.sol";
 
 // import "hardhat/console.sol";
 
-contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
+contract SQRpProRata is
+  OwnableUpgradeable,
+  UUPSUpgradeable,
+  ReentrancyGuardUpgradeable,
+  IDepositable
+{
   using SafeERC20 for IERC20;
   using MessageHashUtils for bytes32;
   using ECDSA for bytes32;
@@ -77,7 +83,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.2";
+  string public constant VERSION = "1.4";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -117,7 +123,6 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   error UsedTransactionId();
   error UserMustAllowToUseFunds();
   error UserMustHaveFunds();
-  error InvalidNonce();
   error TooEarly();
   error TooLate();
   error GoalUnreached();
@@ -197,8 +202,20 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     return keccak256(abi.encodePacked(value));
   }
 
-  function getNonce(address account) public view returns (uint32) {
+  function getDepositNonce(address account) public view returns (uint32) {
     return _users[account].nonce;
+  }
+
+  function getUserAddress(uint32 index) public view returns (address) {
+    return _userAddresses[index];
+  }
+
+  function getDepositedAmount(address account) external view returns (uint256) {
+    return _users[account].depositedAmount;
+  }
+
+  function getTotalDeposited() external view returns (uint256) {
+    return totalDeposited;
   }
 
   function calculateRemainDeposit() external view returns (uint256) {
@@ -213,7 +230,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     return 0;
   }
 
-  function calculateOverfundAmount() public view returns (uint256) {
+  function calculateOverfundAmount() external view returns (uint256) {
     if (totalDeposited > goal) {
       return totalDeposited - goal;
     }
@@ -225,12 +242,10 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
       return 0;
     }
 
-    uint256 overfundAmount = calculateOverfundAmount();
-
     User memory user = _users[account];
 
-    if (overfundAmount > 0) {
-      return (overfundAmount * user.depositedAmount) / totalDeposited;
+    if (totalDeposited >= goal) {
+      return ((totalDeposited - goal) * user.depositedAmount) / totalDeposited;
     } else {
       return user.depositedAmount;
     }
@@ -242,15 +257,20 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     return _transactionIds[getHash(transactionId)];
   }
 
-  function getTransactionItem(
+  function _getTransactionItem(
     string calldata transactionId
   ) private view returns (bytes32, TransactionItem memory) {
     bytes32 transactionIdHash = getHash(transactionId);
     return (transactionIdHash, _transactionIds[transactionIdHash]);
   }
 
+  function getProcessedUserIndex() external view returns (uint32) {
+    return _processedUserIndex;
+  }
+
+  //Write methods-------------------------------------------
   function _setTransactionId(uint256 amount, string calldata transactionId) private {
-    (bytes32 transactionIdHash, TransactionItem memory transactionItem) = getTransactionItem(
+    (bytes32 transactionIdHash, TransactionItem memory transactionItem) = _getTransactionItem(
       transactionId
     );
     if (transactionItem.amount != 0) {
@@ -259,16 +279,9 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     _transactionIds[transactionIdHash] = TransactionItem(amount);
   }
 
-  function getProcessedUserIndex() external view returns (uint32) {
-    return _processedUserIndex;
-  }
-
-  //Write methods-------------------------------------------
-
   function _deposit(
     address account,
     uint256 amount,
-    uint32 nonce,
     string calldata transactionId,
     uint32 timestampLimit
   ) private nonReentrant amountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
@@ -283,10 +296,6 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     _setTransactionId(amount, transactionId);
 
     User storage user = _users[account];
-
-    if (user.nonce != nonce) {
-      revert InvalidNonce();
-    }
 
     if (user.nonce == 0) {
       _userAddresses.push(account);
@@ -325,7 +334,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
   ) external {
     address account = _msgSender();
 
-    uint32 nonce = getNonce(account);
+    uint32 nonce = getDepositNonce(account);
     if (
       !verifyDepositSignature(
         account,
@@ -339,7 +348,7 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     ) {
       revert InvalidSignature();
     }
-    _deposit(account, amount, nonce, transactionId, timestampLimit);
+    _deposit(account, amount, transactionId, timestampLimit);
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
@@ -353,8 +362,8 @@ contract SQRpProRata is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgr
     }
 
     uint32 endIndex = _processedUserIndex + _batchSize;
-    for (uint i = _processedUserIndex; i < endIndex; i++) {
-      address userAddress = _userAddresses[i];
+    for (uint32 i = _processedUserIndex; i < endIndex; i++) {
+      address userAddress = getUserAddress(i);
       uint256 accountRefundAmount = calculateAccountRefundAmount(userAddress);
       baseToken.safeTransfer(userAddress, accountRefundAmount);
       emit Refund(userAddress, accountRefundAmount);

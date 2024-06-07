@@ -23,23 +23,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From Postman
     const body = {
-      contractAddress: '0x44fA6D9Ca99b6bECFc23166dA06fFf320Cb20A92',
+      contractAddress: '0x3721B60822603fB7B13A180BC1E3eDd5330Df827',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
-      amount: 0.1234567890123456789,
-      // "amount": 0.001,
-      // "amount": 0.123456789,
-      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+22',
+      amount: 0.123456789,
+      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+24',
       boost: false,
     };
 
     const response = {
       signature:
-        '0x6de792047b8ae00abdf323c94762c5a9511a357b0c0ac155d08f7cb1fcc554d82135e164e94015d6febec5a274e6c9917774b8fbd9239f9253ffaa85ec8ec6651c',
+        '0x5366c436d92ce544a3e9eb83ef9144a59a1bbbfcf676a246b582474976e523d436fe5fde8f430aac2d895fe95bde173de7cdde920e96f96f14e852ceba4afbc21c',
       amountInWei: '12345679',
-      nonce: 4,
-      timestampNow: 1717540859,
-      timestampLimit: 1717541159,
-      dateLimit: '2024-06-04T22:51:01.414Z',
+      nonce: 1,
+      timestampNow: 1717760842,
+      timestampLimit: 1717761142,
+      dateLimit: '2024-06-07T11:57:25.672Z',
     };
 
     //Checks
@@ -57,7 +55,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       return;
     }
 
-    const nonce = await user1SQRpProRata.getNonce(body.account);
+    const nonce = await user1SQRpProRata.getDepositNonce(body.account);
     console.log(`User nonce: ${nonce}`);
     if (response.nonce !== Number(nonce)) {
       console.error(`Nonce is not correct`);

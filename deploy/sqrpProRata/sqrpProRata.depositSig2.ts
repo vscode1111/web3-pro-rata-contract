@@ -21,7 +21,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const currentAllowance = await user2BaseToken.allowance(user2Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
 
-    const nonce = await user2SQRpProRata.getNonce(user2Address);
+    const nonce = await user2SQRpProRata.getDepositNonce(user2Address);
 
     const params = {
       transactionId: seedData.depositTransactionId2,

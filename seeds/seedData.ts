@@ -47,7 +47,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 5, 7, 0, 0, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 5, 14, 0, 0, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -105,7 +105,7 @@ export function getTokenArgs(newOwner: string): DeployTokenArgs {
   ];
 }
 
-const userInitBalance = toWei(10_000, tokenDecimals) / priceDiv;
+const userInitBalance = toWei(100_000, tokenDecimals) / priceDiv;
 const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
 const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
 
