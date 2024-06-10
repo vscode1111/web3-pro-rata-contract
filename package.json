@@ -1,7 +1,7 @@
 {
   "name": "sqr-p-pro-rata-contract",
   "description": "Solidity smart contracts for SQRp Pro-rata functionality",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "scripts": {
     "clean": "shx rm -rf ./dist ./artifacts ./cache ./coverage ./typechain-types ./coverage.json && yarn typechain",
     "commit": "git-cz",
@@ -19,7 +19,8 @@
     "deploy:deposit-sig1": "hardhat deploy --tags SQRpProRata:deposit-sig1",
     "deploy:deposit-sig1-manual": "hardhat deploy --tags SQRpProRata:deposit-sig1-manual",
     "deploy:deposit-sig2": "hardhat deploy --tags SQRpProRata:deposit-sig2",
-    "deploy:force-withdraw": "hardhat deploy --tags SQRpProRata:force-withdraw",
+    "deploy:refund-all": "hardhat deploy --tags SQRpProRata:refund-all",
+    "deploy:withdraw-goal": "hardhat deploy --tags SQRpProRata:withdraw-goal",
     "deploy:change-balance-limit": "hardhat deploy --tags SQRpProRata:change-balance-limit",
     "deploy:publish-abi": "hardhat deploy --tags SQRpProRata:publish-abi",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",

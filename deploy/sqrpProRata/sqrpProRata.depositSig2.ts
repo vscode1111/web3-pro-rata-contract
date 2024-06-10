@@ -1,11 +1,17 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { toNumberDecimals } from '~common';
-import { callWithTimerHre, waitTx } from '~common-contract';
+import { callWithTimerHre, printDate, printToken, waitTx } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, signMessageForSQRpProRataDeposit } from '~utils';
+import {
+  getAddressesFromHre,
+  getContext,
+  getUsers,
+  signMessageForSQRpProRataDeposit,
+} from '~utils';
 import { deployData, deployParams } from './deployData';
+import { getTokenInfo } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
@@ -16,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const { user2Address, user2BaseToken, user2SQRpProRata, sqrpProRataFactory, verifier } =
       context;
 
-    const decimals = Number(await user2BaseToken.decimals());
+    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user2SQRpProRata);
 
     const currentAllowance = await user2BaseToken.allowance(user2Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
@@ -24,7 +30,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const nonce = await user2SQRpProRata.getDepositNonce(user2Address);
 
     const params = {
-      transactionId: seedData.depositTransactionId2,
+      transactionId: seedData.transactionId2,
       amount: deployData.deposit2,
       account: user2Address,
       nonce: Number(nonce),
@@ -50,7 +56,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       );
     }
 
-    console.table(params);
+    console.table({
+      ...params,
+      amount: printToken(params.amount, decimals, tokenName),
+      timestampLimit: printDate(params.timestampLimit),
+    });
 
     await waitTx(
       user2SQRpProRata.depositSig(

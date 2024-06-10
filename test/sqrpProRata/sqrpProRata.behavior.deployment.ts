@@ -85,14 +85,14 @@ export function shouldBehaveCorrectDeployment(): void {
         seedData.deposit1,
         false,
         seedData.depositNonce1_0,
-        seedData.depositTransactionId1,
+        seedData.transactionId1,
         seedData.startDatePlus1m,
       );
 
       await this.user1SQRpProRata.depositSig(
         seedData.deposit1,
         false,
-        seedData.depositTransactionId1,
+        seedData.transactionId1,
         seedData.startDatePlus1m,
         signature,
       );

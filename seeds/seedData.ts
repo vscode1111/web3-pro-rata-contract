@@ -15,10 +15,10 @@ const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
 const isSqr = ['test', 'main'].includes(deployType);
 // const isSqr = false;
 
-// const isProd = deployType === ('prod' as any);
-// if (isProd) {
-//   throw 'Are you sure? It is PROD!';
-// }
+const isProd = deployType === ('prod' as any);
+if (isProd) {
+  throw 'Are you sure? It is PROD!';
+}
 
 export const chainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
   bsc: isSqr ? getTokenDescription(Token.tSQR) : getTokenDescription(Token.USDT), //SQR/USDT
@@ -43,11 +43,11 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(15_000, tokenDecimals),
+    goal: toWei(1_000, tokenDecimals),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 5, 14, 0, 0, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 5, 10, 9, 58, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -109,12 +109,9 @@ const userInitBalance = toWei(100_000, tokenDecimals) / priceDiv;
 const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
 const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
 
-const depositTransactionId1 = uuidv4();
-const depositTransactionId1_2 = uuidv4();
-const depositTransactionId2 = uuidv4();
-const withdrawTransactionId1_0 = uuidv4();
-const withdrawTransactionId1_1 = uuidv4();
-const withdrawTransactionId2 = uuidv4();
+const transactionId1 = uuidv4();
+const transactionId1_2 = uuidv4();
+const transactionId2 = uuidv4();
 
 export const seedData = {
   zero: toWei(0),
@@ -122,7 +119,6 @@ export const seedData = {
   totalAccountBalance: tokenConfig.initMint,
   deposit1,
   deposit2: deposit1 / userDiv,
-  deposit3: deposit1 / userDiv / userDiv,
   deposit12: deposit1 + deposit1 / userDiv,
   extraDeposit1,
   extraDeposit2: extraDeposit1 / userDiv,
@@ -133,20 +129,13 @@ export const seedData = {
   startDatePlus1m: addSecondsToUnixTime(contractConfig.startDate, 1 * MINUTES),
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),
   timeShift: 10,
-  depositTransactionId1,
-  depositTransactionId1_2,
-  depositTransactionId2,
-  depositTransactionIdWrong: 'wrong',
-  withdrawTransactionId1_0,
-  withdrawTransactionId1_1,
-  withdrawTransactionId2,
+  batchSize: 1,
+  transactionId1,
+  transactionId1_2,
+  transactionId2,
+  transactionIdWrong: 'wrong',
   invalidNonce: 999,
   depositNonce1_0: 0,
   depositNonce1_1: 1,
   depositNonce2_0: 0,
-  depositNonce3_0: 0,
-  withdrawNonce1_0: 0,
-  withdrawNonce1_1: 1,
-  withdrawNonce2_0: 0,
-  withdrawNonce3_0: 0,
 };

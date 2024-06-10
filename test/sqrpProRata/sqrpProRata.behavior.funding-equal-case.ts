@@ -62,7 +62,7 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         userSQRpProRata: this.user1SQRpProRata,
         userAddress: this.user1Address,
         deposit: caseSettings.deposit1,
-        transactionId: seedData.depositTransactionId1,
+        transactionId: seedData.transactionId1,
         timestampLimit,
       });
 
@@ -71,7 +71,7 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         userSQRpProRata: this.user2SQRpProRata,
         userAddress: this.user2Address,
         deposit: caseSettings.deposit2,
-        transactionId: seedData.depositTransactionId2,
+        transactionId: seedData.transactionId2,
         timestampLimit,
       });
 

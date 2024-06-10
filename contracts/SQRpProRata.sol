@@ -83,7 +83,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.4";
+  string public constant VERSION = "1.5";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -365,8 +365,10 @@ contract SQRpProRata is
     for (uint32 i = _processedUserIndex; i < endIndex; i++) {
       address userAddress = getUserAddress(i);
       uint256 accountRefundAmount = calculateAccountRefundAmount(userAddress);
-      baseToken.safeTransfer(userAddress, accountRefundAmount);
-      emit Refund(userAddress, accountRefundAmount);
+      if (accountRefundAmount > 0) {
+        baseToken.safeTransfer(userAddress, accountRefundAmount);
+        emit Refund(userAddress, accountRefundAmount);
+      }
     }
     _processedUserIndex = endIndex;
   }

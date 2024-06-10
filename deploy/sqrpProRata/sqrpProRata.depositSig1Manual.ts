@@ -1,11 +1,17 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { toNumberDecimals } from '~common';
-import { callWithTimerHre, waitTx } from '~common-contract';
+import { callWithTimerHre, printDate, printToken, waitTx } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, signMessageForSQRpProRataDeposit } from '~utils';
+import {
+  getAddressesFromHre,
+  getContext,
+  getUsers,
+  signMessageForSQRpProRataDeposit,
+} from '~utils';
 import { deployParams } from './deployData';
+import { getTokenInfo } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
@@ -16,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const { verifier, user1Address, user2BaseToken, user1SQRpProRata, sqrpProRataFactory } =
       context;
 
-    const decimals = Number(await user2BaseToken.decimals());
+    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user1SQRpProRata);
 
     const currentAllowance = await user2BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
@@ -96,9 +102,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       );
     }
 
-    console.table(params);
-
-    // return;
+    console.table({
+      ...params,
+      amount: printToken(params.amount, decimals, tokenName),
+      timestampLimit: printDate(params.timestampLimit),
+    });
 
     await waitTx(
       user1SQRpProRata.depositSig(
