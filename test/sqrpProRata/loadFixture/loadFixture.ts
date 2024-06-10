@@ -1,10 +1,10 @@
 import { SnapshotRestorer, takeSnapshot } from '@nomicfoundation/hardhat-network-helpers';
+import { isEqual } from '~common';
 import {
   FixtureAnonymousFunctionError,
   FixtureSnapshotError,
   InvalidSnapshotError,
 } from './fixtureErrors';
-import { isEqual } from './isEqual';
 
 // from '@nomicfoundation/hardhat-network-helpers/src/errors';
 

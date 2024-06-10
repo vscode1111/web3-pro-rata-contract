@@ -45,3 +45,11 @@ export function isExists(value: string) {
 export function isEmpty(value: string) {
   return !value;
 }
+
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
+export function isEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
