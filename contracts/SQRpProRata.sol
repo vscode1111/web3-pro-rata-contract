@@ -83,7 +83,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.5";
+  string public constant VERSION = "1.6";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -160,7 +160,7 @@ contract SQRpProRata is
   }
 
   event Deposit(address indexed account, uint256 amount);
-  event Refund(address account, uint256 amount);
+  event Refund(address indexed account, uint256 amount);
   event WithdrawGoal(address indexed to, uint256 amount);
 
   //Read methods-------------------------------------------

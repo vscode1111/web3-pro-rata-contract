@@ -43,11 +43,11 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(1_000, tokenDecimals),
+    goal: toWei(10_000, tokenDecimals),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 5, 10, 9, 58, 0)),
+    closeDate: toUnixTimeUtc(new Date(2025, 5, 10, 20, 38, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
