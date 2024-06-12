@@ -25,7 +25,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       goal: printToken(await ownerSQRpProRata.goal(), decimals, tokenName),
       startDate: printDate(await ownerSQRpProRata.startDate()),
       closeDate: printDate(await ownerSQRpProRata.closeDate()),
-      balance: printToken(await ownerSQRpProRata.getBalance(), decimals, tokenName),
+      baseBalance: printToken(await ownerSQRpProRata.getBaseBalance(), decimals, tokenName),
     };
 
     console.table(result);

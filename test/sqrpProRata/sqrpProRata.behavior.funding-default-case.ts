@@ -372,6 +372,8 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               seedData.zero,
             );
             expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(seedData.deposit1);
+
+            expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
           });
 
           it('user1 deposited again', async function () {
@@ -416,6 +418,21 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               ).eq(seedData.zero);
 
               expect(await this.owner2SQRpProRata.isReady()).eq(false);
+            });
+
+            it('owner2 tries to withdraw unreached goal when someone accidentally sent tokens', async function () {
+              expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
+
+              await this.owner2BaseToken.transfer(this.sqrpProRataAddress, seedData.accidentAmount);
+
+              expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(
+                seedData.accidentAmount,
+              );
+
+              await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+                this.owner2SQRpProRata,
+                customError.goalUnreached,
+              );
             });
 
             it('owner2 tries to withdraw unreached goal', async function () {
@@ -499,6 +516,8 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 seedData.deposit2,
               );
               expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(seedData.deposit12);
+
+              expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
             });
 
             it('owner2 tries to refund tokens for first user to early', async function () {
@@ -578,6 +597,28 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 );
               });
 
+              it('user1 tries to refund tokens for first user', async function () {
+                expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
+                await this.owner2BaseToken.transfer(
+                  this.sqrpProRataAddress,
+                  seedData.accidentAmount,
+                );
+                expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(
+                  seedData.accidentAmount,
+                );
+                await this.owner2SQRpProRata.refundAll();
+
+                expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(
+                  seedData.accidentAmount,
+                );
+
+                await this.owner2SQRpProRata.withdrawGoal();
+
+                expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(
+                  seedData.accidentAmount,
+                );
+              });
+
               describe('owner2 refunded tokens for all user', () => {
                 beforeEach(async function () {
                   await this.owner2SQRpProRata.refundAll();
@@ -618,6 +659,12 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                     seedData.deposit2,
                   );
                   expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(seedData.deposit12);
+
+                  expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
+
+                  expect(await this.owner2SQRpProRata.totalRefunded()).eq(
+                    refundAmount1 + refundAmount2,
+                  );
                 });
 
                 it('owner2 tries to call withdrawGoal again', async function () {
@@ -657,6 +704,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                       seedData.deposit2,
                     );
                     expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(seedData.deposit12);
+                    expect(await this.ownerSQRpProRata.totalWithdrew()).eq(contractConfig.goal);
                   });
                 });
               });

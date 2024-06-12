@@ -10,8 +10,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IDepositable} from "./IDepositable.sol";
 
-// import "hardhat/console.sol";
-
 contract SQRpProRata is
   OwnableUpgradeable,
   UUPSUpgradeable,
@@ -83,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.6";
+  string public constant VERSION = "1.7";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -92,6 +90,7 @@ contract SQRpProRata is
   uint32 public startDate;
   uint32 public closeDate;
   uint256 public totalDeposited;
+  uint256 public totalRefunded;
   uint256 public totalWithdrew;
 
   mapping(address => User) private _users;
@@ -185,7 +184,7 @@ contract SQRpProRata is
     return _users[account];
   }
 
-  function getBalance() public view returns (uint256) {
+  function getBaseBalance() public view returns (uint256) {
     return baseToken.balanceOf(address(this));
   }
 
@@ -227,6 +226,15 @@ contract SQRpProRata is
       return goal - totalDeposited;
     }
 
+    return 0;
+  }
+
+  function calculateAccidentAmount() external view returns (uint256) {
+    uint256 baseBalance = getBaseBalance();
+    uint256 totalOutput = totalRefunded + totalWithdrew;
+    if (totalDeposited > totalOutput && baseBalance > totalDeposited - totalOutput) {
+      return baseBalance - totalDeposited + totalOutput;
+    }
     return 0;
   }
 
@@ -367,6 +375,7 @@ contract SQRpProRata is
       uint256 accountRefundAmount = calculateAccountRefundAmount(userAddress);
       if (accountRefundAmount > 0) {
         baseToken.safeTransfer(userAddress, accountRefundAmount);
+        totalRefunded += accountRefundAmount;
         emit Refund(userAddress, accountRefundAmount);
       }
     }
@@ -378,12 +387,13 @@ contract SQRpProRata is
   }
 
   function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {
-    if (getBalance() < goal) {
+    if (totalDeposited < goal) {
       revert GoalUnreached();
     }
 
     address to = owner();
     baseToken.safeTransfer(to, goal);
+    totalWithdrew += goal;
     emit WithdrawGoal(to, goal);
   }
 }

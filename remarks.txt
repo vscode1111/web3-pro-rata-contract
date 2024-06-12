@@ -8,3 +8,5 @@ https://github.com/ContractLabs/payment-gateway/blob/main/contracts/PaymentGatew
 
 require(acceptedTokens[_token], "Token not supported");
 https://bscscan.com/address/0xbae4a73f353581a524a5bbe3ef54736e3ad6d4ea#code
+
+// import "hardhat/console.sol";

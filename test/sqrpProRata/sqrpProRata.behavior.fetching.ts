@@ -28,8 +28,9 @@ export function shouldBehaveCorrectFetching(): void {
 
     it('should be correct balances', async function () {
       expect(await getBaseTokenBalance(this, this.owner2Address)).eq(seedData.totalAccountBalance);
-      expect(await this.ownerSQRpProRata.getBalance()).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.getBaseBalance()).eq(seedData.zero);
       expect(await this.ownerSQRpProRata.totalDeposited()).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.totalRefunded()).eq(seedData.zero);
       expect(await this.ownerSQRpProRata.totalWithdrew()).eq(seedData.zero);
     });
   });

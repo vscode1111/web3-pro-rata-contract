@@ -108,6 +108,7 @@ export function getTokenArgs(newOwner: string): DeployTokenArgs {
 const userInitBalance = toWei(100_000, tokenDecimals) / priceDiv;
 const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
 const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
+const accidentAmount = toWei(20_500, tokenDecimals) / priceDiv;
 
 const transactionId1 = uuidv4();
 const transactionId1_2 = uuidv4();
@@ -123,6 +124,7 @@ export const seedData = {
   extraDeposit1,
   extraDeposit2: extraDeposit1 / userDiv,
   extraDeposit3: extraDeposit1 / userDiv / userDiv,
+  accidentAmount,
   allowance: toWei(1000000, tokenDecimals),
   balanceDelta: toWei(0.000001, tokenDecimals),
   nowPlus1m: toUnixTime(now.add(1, 'minute').toDate()),
