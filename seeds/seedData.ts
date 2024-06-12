@@ -10,15 +10,15 @@ import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from
 
 type DeployType = 'test' | 'main' | 'stage' | 'prod';
 
-const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
+const deployType: DeployType = (process.env.ENV as DeployType) ?? 'prod';
 
 const isSqr = ['test', 'main'].includes(deployType);
 // const isSqr = false;
 
-const isProd = deployType === ('prod' as any);
-if (isProd) {
-  throw 'Are you sure? It is PROD!';
-}
+// const isProd = deployType === ('prod' as any);
+// if (isProd) {
+//   throw 'Are you sure? It is PROD!';
+// }
 
 export const chainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
   bsc: isSqr ? getTokenDescription(Token.tSQR) : getTokenDescription(Token.USDT), //SQR/USDT
@@ -61,11 +61,11 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   prod: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(15, tokenDecimals),
-    // startDate: 0,
-    startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
+    goal: toWei(10, tokenDecimals),
+    startDate: 0,
+    // startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 4, 27, 20, 0, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 6, 30, 0, 0, 0)),
   },
 };
 

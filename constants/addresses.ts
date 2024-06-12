@@ -18,12 +18,16 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0xD9cb29a4eF5A08aA16ac1A497C061Dc54606D5b8', //Test - pro-rata
     // bsc: '0x070403460c1ff7cdaE96BB77F418217A524357C9', //Test - pro-rata
     // bsc: '0x6804b473f6a33Ac364FBD070548f69e32DC22bFA', //Test - pro-rata
-    bsc: '0x4ca2E22bA9aFdB1f1373f6Fde8CacA4324B2E04E', //Test - pro-rata-sqrp-gated
+    // bsc: '0x4ca2E22bA9aFdB1f1373f6Fde8CacA4324B2E04E', //Test - pro-rata-sqrp-gated
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '0x5D27C778759e078BBe6D11A6cd802E41459Fe852', //Main - goal: 15 USDT
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '0x6fae03D2FbBAf8821DC3248ca61cA239f60A9Bac', //Stage
+    //12.06.2024
+    // bsc: '0x58563F605b83958B59de5346f4e08C41b8766837', //Stage - pro-rata | Goal: 1 USDT
+    // bsc: '0x2e0A4AE70163C0d7f15Da7d958268b4469ea44eb', //Stage - pro-rata-sqrp-gated | Goal: 1 USDT
     //-------------------------------------------------------------------------------------------------------------
-    // bsc: '0x57c11ef0f8fDbdc376444DE64a03d488BD3b09B8', //Prod
+    // bsc: '0xA43dcaA26C8BcCA939754408C6Cf7Fad6c071c57', //Prod - pro-rata | Goal: 12 USDT | Close: 07/30
+    bsc: '0x69DaB3a3Fde951c8FAe14587C12a8eaE10d361Ba', //Prod - pro-rata-sqrp-gated | Goal: 12 USDT | Close: 07/30
   },
 };
