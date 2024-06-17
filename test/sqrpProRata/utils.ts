@@ -87,7 +87,7 @@ export async function contractZeroCheck(context: Context) {
   expect(await context.owner2SQRpProRata.calculateAccountRefundAmount(context.user2Address)).eq(
     seedData.zero,
   );
-  expect(await context.owner2SQRpProRata.getProcessedUserIndex()).eq(0);
+  expect(await context.owner2SQRpProRata.getProcessedAccountIndex()).eq(0);
 
   expect(await context.ownerSQRpProRata.getAccountDepositAmount(context.user1Address)).eq(
     seedData.zero,

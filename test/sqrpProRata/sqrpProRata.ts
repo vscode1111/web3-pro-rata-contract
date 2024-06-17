@@ -4,6 +4,7 @@ import { shouldBehaveCorrectDeployment } from './sqrpProRata.behavior.deployment
 import { shouldBehaveCorrectFetching } from './sqrpProRata.behavior.fetching';
 import { shouldBehaveCorrectFundingDefaultCase } from './sqrpProRata.behavior.funding-default-case';
 import { shouldBehaveCorrectFundingEqualCase } from './sqrpProRata.behavior.funding-equal-case';
+import { shouldBehaveCorrectFundingLessCase } from './sqrpProRata.behavior.funding-less-case';
 
 describe(SQR_P_PRO_RATA_NAME, function () {
   before(async function () {
@@ -14,4 +15,5 @@ describe(SQR_P_PRO_RATA_NAME, function () {
   shouldBehaveCorrectFetching();
   shouldBehaveCorrectFundingDefaultCase();
   shouldBehaveCorrectFundingEqualCase();
+  shouldBehaveCorrectFundingLessCase();
 });

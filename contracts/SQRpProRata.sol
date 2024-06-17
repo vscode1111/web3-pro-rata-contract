@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.9";
+  string public constant VERSION = "1.10";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -93,12 +93,12 @@ contract SQRpProRata is
   uint256 public totalRefunded;
   uint256 public totalWithdrew;
 
-  mapping(address => Account) private _accounts;
+  mapping(address => AccountItem) private _accountItems;
   mapping(bytes32 => TransactionItem) private _transactionIds;
   address[] private _accountAddresses;
-  uint32 private _processedUserIndex;
+  uint32 private _processedAccountIndex;
 
-  struct Account {
+  struct AccountItem {
     uint256 deposited;
     uint256 refunded;
     uint32 nonce;
@@ -132,7 +132,7 @@ contract SQRpProRata is
   error UserMustHaveFunds();
   error TooEarly();
   error TooLate();
-  error GoalUnreached();
+  error UnreachedGoal();
   error AllUsersProcessed();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
@@ -184,20 +184,24 @@ contract SQRpProRata is
     return !isBeforeStartDate() && !isAfterCloseDate();
   }
 
+  function isReachedGoal() public view returns (bool) {
+    return totalDeposited >= goal;
+  }
+
   function getAccountCount() public view returns (uint32) {
     return (uint32)(_accountAddresses.length);
   }
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
-    Account memory user = _accounts[account];
+    AccountItem memory accountItem = _accountItems[account];
     uint256 refundAmount = calculateAccountRefundAmount(account);
     return
       AccountInfo(
-        user.deposited,
-        user.deposited - refundAmount,
-        user.refunded,
+        accountItem.deposited,
+        accountItem.deposited - refundAmount,
+        accountItem.refunded,
         refundAmount,
-        user.nonce
+        accountItem.nonce
       );
   }
 
@@ -206,7 +210,7 @@ contract SQRpProRata is
   }
 
   function balanceOf(address account) external view returns (uint256) {
-    return _accounts[account].deposited;
+    return _accountItems[account].deposited;
   }
 
   function getHash(string calldata value) private pure returns (bytes32) {
@@ -214,7 +218,7 @@ contract SQRpProRata is
   }
 
   function getAccountDepositNonce(address account) public view returns (uint32) {
-    return _accounts[account].nonce;
+    return _accountItems[account].nonce;
   }
 
   function getAccountByIndex(uint32 index) public view returns (address) {
@@ -222,11 +226,15 @@ contract SQRpProRata is
   }
 
   function getAccountDepositAmount(address account) external view returns (uint256) {
-    return _accounts[account].deposited - calculateAccountRefundAmount(account);
+    if (!isAfterCloseDate() || !isReachedGoal()) {
+      return 0;
+    }
+
+    return _accountItems[account].deposited - calculateAccountRefundAmount(account);
   }
 
   function getTotalDeposited() external view returns (uint256) {
-    if (totalDeposited >= goal) {
+    if (isReachedGoal()) {
       return goal;
     }
 
@@ -250,7 +258,7 @@ contract SQRpProRata is
   }
 
   function calculateOverfundAmount() external view returns (uint256) {
-    if (totalDeposited > goal) {
+    if (isReachedGoal()) {
       return totalDeposited - goal;
     }
     return 0;
@@ -261,12 +269,12 @@ contract SQRpProRata is
       return 0;
     }
 
-    Account memory user = _accounts[account];
+    AccountItem memory accountItem = _accountItems[account];
 
     if (totalDeposited >= goal) {
-      return ((totalDeposited - goal) * user.deposited) / totalDeposited;
+      return ((totalDeposited - goal) * accountItem.deposited) / totalDeposited;
     } else {
-      return user.deposited;
+      return accountItem.deposited;
     }
   }
 
@@ -283,12 +291,12 @@ contract SQRpProRata is
     return (transactionIdHash, _transactionIds[transactionIdHash]);
   }
 
-  function getProcessedUserIndex() external view returns (uint32) {
-    return _processedUserIndex;
+  function getProcessedAccountIndex() external view returns (uint32) {
+    return _processedAccountIndex;
   }
 
   //Write methods-------------------------------------------
-  function _setTransactionId(uint256 amount, string calldata transactionId) private {
+  function _setTransactionId(string calldata transactionId, uint256 amount) private {
     (bytes32 transactionIdHash, TransactionItem memory transactionItem) = _getTransactionItem(
       transactionId
     );
@@ -312,16 +320,16 @@ contract SQRpProRata is
       revert UserMustHaveFunds();
     }
 
-    _setTransactionId(amount, transactionId);
+    _setTransactionId(transactionId, amount);
 
-    Account storage user = _accounts[account];
+    AccountItem storage accountItem = _accountItems[account];
 
-    if (user.nonce == 0) {
+    if (accountItem.nonce == 0) {
       _accountAddresses.push(account);
     }
 
-    user.deposited += amount;
-    user.nonce += 1;
+    accountItem.deposited += amount;
+    accountItem.nonce += 1;
     totalDeposited += amount;
 
     baseToken.safeTransferFrom(account, address(this), amount);
@@ -372,27 +380,27 @@ contract SQRpProRata is
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
     uint32 accountCount = getAccountCount();
-    if (_batchSize > accountCount - _processedUserIndex) {
-      _batchSize = accountCount - _processedUserIndex;
+    if (_batchSize > accountCount - _processedAccountIndex) {
+      _batchSize = accountCount - _processedAccountIndex;
     }
 
     if (_batchSize == 0) {
       revert AllUsersProcessed();
     }
 
-    uint32 endIndex = _processedUserIndex + _batchSize;
-    for (uint32 i = _processedUserIndex; i < endIndex; i++) {
+    uint32 endIndex = _processedAccountIndex + _batchSize;
+    for (uint32 i = _processedAccountIndex; i < endIndex; i++) {
       address account = getAccountByIndex(i);
       uint256 refundAmount = calculateAccountRefundAmount(account);
       if (refundAmount > 0) {
-        Account storage user = _accounts[account];
-        user.refunded = refundAmount;
+        AccountItem storage accountItem = _accountItems[account];
+        accountItem.refunded = refundAmount;
         baseToken.safeTransfer(account, refundAmount);
         totalRefunded += refundAmount;
         emit Refund(account, refundAmount);
       }
     }
-    _processedUserIndex = endIndex;
+    _processedAccountIndex = endIndex;
   }
 
   function refundAll() external {
@@ -400,8 +408,8 @@ contract SQRpProRata is
   }
 
   function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {
-    if (totalDeposited < goal) {
-      revert GoalUnreached();
+    if (!isReachedGoal()) {
+      revert UnreachedGoal();
     }
 
     address to = owner();

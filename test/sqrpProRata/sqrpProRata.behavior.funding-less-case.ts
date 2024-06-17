@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime, toWei } from '~common';
 import { ContractConfig, contractConfig, now, seedData, tokenConfig, tokenDecimals } from '~seeds';
 import { addSecondsToUnixTime } from '~utils';
+import { customError } from './testData';
 import {
   checkTotalSQRBalance,
   contractZeroCheck,
@@ -15,17 +16,17 @@ import {
 const caseContractConfig: ContractConfig = {
   ...contractConfig,
   goal: toWei(15_000, tokenDecimals),
-  startDate: toUnixTime(now.add(10, 'days').toDate()),
-  closeDate: toUnixTime(now.add(12, 'days').toDate()),
+  startDate: toUnixTime(now.add(20, 'days').toDate()),
+  closeDate: toUnixTime(now.add(22, 'days').toDate()),
 };
 
 const caseSettings = {
-  deposit1: toWei(8_000, tokenDecimals),
+  deposit1: toWei(6_000, tokenDecimals),
   deposit2: toWei(7_000, tokenDecimals),
 };
 
-export function shouldBehaveCorrectFundingEqualCase(): void {
-  describe('funding: equal case', () => {
+export function shouldBehaveCorrectFundingLessCase(): void {
+  describe('funding: less case', () => {
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, caseContractConfig);
       await checkTotalSQRBalance(this);
@@ -80,41 +81,48 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         seedData.balanceDelta,
       );
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
+      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
 
       const closeDate = addSecondsToUnixTime(caseContractConfig.closeDate, seedData.timeShift);
       await time.increaseTo(closeDate);
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
+      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
+
+      expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
+        seedData.zero,
+      );
+      expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
+        seedData.zero,
+      );
 
       await this.owner2SQRpProRata.refundAll();
 
       expect(await getBaseTokenBalance(this, this.user1Address)).closeTo(
-        seedData.userInitBalance - caseSettings.deposit1,
+        seedData.userInitBalance,
         seedData.balanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.user2Address)).closeTo(
-        seedData.userInitBalance - caseSettings.deposit2,
+        seedData.userInitBalance,
         seedData.balanceDelta,
       );
-      expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
-        caseContractConfig.goal,
-        seedData.balanceDelta,
-      );
+      expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).eq(seedData.zero);
 
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
         tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
         seedData.balanceDelta,
       );
 
-      await this.owner2SQRpProRata.withdrawGoal();
+      await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.unreachedGoal,
+      );
 
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         seedData.zero,
         seedData.balanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
-        tokenConfig.initMint - BigInt(2) * seedData.userInitBalance + caseContractConfig.goal,
+        tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
         seedData.balanceDelta,
       );
     });

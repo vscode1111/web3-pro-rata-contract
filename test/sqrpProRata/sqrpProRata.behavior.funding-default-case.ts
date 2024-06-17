@@ -371,7 +371,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             );
 
             expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
-              seedData.deposit1,
+              seedData.zero,
             );
             expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
               seedData.zero,
@@ -379,6 +379,8 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(seedData.zero);
 
             expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
+
+            expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
           });
 
           it('user1 deposited again', async function () {
@@ -399,12 +401,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             expect(await this.owner2SQRpProRata.totalDeposited()).eq(user1Deposit);
 
             expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
-              user1Deposit,
+              seedData.zero,
             );
             expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
               seedData.zero,
             );
             expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(contractConfig.goal);
+
+            expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
           });
 
           describe(`set time after close date when goal wasn't reached`, () => {
@@ -436,14 +440,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
               await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
                 this.owner2SQRpProRata,
-                customError.goalUnreached,
+                customError.unreachedGoal,
               );
             });
 
             it('owner2 tries to withdraw unreached goal', async function () {
               await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
                 this.owner2SQRpProRata,
-                customError.goalUnreached,
+                customError.unreachedGoal,
               );
             });
           });
@@ -520,14 +524,16 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
 
               expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
-                seedData.deposit1,
+                seedData.zero,
               );
               expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
-                seedData.deposit2,
+                seedData.zero,
               );
               expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(contractConfig.goal);
 
               expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
+
+              expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
             });
 
             it('owner2 tries to refund tokens for first user to early', async function () {
@@ -629,7 +635,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 );
                 expect(amount).eq(refundAmount1);
 
-                expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(1);
+                expect(await this.owner2SQRpProRata.getProcessedAccountIndex()).eq(1);
               });
 
               it('user1 tries to refund tokens for first user', async function () {
@@ -669,7 +675,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 });
 
                 it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-                  expect(await this.owner2SQRpProRata.getProcessedUserIndex()).eq(2);
+                  expect(await this.owner2SQRpProRata.getProcessedAccountIndex()).eq(2);
 
                   expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
                     contractConfig.goal,

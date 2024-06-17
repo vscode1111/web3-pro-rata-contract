@@ -17,6 +17,6 @@ export const customError = {
   invalidNonce: 'InvalidNonce',
   tooEarly: 'TooEarly',
   tooLate: 'TooLate',
-  goalUnreached: 'GoalUnreached',
+  unreachedGoal: 'UnreachedGoal',
   allUsersProcessed: 'AllUsersProcessed',
 };
