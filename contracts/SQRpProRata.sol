@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.8";
+  string public constant VERSION = "1.9";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -190,13 +190,13 @@ contract SQRpProRata is
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
     Account memory user = _accounts[account];
-    uint256 accountRefundAmount = calculateAccountRefundAmount(account);
+    uint256 refundAmount = calculateAccountRefundAmount(account);
     return
       AccountInfo(
         user.deposited,
-        user.deposited - accountRefundAmount,
+        user.deposited - refundAmount,
         user.refunded,
-        accountRefundAmount,
+        refundAmount,
         user.nonce
       );
   }
