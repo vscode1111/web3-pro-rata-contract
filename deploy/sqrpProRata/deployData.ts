@@ -4,14 +4,14 @@ import { tokenDecimals } from '~seeds';
 export const verifyRequired = false;
 export const verifyArgsRequired = false;
 
-const isTiny = true;
+const isTiny = false;
 
 export const deployData = {
   now: toUnixTime(),
   nullAddress: '0x0000000000000000000000000000000000000000',
   userMintAmount: 100000,
-  deposit1: isTiny ? toWei(0.001, tokenDecimals) : toWei(700, tokenDecimals),
-  deposit2: isTiny ? toWei(0.002, tokenDecimals) : toWei(400, tokenDecimals),
+  deposit1: isTiny ? toWei(0.001, tokenDecimals) : toWei(7_000, tokenDecimals),
+  deposit2: isTiny ? toWei(0.002, tokenDecimals) : toWei(4_000, tokenDecimals),
 };
 
 export const deployParams = {

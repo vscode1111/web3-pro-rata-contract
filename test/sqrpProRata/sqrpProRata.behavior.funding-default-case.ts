@@ -344,16 +344,17 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             );
             expect(await this.owner2SQRpProRata.balanceOf(this.user1Address)).eq(seedData.deposit1);
             expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
+
             expect(await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address)).eq(
-              seedData.zero,
+              seedData.deposit1,
             );
 
             const { deposited, depositAmount, refunded, refundAmount, nonce } =
               await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
             expect(deposited).eq(seedData.deposit1);
-            expect(depositAmount).eq(seedData.deposit1);
+            expect(depositAmount).eq(seedData.zero);
             expect(refunded).eq(seedData.zero);
-            expect(refundAmount).eq(seedData.zero);
+            expect(refundAmount).eq(seedData.deposit1);
             expect(nonce).eq(1);
 
             expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.deposit1);
@@ -499,16 +500,23 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(
                 seedData.deposit1 + seedData.deposit2 - contractConfig.goal,
               );
+
+              const refundAmount1 = calculateAccountRefundAmount(
+                contractConfig.goal,
+                seedData.deposit1,
+                seedData.deposit12,
+              );
+
               expect(
                 await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
-              ).eq(seedData.zero);
+              ).eq(refundAmount1);
 
               const { deposited, depositAmount, refunded, refundAmount, nonce } =
                 await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
               expect(deposited).eq(seedData.deposit1);
-              expect(depositAmount).eq(seedData.deposit1);
+              expect(depositAmount).eq(seedData.deposit1 - refundAmount1);
               expect(refunded).eq(seedData.zero);
-              expect(refundAmount).eq(seedData.zero);
+              expect(refundAmount).eq(refundAmount1);
               expect(nonce).eq(1);
 
               expect(await this.owner2SQRpProRata.totalDeposited()).eq(seedData.deposit12);

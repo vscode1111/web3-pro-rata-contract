@@ -29,3 +29,38 @@ export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
     tokenName: await ownerBaseToken.name(),
   };
 }
+
+interface FormattedAccountInfo {
+  deposited: string;
+  depositAmount: string;
+  refunded: string;
+  refundAmount: string;
+  nonce: number;
+}
+
+export function formatAccountInfo(
+  accountInfo: SQRpProRata.AccountInfoStruct,
+  decimals: number,
+  tokenName?: string,
+): FormattedAccountInfo {
+  const { deposited, depositAmount, refunded, refundAmount, nonce } = accountInfo;
+
+  return {
+    deposited: printToken(deposited, decimals, tokenName),
+    depositAmount: printToken(depositAmount, decimals, tokenName),
+    refunded: printToken(refunded, decimals, tokenName),
+    refundAmount: printToken(refundAmount, decimals, tokenName),
+    nonce: Number(nonce),
+  };
+}
+
+export async function printAccountInfo(
+  ownerSQRpProRata: SQRpProRata,
+  account: string,
+  decimals: number,
+  tokenName?: string,
+) {
+  const accountInfo = await ownerSQRpProRata.fetchAccountInfo(account);
+  console.log(`User: ${account}`);
+  console.log(formatAccountInfo(accountInfo, decimals, tokenName));
+}

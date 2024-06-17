@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.10";
+  string public constant VERSION = "1.11";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -265,13 +265,9 @@ contract SQRpProRata is
   }
 
   function calculateAccountRefundAmount(address account) public view returns (uint256) {
-    if (!isAfterCloseDate()) {
-      return 0;
-    }
-
     AccountItem memory accountItem = _accountItems[account];
 
-    if (totalDeposited >= goal) {
+    if (isReachedGoal()) {
       return ((totalDeposited - goal) * accountItem.deposited) / totalDeposited;
     } else {
       return accountItem.deposited;

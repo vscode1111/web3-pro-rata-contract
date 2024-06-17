@@ -3,10 +3,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { callWithTimerHre, printDate, printToken } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME } from '~constants';
 import { getAddressesFromHre, getBaseTokenContext, getSQRpProRataContext, getUsers } from '~utils';
+import { printAccountInfo } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
-    const { sqrpProRataAddress } = await getAddressesFromHre(hre);
+    const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is fetching...`);
     const users = await getUsers();
     const { ownerSQRpProRata } = await getSQRpProRataContext(users, sqrpProRataAddress);
@@ -30,10 +31,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table(result);
 
-    const accountInfo = await ownerSQRpProRata.fetchAccountInfo(users.user1Address);
-    console.log(accountInfo);
-    const accountDepositNonce = await ownerSQRpProRata.getAccountDepositNonce(users.user1Address);
-    console.log(accountDepositNonce);
+    await printAccountInfo(ownerSQRpProRata, users.user1Address, decimals, tokenName);
+    await printAccountInfo(ownerSQRpProRata, users.user2Address, decimals, tokenName);
   }, hre);
 };
 
