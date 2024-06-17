@@ -4,12 +4,7 @@ import { toNumberDecimals } from '~common';
 import { callWithTimerHre, printDate, printToken, waitTx } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import {
-  getAddressesFromHre,
-  getContext,
-  getUsers,
-  signMessageForSQRpProRataDeposit,
-} from '~utils';
+import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
 import { deployData, deployParams } from './deployData';
 import { getTokenInfo } from './utils';
 
@@ -27,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} token was allowed`);
 
-    const nonce = await user1SQRpProRata.getDepositNonce(user1Address);
+    const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);
     const params = {
       account: user1Address,
       amount: deployData.deposit1,
@@ -37,7 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       signature: '',
     };
 
-    params.signature = await signMessageForSQRpProRataDeposit(
+    params.signature = await signMessageForProRataDeposit(
       verifier,
       params.account,
       params.amount,

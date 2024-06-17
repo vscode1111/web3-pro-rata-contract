@@ -6,19 +6,19 @@ pragma solidity >=0.8.19;
  */
 interface IDepositable {
   /**
-   * @dev Returns the value of user count.
+   * @dev Returns the value of account count.
    */
-  function getUserCount() external view returns (uint32);
+  function getAccountCount() external view returns (uint32);
 
   /**
-   * @dev Returns the value of user count.
+   * @dev Returns the account by index.
    */
-  function getUserAddress(uint32 index) external view returns (address);
+  function getAccountByIndex(uint32 index) external view returns (address);
 
   /**
-   * @dev Returns the user's deposited amount.
+   * @dev Returns the account's deposited amount.
    */
-  function getDepositedAmount(address account) external view returns (uint256);
+  function getAccountDepositAmount(address account) external view returns (uint256);
 
   /**
    * @dev Returns the total deposited amount.

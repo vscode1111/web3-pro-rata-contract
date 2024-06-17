@@ -4,12 +4,7 @@ import { toNumberDecimals } from '~common';
 import { callWithTimerHre, printDate, printToken, waitTx } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import {
-  getAddressesFromHre,
-  getContext,
-  getUsers,
-  signMessageForSQRpProRataDeposit,
-} from '~utils';
+import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
 import { deployParams } from './deployData';
 import { getTokenInfo } from './utils';
 
@@ -61,14 +56,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       return;
     }
 
-    const nonce = await user1SQRpProRata.getDepositNonce(body.account);
+    const nonce = await user1SQRpProRata.getAccountDepositNonce(body.account);
     console.log(`User nonce: ${nonce}`);
     if (response.nonce !== Number(nonce)) {
       console.error(`Nonce is not correct`);
       // return;
     }
 
-    const signature = await signMessageForSQRpProRataDeposit(
+    const signature = await signMessageForProRataDeposit(
       verifier,
       account,
       BigInt(response.amountInWei),

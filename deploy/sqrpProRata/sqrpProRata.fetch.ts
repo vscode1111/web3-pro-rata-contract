@@ -30,10 +30,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table(result);
 
-    const user = await ownerSQRpProRata.fetchUser(users.user1Address);
-    console.log(user);
-    const depositNonce = await ownerSQRpProRata.getDepositNonce(users.user1Address);
-    console.log(depositNonce);
+    const accountInfo = await ownerSQRpProRata.fetchAccountInfo(users.user1Address);
+    console.log(accountInfo);
+    const accountDepositNonce = await ownerSQRpProRata.getAccountDepositNonce(users.user1Address);
+    console.log(accountDepositNonce);
   }, hre);
 };
 

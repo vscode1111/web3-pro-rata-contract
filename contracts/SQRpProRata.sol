@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.7";
+  string public constant VERSION = "1.8";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -93,14 +93,22 @@ contract SQRpProRata is
   uint256 public totalRefunded;
   uint256 public totalWithdrew;
 
-  mapping(address => User) private _users;
+  mapping(address => Account) private _accounts;
   mapping(bytes32 => TransactionItem) private _transactionIds;
-  address[] private _userAddresses;
+  address[] private _accountAddresses;
   uint32 private _processedUserIndex;
 
-  struct User {
-    uint256 depositedAmount;
-    // uint256 contributionAmount;
+  struct Account {
+    uint256 deposited;
+    uint256 refunded;
+    uint32 nonce;
+  }
+
+  struct AccountInfo {
+    uint256 deposited;
+    uint256 depositAmount;
+    uint256 refunded;
+    uint256 refundAmount;
     uint32 nonce;
   }
 
@@ -160,7 +168,7 @@ contract SQRpProRata is
 
   event Deposit(address indexed account, uint256 amount);
   event Refund(address indexed account, uint256 amount);
-  event WithdrawGoal(address indexed to, uint256 amount);
+  event WithdrawGoal(address indexed account, uint256 amount);
 
   //Read methods-------------------------------------------
 
@@ -176,12 +184,21 @@ contract SQRpProRata is
     return !isBeforeStartDate() && !isAfterCloseDate();
   }
 
-  function getUserCount() public view returns (uint32) {
-    return (uint32)(_userAddresses.length);
+  function getAccountCount() public view returns (uint32) {
+    return (uint32)(_accountAddresses.length);
   }
 
-  function fetchUser(address account) external view returns (User memory) {
-    return _users[account];
+  function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
+    Account memory user = _accounts[account];
+    uint256 accountRefundAmount = calculateAccountRefundAmount(account);
+    return
+      AccountInfo(
+        user.deposited,
+        user.deposited - accountRefundAmount,
+        user.refunded,
+        accountRefundAmount,
+        user.nonce
+      );
   }
 
   function getBaseBalance() public view returns (uint256) {
@@ -189,32 +206,31 @@ contract SQRpProRata is
   }
 
   function balanceOf(address account) external view returns (uint256) {
-    User memory fund = _users[account];
-    // if (fund.depositedAmount > fund.contributionAmount) {
-    //   return fund.depositedAmount - fund.contributionAmount;
-    // }
-    // return 0;
-    return fund.depositedAmount;
+    return _accounts[account].deposited;
   }
 
   function getHash(string calldata value) private pure returns (bytes32) {
     return keccak256(abi.encodePacked(value));
   }
 
-  function getDepositNonce(address account) public view returns (uint32) {
-    return _users[account].nonce;
+  function getAccountDepositNonce(address account) public view returns (uint32) {
+    return _accounts[account].nonce;
   }
 
-  function getUserAddress(uint32 index) public view returns (address) {
-    return _userAddresses[index];
+  function getAccountByIndex(uint32 index) public view returns (address) {
+    return _accountAddresses[index];
   }
 
-  function getDepositedAmount(address account) external view returns (uint256) {
-    return _users[account].depositedAmount;
+  function getAccountDepositAmount(address account) external view returns (uint256) {
+    return _accounts[account].deposited - calculateAccountRefundAmount(account);
   }
 
   function getTotalDeposited() external view returns (uint256) {
-    return totalDeposited;
+    if (totalDeposited >= goal) {
+      return goal;
+    }
+
+    return 0;
   }
 
   function calculateRemainDeposit() external view returns (uint256) {
@@ -230,12 +246,7 @@ contract SQRpProRata is
   }
 
   function calculateAccidentAmount() external view returns (uint256) {
-    uint256 baseBalance = getBaseBalance();
-    uint256 totalOutput = totalRefunded + totalWithdrew;
-    if (totalDeposited > totalOutput && baseBalance > totalDeposited - totalOutput) {
-      return baseBalance - totalDeposited + totalOutput;
-    }
-    return 0;
+    return getBaseBalance() - (totalDeposited - totalRefunded - totalWithdrew);
   }
 
   function calculateOverfundAmount() external view returns (uint256) {
@@ -250,12 +261,12 @@ contract SQRpProRata is
       return 0;
     }
 
-    User memory user = _users[account];
+    Account memory user = _accounts[account];
 
     if (totalDeposited >= goal) {
-      return ((totalDeposited - goal) * user.depositedAmount) / totalDeposited;
+      return ((totalDeposited - goal) * user.deposited) / totalDeposited;
     } else {
-      return user.depositedAmount;
+      return user.deposited;
     }
   }
 
@@ -303,13 +314,13 @@ contract SQRpProRata is
 
     _setTransactionId(amount, transactionId);
 
-    User storage user = _users[account];
+    Account storage user = _accounts[account];
 
     if (user.nonce == 0) {
-      _userAddresses.push(account);
+      _accountAddresses.push(account);
     }
 
-    user.depositedAmount += amount;
+    user.deposited += amount;
     user.nonce += 1;
     totalDeposited += amount;
 
@@ -342,7 +353,7 @@ contract SQRpProRata is
   ) external {
     address account = _msgSender();
 
-    uint32 nonce = getDepositNonce(account);
+    uint32 nonce = getAccountDepositNonce(account);
     if (
       !verifyDepositSignature(
         account,
@@ -360,9 +371,9 @@ contract SQRpProRata is
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
-    uint32 userCount = getUserCount();
-    if (_batchSize > userCount - _processedUserIndex) {
-      _batchSize = userCount - _processedUserIndex;
+    uint32 accountCount = getAccountCount();
+    if (_batchSize > accountCount - _processedUserIndex) {
+      _batchSize = accountCount - _processedUserIndex;
     }
 
     if (_batchSize == 0) {
@@ -371,19 +382,21 @@ contract SQRpProRata is
 
     uint32 endIndex = _processedUserIndex + _batchSize;
     for (uint32 i = _processedUserIndex; i < endIndex; i++) {
-      address userAddress = getUserAddress(i);
-      uint256 accountRefundAmount = calculateAccountRefundAmount(userAddress);
-      if (accountRefundAmount > 0) {
-        baseToken.safeTransfer(userAddress, accountRefundAmount);
-        totalRefunded += accountRefundAmount;
-        emit Refund(userAddress, accountRefundAmount);
+      address account = getAccountByIndex(i);
+      uint256 refundAmount = calculateAccountRefundAmount(account);
+      if (refundAmount > 0) {
+        Account storage user = _accounts[account];
+        user.refunded = refundAmount;
+        baseToken.safeTransfer(account, refundAmount);
+        totalRefunded += refundAmount;
+        emit Refund(account, refundAmount);
       }
     }
     _processedUserIndex = endIndex;
   }
 
   function refundAll() external {
-    refund(getUserCount());
+    refund(getAccountCount());
   }
 
   function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {

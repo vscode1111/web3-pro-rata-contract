@@ -7,7 +7,7 @@ import { ContractConfig, seedData, tokenConfig } from '~seeds';
 import { BaseToken } from '~typechain-types/contracts/BaseToken';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { ContextBase } from '~types';
-import { signMessageForSQRpProRataDeposit } from '~utils';
+import { signMessageForProRataDeposit } from '~utils';
 import { loadFixture } from './loadFixture';
 import { deploySQRpProRataContractFixture } from './sqrpProRata.fixture';
 
@@ -78,7 +78,7 @@ export async function contractZeroCheck(context: Context) {
   expect(await getBaseTokenBalance(context, context.user2Address)).eq(seedData.zero);
   expect(await getBaseTokenBalance(context, context.sqrpProRataAddress)).eq(seedData.zero);
 
-  expect(await context.owner2SQRpProRata.getUserCount()).eq(seedData.zero);
+  expect(await context.owner2SQRpProRata.getAccountCount()).eq(seedData.zero);
   expect(await context.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
   expect(await context.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
   expect(await context.owner2SQRpProRata.calculateAccountRefundAmount(context.user1Address)).eq(
@@ -89,8 +89,12 @@ export async function contractZeroCheck(context: Context) {
   );
   expect(await context.owner2SQRpProRata.getProcessedUserIndex()).eq(0);
 
-  expect(await context.ownerSQRpProRata.getDepositedAmount(context.user1Address)).eq(seedData.zero);
-  expect(await context.ownerSQRpProRata.getDepositedAmount(context.user2Address)).eq(seedData.zero);
+  expect(await context.ownerSQRpProRata.getAccountDepositAmount(context.user1Address)).eq(
+    seedData.zero,
+  );
+  expect(await context.ownerSQRpProRata.getAccountDepositAmount(context.user2Address)).eq(
+    seedData.zero,
+  );
   expect(await context.ownerSQRpProRata.getTotalDeposited()).eq(seedData.zero);
 }
 
@@ -120,9 +124,9 @@ export async function depositSig({
   transactionId: string;
   timestampLimit: number;
 }) {
-  const nonce = await userSQRpProRata.getDepositNonce(userAddress);
+  const nonce = await userSQRpProRata.getAccountDepositNonce(userAddress);
 
-  const signature = await signMessageForSQRpProRataDeposit(
+  const signature = await signMessageForProRataDeposit(
     context.owner2,
     userAddress,
     deposit,

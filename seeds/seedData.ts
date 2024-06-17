@@ -10,7 +10,7 @@ import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from
 
 type DeployType = 'test' | 'main' | 'stage' | 'prod';
 
-const deployType: DeployType = (process.env.ENV as DeployType) ?? 'prod';
+const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
 
 const isSqr = ['test', 'main'].includes(deployType);
 // const isSqr = false;
@@ -108,7 +108,7 @@ export function getTokenArgs(newOwner: string): DeployTokenArgs {
 const userInitBalance = toWei(100_000, tokenDecimals) / priceDiv;
 const deposit1 = toWei(1_000, tokenDecimals) / priceDiv;
 const extraDeposit1 = toWei(2_500, tokenDecimals) / priceDiv;
-const accidentAmount = toWei(20_500, tokenDecimals) / priceDiv;
+const accidentAmount = toWei(500, tokenDecimals) / priceDiv;
 
 const transactionId1 = uuidv4();
 const transactionId1_2 = uuidv4();

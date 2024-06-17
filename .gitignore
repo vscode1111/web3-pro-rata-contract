@@ -17,7 +17,9 @@
 **/dist
 **/node_modules
 **/typechain-types
-#**/.openzeppelin
+
+#For deployment on different computers
+#**/.openzeppelin 
 
 # files
 *.env
