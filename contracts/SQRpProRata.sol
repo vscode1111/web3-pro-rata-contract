@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.12";
+  string public constant VERSION = "1.13";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -93,8 +93,8 @@ contract SQRpProRata is
   uint256 public totalRefunded;
   uint256 public totalWithdrew;
 
-  mapping(address => AccountItem) private _accountItems;
-  mapping(bytes32 => TransactionItem) private _transactionIds;
+  mapping(address account => AccountItem accountItem) private _accountItems;
+  mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
   address[] private _accountAddresses;
   uint32 private _processedAccountIndex;
 
