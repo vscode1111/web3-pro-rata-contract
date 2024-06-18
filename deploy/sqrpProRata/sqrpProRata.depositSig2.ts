@@ -27,6 +27,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const params = {
       transactionId: seedData.transactionId2,
       amount: deployData.deposit2,
+      boost: false,
       account: user2Address,
       nonce: Number(nonce),
       timestampLimit: seedData.nowPlus1m,
@@ -37,7 +38,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       verifier,
       params.account,
       params.amount,
-      false,
+      params.boost,
       params.nonce,
       params.transactionId,
       params.timestampLimit,

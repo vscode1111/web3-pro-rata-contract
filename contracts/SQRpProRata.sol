@@ -81,7 +81,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.11";
+  string public constant VERSION = "1.12";
 
   IERC20 public baseToken;
   IERC20 public boostToken;
@@ -246,7 +246,7 @@ contract SQRpProRata is
       return 0;
     }
 
-    if (goal > totalDeposited) {
+    if (!isReachedGoal()) {
       return goal - totalDeposited;
     }
 
