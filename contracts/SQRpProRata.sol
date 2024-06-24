@@ -30,7 +30,7 @@ contract SQRpProRata is
     address _baseToken,
     address _boostToken,
     address _verifier,
-    uint256 _goal,
+    uint256 _baseGoal,
     uint32 _startDate, //0 - skip
     uint32 _closeDate
   ) public initializer {
@@ -42,15 +42,15 @@ contract SQRpProRata is
       revert BaseTokenNotZeroAddress();
     }
 
-    if (_boostToken == address(0)) {
-      revert BoostTokenNotZeroAddress();
-    }
+    // if (_boostToken == address(0)) {
+    //   revert BoostTokenNotZeroAddress();
+    // }
 
     if (_verifier == address(0)) {
       revert VerifierNotZeroAddress();
     }
 
-    if (_goal == 0) {
+    if (_baseGoal == 0) {
       revert GoalNotZero();
     }
 
@@ -72,7 +72,7 @@ contract SQRpProRata is
     baseToken = IERC20(_baseToken);
     boostToken = IERC20(_boostToken);
     verifier = _verifier;
-    goal = _goal;
+    baseGoal = _baseGoal;
     startDate = _startDate;
     closeDate = _closeDate;
   }
@@ -81,17 +81,18 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "1.13";
+  string public constant VERSION = "2.0";
+  uint256 public constant DIVIDER = 1e18;
 
   IERC20 public baseToken;
   IERC20 public boostToken;
   address public verifier;
-  uint256 public goal;
+  uint256 public baseGoal;
   uint32 public startDate;
   uint32 public closeDate;
-  uint256 public totalDeposited;
-  uint256 public totalRefunded;
-  uint256 public totalWithdrew;
+  uint256 public totalBaseDeposited;
+  uint256 public totalBaseRefunded;
+  uint256 public totalBaseWithdrew;
 
   mapping(address account => AccountItem accountItem) private _accountItems;
   mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
@@ -99,17 +100,21 @@ contract SQRpProRata is
   uint32 private _processedAccountIndex;
 
   struct AccountItem {
-    uint256 deposited;
-    uint256 refunded;
+    uint256 baseDeposited;
+    uint256 baseRefunded;
+    uint256 boostDeposited;
+    uint256 boostRefunded;
     uint32 nonce;
+    bool boosted;
   }
 
   struct AccountInfo {
-    uint256 deposited;
-    uint256 depositAmount;
-    uint256 refunded;
-    uint256 refundAmount;
+    uint256 baseDeposited;
+    uint256 baseDepositAmount;
+    uint256 baseRefunded;
+    uint256 baseRefundAmount;
     uint32 nonce;
+    bool boosted;
   }
 
   struct TransactionItem {
@@ -118,14 +123,14 @@ contract SQRpProRata is
 
   error NewOwnerNotZeroAddress();
   error BaseTokenNotZeroAddress();
-  error BoostTokenNotZeroAddress();
+  // error BoostTokenNotZeroAddress();
   error VerifierNotZeroAddress();
   error GoalNotZero();
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanStartDate();
   error TimeoutBlocker();
-  error AmountNotZero();
+  error BaseAmountNotZero();
   error InvalidSignature();
   error UsedTransactionId();
   error UserMustAllowToUseFunds();
@@ -142,9 +147,9 @@ contract SQRpProRata is
     _;
   }
 
-  modifier amountChecker(uint256 amount) {
+  modifier baseAmountChecker(uint256 amount) {
     if (amount == 0) {
-      revert AmountNotZero();
+      revert BaseAmountNotZero();
     }
     _;
   }
@@ -180,16 +185,36 @@ contract SQRpProRata is
     return block.timestamp > closeDate;
   }
 
-  function isReady() public view returns (bool) {
+  function isDepositReady() public view returns (bool) {
     return !isBeforeStartDate() && !isAfterCloseDate();
   }
 
-  function isReachedGoal() public view returns (bool) {
-    return totalDeposited >= goal;
+  function isReachedBaseGoal() public view returns (bool) {
+    return totalBaseDeposited >= baseGoal;
   }
 
   function getAccountCount() public view returns (uint32) {
     return (uint32)(_accountAddresses.length);
+  }
+
+  function getAccountByIndex(uint32 index) public view returns (address) {
+    return _accountAddresses[index];
+  }
+
+  function getAccountDepositAmount(address account) external view returns (uint256) {
+    if (!isAfterCloseDate() || !isReachedBaseGoal()) {
+      return 0;
+    }
+
+    return _accountItems[account].baseDeposited - calculateAccountRefundAmount(account);
+  }
+
+  function getTotalDeposited() external view returns (uint256) {
+    if (isReachedBaseGoal()) {
+      return baseGoal;
+    }
+
+    return 0;
   }
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
@@ -197,11 +222,12 @@ contract SQRpProRata is
     uint256 refundAmount = calculateAccountRefundAmount(account);
     return
       AccountInfo(
-        accountItem.deposited,
-        accountItem.deposited - refundAmount,
-        accountItem.refunded,
+        accountItem.baseDeposited,
+        accountItem.baseDeposited - refundAmount,
+        accountItem.baseRefunded,
         refundAmount,
-        accountItem.nonce
+        accountItem.nonce,
+        accountItem.boosted
       );
   }
 
@@ -209,8 +235,10 @@ contract SQRpProRata is
     return baseToken.balanceOf(address(this));
   }
 
-  function balanceOf(address account) external view returns (uint256) {
-    return _accountItems[account].deposited;
+  function balanceOf(
+    address account
+  ) external view returns (uint256 baseDeposited, uint256 boostDeposited) {
+    return (_accountItems[account].baseDeposited, _accountItems[account].boostDeposited);
   }
 
   function getHash(string calldata value) private pure returns (bytes32) {
@@ -221,45 +249,25 @@ contract SQRpProRata is
     return _accountItems[account].nonce;
   }
 
-  function getAccountByIndex(uint32 index) public view returns (address) {
-    return _accountAddresses[index];
-  }
-
-  function getAccountDepositAmount(address account) external view returns (uint256) {
-    if (!isAfterCloseDate() || !isReachedGoal()) {
-      return 0;
-    }
-
-    return _accountItems[account].deposited - calculateAccountRefundAmount(account);
-  }
-
-  function getTotalDeposited() external view returns (uint256) {
-    if (isReachedGoal()) {
-      return goal;
-    }
-
-    return 0;
-  }
-
   function calculateRemainDeposit() external view returns (uint256) {
-    if (!isReady()) {
+    if (!isDepositReady()) {
       return 0;
     }
 
-    if (!isReachedGoal()) {
-      return goal - totalDeposited;
+    if (!isReachedBaseGoal()) {
+      return baseGoal - totalBaseDeposited;
     }
 
     return 0;
   }
 
   function calculateAccidentAmount() external view returns (uint256) {
-    return getBaseBalance() - (totalDeposited - totalRefunded - totalWithdrew);
+    return getBaseBalance() - (totalBaseDeposited - totalBaseRefunded - totalBaseWithdrew);
   }
 
   function calculateOverfundAmount() external view returns (uint256) {
-    if (isReachedGoal()) {
-      return totalDeposited - goal;
+    if (isReachedBaseGoal()) {
+      return totalBaseDeposited - baseGoal;
     }
     return 0;
   }
@@ -267,10 +275,10 @@ contract SQRpProRata is
   function calculateAccountRefundAmount(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
 
-    if (isReachedGoal()) {
-      return ((totalDeposited - goal) * accountItem.deposited) / totalDeposited;
+    if (isReachedBaseGoal()) {
+      return ((totalBaseDeposited - baseGoal) * accountItem.baseDeposited) / totalBaseDeposited;
     } else {
-      return accountItem.deposited;
+      return accountItem.baseDeposited;
     }
   }
 
@@ -307,7 +315,7 @@ contract SQRpProRata is
     uint256 amount,
     string calldata transactionId,
     uint32 timestampLimit
-  ) private nonReentrant amountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
+  ) private nonReentrant baseAmountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
     if (baseToken.allowance(account, address(this)) < amount) {
       revert UserMustAllowToUseFunds();
     }
@@ -324,9 +332,9 @@ contract SQRpProRata is
       _accountAddresses.push(account);
     }
 
-    accountItem.deposited += amount;
+    accountItem.baseDeposited += amount;
     accountItem.nonce += 1;
-    totalDeposited += amount;
+    totalBaseDeposited += amount;
 
     baseToken.safeTransferFrom(account, address(this), amount);
     emit Deposit(account, amount);
@@ -349,7 +357,7 @@ contract SQRpProRata is
   }
 
   function depositSig(
-    uint256 amount,
+    uint256 baseAmount,
     bool boost,
     string calldata transactionId,
     uint32 timestampLimit,
@@ -361,7 +369,7 @@ contract SQRpProRata is
     if (
       !verifyDepositSignature(
         account,
-        amount,
+        baseAmount,
         boost,
         nonce,
         transactionId,
@@ -371,7 +379,7 @@ contract SQRpProRata is
     ) {
       revert InvalidSignature();
     }
-    _deposit(account, amount, transactionId, timestampLimit);
+    _deposit(account, baseAmount, transactionId, timestampLimit);
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
@@ -390,9 +398,9 @@ contract SQRpProRata is
       uint256 refundAmount = calculateAccountRefundAmount(account);
       if (refundAmount > 0) {
         AccountItem storage accountItem = _accountItems[account];
-        accountItem.refunded = refundAmount;
+        accountItem.baseRefunded = refundAmount;
         baseToken.safeTransfer(account, refundAmount);
-        totalRefunded += refundAmount;
+        totalBaseRefunded += refundAmount;
         emit Refund(account, refundAmount);
       }
     }
@@ -404,13 +412,13 @@ contract SQRpProRata is
   }
 
   function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {
-    if (!isReachedGoal()) {
+    if (!isReachedBaseGoal()) {
       revert UnreachedGoal();
     }
 
     address to = owner();
-    baseToken.safeTransfer(to, goal);
-    totalWithdrew += goal;
-    emit WithdrawGoal(to, goal);
+    baseToken.safeTransfer(to, baseGoal);
+    totalBaseWithdrew += baseGoal;
+    emit WithdrawGoal(to, baseGoal);
   }
 }

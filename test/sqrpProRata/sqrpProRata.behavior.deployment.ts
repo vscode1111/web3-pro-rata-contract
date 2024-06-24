@@ -43,16 +43,6 @@ export function shouldBehaveCorrectDeployment(): void {
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.baseTokenNotZeroAddress);
     });
 
-    it('owner tries to deploy with zero boost token address', async function () {
-      const users = await getUsers();
-      await expect(
-        getSQRpProRataContext(users, {
-          ...contractConfig,
-          boostToken: ZeroAddress,
-        }),
-      ).revertedWithCustomError(this.owner2SQRpProRata, customError.boostTokenNotZeroAddress);
-    });
-
     it('owner tries to deploy when start date is later than close one', async function () {
       const users = await getUsers();
       await expect(
@@ -139,7 +129,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await expect(
         getSQRpProRataContext(users, {
           ...contractConfig,
-          goal: ZERO,
+          baseGoal: ZERO,
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.goalNotZero);
     });

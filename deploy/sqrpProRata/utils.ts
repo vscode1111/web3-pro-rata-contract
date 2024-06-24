@@ -11,11 +11,11 @@ export function getContractArgsEx() {
 
 export function formatContractConfig(contractConfig: ContractConfig) {
   const { decimals, tokenName } = chainTokenDescription.bsc;
-  const { goal, startDate, closeDate } = contractConfig;
+  const { baseGoal: goal, startDate, closeDate } = contractConfig;
 
   return {
     ...contractConfig,
-    goal: printToken(goal, decimals, tokenName),
+    baseGoal: printToken(goal, decimals, tokenName),
     startDate: printDate(startDate),
     closeDate: printDate(closeDate),
   };
@@ -31,10 +31,10 @@ export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
 }
 
 interface FormattedAccountInfo {
-  deposited: string;
-  depositAmount: string;
-  refunded: string;
-  refundAmount: string;
+  baseDeposited: string;
+  baseDepositAmount: string;
+  baseRefunded: string;
+  baseRefundAmount: string;
   nonce: number;
 }
 
@@ -43,13 +43,13 @@ export function formatAccountInfo(
   decimals: number,
   tokenName?: string,
 ): FormattedAccountInfo {
-  const { deposited, depositAmount, refunded, refundAmount, nonce } = accountInfo;
+  const { baseDeposited, baseDepositAmount, baseRefunded, baseRefundAmount, nonce } = accountInfo;
 
   return {
-    deposited: printToken(deposited, decimals, tokenName),
-    depositAmount: printToken(depositAmount, decimals, tokenName),
-    refunded: printToken(refunded, decimals, tokenName),
-    refundAmount: printToken(refundAmount, decimals, tokenName),
+    baseDeposited: printToken(baseDeposited, decimals, tokenName),
+    baseDepositAmount: printToken(baseDepositAmount, decimals, tokenName),
+    baseRefunded: printToken(baseRefunded, decimals, tokenName),
+    baseRefundAmount: printToken(baseRefundAmount, decimals, tokenName),
     nonce: Number(nonce),
   };
 }

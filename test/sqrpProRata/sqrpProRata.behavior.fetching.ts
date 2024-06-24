@@ -17,14 +17,14 @@ export function shouldBehaveCorrectFetching(): void {
       expect(await this.ownerSQRpProRata.baseToken()).eq(this.baseTokenAddress);
       expect(await this.ownerSQRpProRata.isBeforeStartDate()).eq(true);
       expect(await this.ownerSQRpProRata.isAfterCloseDate()).eq(false);
-      expect(await this.ownerSQRpProRata.isReady()).eq(false);
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
+      expect(await this.ownerSQRpProRata.isDepositReady()).eq(false);
+      expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(false);
 
       expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
 
       await time.increaseTo(addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift));
 
-      expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(contractConfig.goal);
+      expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(contractConfig.baseGoal);
 
       expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
         seedData.zero,
@@ -37,9 +37,9 @@ export function shouldBehaveCorrectFetching(): void {
     it('should be correct balances', async function () {
       expect(await getBaseTokenBalance(this, this.owner2Address)).eq(seedData.totalAccountBalance);
       expect(await this.ownerSQRpProRata.getBaseBalance()).eq(seedData.zero);
-      expect(await this.ownerSQRpProRata.totalDeposited()).eq(seedData.zero);
-      expect(await this.ownerSQRpProRata.totalRefunded()).eq(seedData.zero);
-      expect(await this.ownerSQRpProRata.totalWithdrew()).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.totalBaseDeposited()).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.totalBaseRefunded()).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.totalBaseWithdrew()).eq(seedData.zero);
     });
   });
 }

@@ -23,7 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       owner: await ownerSQRpProRata.owner(),
       baseToken,
       verifier: await ownerSQRpProRata.verifier(),
-      goal: printToken(await ownerSQRpProRata.goal(), decimals, tokenName),
+      baseGoal: printToken(await ownerSQRpProRata.baseGoal(), decimals, tokenName),
       startDate: printDate(await ownerSQRpProRata.startDate()),
       closeDate: printDate(await ownerSQRpProRata.closeDate()),
       baseBalance: printToken(await ownerSQRpProRata.getBaseBalance(), decimals, tokenName),

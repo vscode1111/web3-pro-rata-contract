@@ -14,7 +14,7 @@ import {
 
 const caseContractConfig: ContractConfig = {
   ...contractConfig,
-  goal: toWei(15_000, tokenDecimals),
+  baseGoal: toWei(15_000, tokenDecimals),
   startDate: toUnixTime(now.add(10, 'days').toDate()),
   closeDate: toUnixTime(now.add(12, 'days').toDate()),
 };
@@ -80,12 +80,12 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         seedData.balanceDelta,
       );
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
+      expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
 
       const closeDate = addSecondsToUnixTime(caseContractConfig.closeDate, seedData.timeShift);
       await time.increaseTo(closeDate);
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(true);
+      expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
 
       await this.owner2SQRpProRata.refundAll();
 
@@ -98,7 +98,7 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         seedData.balanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
-        caseContractConfig.goal,
+        caseContractConfig.baseGoal,
         seedData.balanceDelta,
       );
 
@@ -114,7 +114,7 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
         seedData.balanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
-        tokenConfig.initMint - BigInt(2) * seedData.userInitBalance + caseContractConfig.goal,
+        tokenConfig.initMint - BigInt(2) * seedData.userInitBalance + caseContractConfig.baseGoal,
         seedData.balanceDelta,
       );
     });

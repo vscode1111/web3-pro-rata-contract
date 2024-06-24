@@ -15,7 +15,7 @@ import {
 
 const caseContractConfig: ContractConfig = {
   ...contractConfig,
-  goal: toWei(15_000, tokenDecimals),
+  baseGoal: toWei(15_000, tokenDecimals),
   startDate: toUnixTime(now.add(20, 'days').toDate()),
   closeDate: toUnixTime(now.add(22, 'days').toDate()),
 };
@@ -81,12 +81,12 @@ export function shouldBehaveCorrectFundingLessCase(): void {
         seedData.balanceDelta,
       );
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
+      expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(false);
 
       const closeDate = addSecondsToUnixTime(caseContractConfig.closeDate, seedData.timeShift);
       await time.increaseTo(closeDate);
 
-      expect(await this.ownerSQRpProRata.isReachedGoal()).eq(false);
+      expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(false);
 
       expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
         seedData.zero,

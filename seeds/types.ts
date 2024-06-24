@@ -5,7 +5,7 @@ export interface ContractConfig {
   baseToken: string;
   boostToken: string;
   verifier: string;
-  goal: bigint;
+  baseGoal: bigint;
   startDate: number;
   closeDate: number;
 }
@@ -15,7 +15,7 @@ export type DeployContractArgs = [
   baseToken: string,
   boostToken: string,
   verifier: string,
-  goal: BigNumberish,
+  baseGoal: BigNumberish,
   startDate: number,
   closeDate: number,
 ];

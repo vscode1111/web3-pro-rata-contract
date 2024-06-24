@@ -36,14 +36,14 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
     baseToken: tokenAddress,
     verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-    goal: toWei(1_200, tokenDecimals) / priceDiv,
+    baseGoal: toWei(1_200, tokenDecimals) / priceDiv,
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
   },
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(10_000, tokenDecimals),
+    baseGoal: toWei(10_000, tokenDecimals),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
@@ -52,7 +52,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(15, tokenDecimals),
+    baseGoal: toWei(15, tokenDecimals),
     // startDate: 0,
     startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
     // closeDate: 0,
@@ -61,7 +61,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   prod: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    goal: toWei(10, tokenDecimals),
+    baseGoal: toWei(10, tokenDecimals),
     startDate: 0,
     // startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
     // closeDate: 0,
@@ -76,14 +76,22 @@ export const contractConfig: ContractConfig = {
   baseToken: tokenAddress,
   boostToken: tokenAddress,
   verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  goal: toWei(1_200, tokenDecimals) / priceDiv,
+  baseGoal: toWei(1_200, tokenDecimals) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
   ...extContractConfig,
 };
 
 export function getContractArgs(contractConfig: ContractConfig): DeployContractArgs {
-  const { newOwner, baseToken, boostToken, verifier, goal, startDate, closeDate } = contractConfig;
+  const {
+    newOwner,
+    baseToken,
+    boostToken,
+    verifier,
+    baseGoal: goal,
+    startDate,
+    closeDate,
+  } = contractConfig;
   return [newOwner, baseToken, boostToken, verifier, goal, startDate, closeDate];
 }
 
