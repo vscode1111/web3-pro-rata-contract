@@ -1,4 +1,5 @@
-import { printDate, printToken } from '~common-contract';
+import { Numeric } from 'ethers';
+import { formatContractDate, formatContractToken } from '~common-contract';
 import { ContractConfig, chainTokenDescription, contractConfig, getContractArgs } from '~seeds';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { Users } from '~types';
@@ -15,9 +16,9 @@ export function formatContractConfig(contractConfig: ContractConfig) {
 
   return {
     ...contractConfig,
-    baseGoal: printToken(goal, decimals, tokenName),
-    startDate: printDate(startDate),
-    closeDate: printDate(closeDate),
+    baseGoal: formatContractToken(goal, decimals, tokenName),
+    startDate: formatContractDate(startDate),
+    closeDate: formatContractDate(closeDate),
   };
 }
 
@@ -32,24 +33,45 @@ export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
 
 interface FormattedAccountInfo {
   baseDeposited: string;
-  baseDepositAmount: string;
+  baseDeposit: string;
+  baseAllocation: string;
+  baseRefund: string;
   baseRefunded: string;
-  baseRefundAmount: string;
+  boostDeposit: string;
+  boostAllocation: string;
+  boostRefund: string;
+  boostRefunded: string;
   nonce: number;
 }
 
 export function formatAccountInfo(
   accountInfo: SQRpProRata.AccountInfoStruct,
-  decimals: number,
+  decimals: Numeric,
   tokenName?: string,
 ): FormattedAccountInfo {
-  const { baseDeposited, baseDepositAmount, baseRefunded, baseRefundAmount, nonce } = accountInfo;
+  const {
+    baseDeposited,
+    baseDeposit,
+    baseAllocation,
+    baseRefund,
+    baseRefunded,
+    boostDeposit,
+    boostAllocation,
+    boostRefund,
+    boostRefunded,
+    nonce,
+  } = accountInfo;
 
   return {
-    baseDeposited: printToken(baseDeposited, decimals, tokenName),
-    baseDepositAmount: printToken(baseDepositAmount, decimals, tokenName),
-    baseRefunded: printToken(baseRefunded, decimals, tokenName),
-    baseRefundAmount: printToken(baseRefundAmount, decimals, tokenName),
+    baseDeposited: formatContractToken(baseDeposited, decimals, tokenName),
+    baseDeposit: formatContractToken(baseDeposit, decimals, tokenName),
+    baseAllocation: formatContractToken(baseAllocation, decimals, tokenName),
+    baseRefund: formatContractToken(baseRefund, decimals, tokenName),
+    baseRefunded: formatContractToken(baseRefunded, decimals, tokenName),
+    boostDeposit: formatContractToken(boostDeposit, decimals, tokenName),
+    boostAllocation: formatContractToken(boostAllocation, decimals, tokenName),
+    boostRefund: formatContractToken(boostRefund, decimals, tokenName),
+    boostRefunded: formatContractToken(boostRefunded, decimals, tokenName),
     nonce: Number(nonce),
   };
 }
@@ -57,7 +79,7 @@ export function formatAccountInfo(
 export async function printAccountInfo(
   ownerSQRpProRata: SQRpProRata,
   account: string,
-  decimals: number,
+  decimals: Numeric,
   tokenName?: string,
 ) {
   const accountInfo = await ownerSQRpProRata.fetchAccountInfo(account);

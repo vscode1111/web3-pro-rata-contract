@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { BigNumberish, formatEther, formatUnits, parseUnits } from 'ethers';
+import { BigNumberish, Numeric, formatEther, formatUnits, parseUnits } from 'ethers';
 import { StringNumber } from './types';
 
 export const DECIMAL_FACTOR = 1e18;
@@ -25,7 +25,7 @@ export function toNumber(value: bigint, factor = 1): number {
   return Number(formatEther(value)) * factor;
 }
 
-export function toNumberDecimals(value: BigNumberish, decimals = 18): number {
+export function toNumberDecimals(value: BigNumberish, decimals: Numeric = 18): number {
   return Number(formatUnits(value, decimals));
 }
 

@@ -101,8 +101,9 @@ contract SQRpProRata is
 
   struct AccountItem {
     uint256 baseDeposited;
+    uint256 baseDeposit;
     uint256 baseRefunded;
-    uint256 boostDeposited;
+    uint256 boostDeposit;
     uint256 boostRefunded;
     uint32 nonce;
     bool boosted;
@@ -110,9 +111,14 @@ contract SQRpProRata is
 
   struct AccountInfo {
     uint256 baseDeposited;
-    uint256 baseDepositAmount;
+    uint256 baseDeposit;
+    uint256 baseAllocation;
+    uint256 baseRefund;
     uint256 baseRefunded;
-    uint256 baseRefundAmount;
+    uint256 boostDeposit;
+    uint256 boostAllocation;
+    uint256 boostRefund;
+    uint256 boostRefunded;
     uint32 nonce;
     bool boosted;
   }
@@ -206,7 +212,7 @@ contract SQRpProRata is
       return 0;
     }
 
-    return _accountItems[account].baseDeposited - calculateAccountRefundAmount(account);
+    return _accountItems[account].baseDeposit - calculateAccountBaseRefund(account);
   }
 
   function getTotalDeposited() external view returns (uint256) {
@@ -219,13 +225,19 @@ contract SQRpProRata is
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
     AccountItem memory accountItem = _accountItems[account];
-    uint256 refundAmount = calculateAccountRefundAmount(account);
+    uint256 baseRefund = calculateAccountBaseRefund(account);
+    uint256 boostRefund = calculateAccountBoostRefund(account);
     return
       AccountInfo(
         accountItem.baseDeposited,
-        accountItem.baseDeposited - refundAmount,
+        accountItem.baseDeposit,
+        accountItem.baseDeposit - baseRefund,
+        baseRefund,
         accountItem.baseRefunded,
-        refundAmount,
+        accountItem.boostDeposit,
+        accountItem.boostDeposit - boostRefund,
+        boostRefund,
+        accountItem.boostRefunded,
         accountItem.nonce,
         accountItem.boosted
       );
@@ -238,7 +250,7 @@ contract SQRpProRata is
   function balanceOf(
     address account
   ) external view returns (uint256 baseDeposited, uint256 boostDeposited) {
-    return (_accountItems[account].baseDeposited, _accountItems[account].boostDeposited);
+    return (_accountItems[account].baseDeposit, _accountItems[account].boostDeposit);
   }
 
   function getHash(string calldata value) private pure returns (bytes32) {
@@ -272,14 +284,27 @@ contract SQRpProRata is
     return 0;
   }
 
-  function calculateAccountRefundAmount(address account) public view returns (uint256) {
+  function calculateAccountBaseRefund(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
 
     if (isReachedBaseGoal()) {
-      return ((totalBaseDeposited - baseGoal) * accountItem.baseDeposited) / totalBaseDeposited;
+      return ((totalBaseDeposited - baseGoal) * accountItem.baseDeposit) / totalBaseDeposited;
     } else {
-      return accountItem.baseDeposited;
+      return accountItem.baseDeposit;
     }
+  }
+
+  //ToDo: fix
+  function calculateAccountBoostRefund(address account) public view returns (uint256) {
+    // AccountItem memory accountItem = _accountItems[account];
+
+    // if (isReachedBaseGoal()) {
+    //   return ((totalBaseDeposited - baseGoal) * accountItem.baseDeposit) / totalBaseDeposited;
+    // } else {
+    //   return accountItem.baseDeposit;
+    // }
+
+    return 0;
   }
 
   function fetchTransactionItem(
@@ -333,6 +358,7 @@ contract SQRpProRata is
     }
 
     accountItem.baseDeposited += amount;
+    accountItem.baseDeposit += amount;
     accountItem.nonce += 1;
     totalBaseDeposited += amount;
 
@@ -395,13 +421,13 @@ contract SQRpProRata is
     uint32 endIndex = _processedAccountIndex + _batchSize;
     for (uint32 i = _processedAccountIndex; i < endIndex; i++) {
       address account = getAccountByIndex(i);
-      uint256 refundAmount = calculateAccountRefundAmount(account);
-      if (refundAmount > 0) {
+      uint256 baseRefund = calculateAccountBaseRefund(account);
+      if (baseRefund > 0) {
         AccountItem storage accountItem = _accountItems[account];
-        accountItem.baseRefunded = refundAmount;
-        baseToken.safeTransfer(account, refundAmount);
-        totalBaseRefunded += refundAmount;
-        emit Refund(account, refundAmount);
+        accountItem.baseRefunded = baseRefund;
+        baseToken.safeTransfer(account, baseRefund);
+        totalBaseRefunded += baseRefund;
+        emit Refund(account, baseRefund);
       }
     }
     _processedAccountIndex = endIndex;

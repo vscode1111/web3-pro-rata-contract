@@ -121,6 +121,7 @@ const accidentAmount = toWei(500, tokenDecimals) / priceDiv;
 const transactionId1 = uuidv4();
 const transactionId1_2 = uuidv4();
 const transactionId2 = uuidv4();
+const transactionId3 = uuidv4();
 
 export const seedData = {
   zero: toWei(0),
@@ -143,6 +144,7 @@ export const seedData = {
   transactionId1,
   transactionId1_2,
   transactionId2,
+  transactionId3,
   transactionIdWrong: 'wrong',
   invalidNonce: 999,
   depositNonce1_0: 0,

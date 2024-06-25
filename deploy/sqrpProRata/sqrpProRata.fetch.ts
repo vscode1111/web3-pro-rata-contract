@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { callWithTimerHre, printDate, printToken } from '~common-contract';
+import { callWithTimerHre, formatContractDate, formatContractToken } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME } from '~constants';
 import { getAddressesFromHre, getBaseTokenContext, getSQRpProRataContext, getUsers } from '~utils';
 import { printAccountInfo } from './utils';
@@ -16,17 +16,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     const { ownerBaseToken } = await getBaseTokenContext(users, baseToken);
 
-    const decimals = Number(await ownerBaseToken.decimals());
+    const decimals = await ownerBaseToken.decimals();
     const tokenName = await ownerBaseToken.name();
 
     const result = {
       owner: await ownerSQRpProRata.owner(),
       baseToken,
       verifier: await ownerSQRpProRata.verifier(),
-      baseGoal: printToken(await ownerSQRpProRata.baseGoal(), decimals, tokenName),
-      startDate: printDate(await ownerSQRpProRata.startDate()),
-      closeDate: printDate(await ownerSQRpProRata.closeDate()),
-      baseBalance: printToken(await ownerSQRpProRata.getBaseBalance(), decimals, tokenName),
+      baseGoal: formatContractToken(await ownerSQRpProRata.baseGoal(), decimals, tokenName),
+      startDate: formatContractDate(await ownerSQRpProRata.startDate()),
+      closeDate: formatContractDate(await ownerSQRpProRata.closeDate()),
+      baseBalance: formatContractToken(
+        await ownerSQRpProRata.getBaseBalance(),
+        decimals,
+        tokenName,
+      ),
     };
 
     console.table(result);

@@ -10,7 +10,7 @@ export function getTokenDescription(address: string): TokenAddressDescription {
   };
 }
 
-export function calculateAccountRefundAmount(
+export function calculateAccountRefund(
   goal: bigint,
   userDeposited: bigint,
   totalDeposited: bigint,

@@ -3,11 +3,7 @@ import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE } from '~common';
 import { waitTx } from '~common-contract';
 import { contractConfig, seedData, tokenConfig } from '~seeds';
-import {
-  addSecondsToUnixTime,
-  calculateAccountRefundAmount,
-  signMessageForProRataDeposit,
-} from '~utils';
+import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDeposit } from '~utils';
 import { customError } from './testData';
 import { DepositEventArgs, RefundEventArgs, WithdrawGoalEventArgs } from './types';
 import {
@@ -348,22 +344,24 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             ]);
             expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
 
-            expect(await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address)).eq(
+            expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
               seedData.deposit1,
             );
 
             const {
               baseDeposited,
-              baseDepositAmount,
+              baseDeposit,
+              baseAllocation,
               baseRefunded,
-              baseRefundAmount,
+              baseRefund,
               nonce,
               boosted,
             } = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
             expect(baseDeposited).eq(seedData.deposit1);
-            expect(baseDepositAmount).eq(seedData.zero);
+            expect(baseDeposit).eq(seedData.deposit1);
+            expect(baseAllocation).eq(seedData.zero);
             expect(baseRefunded).eq(seedData.zero);
-            expect(baseRefundAmount).eq(seedData.deposit1);
+            expect(baseRefund).eq(seedData.deposit1);
             expect(nonce).eq(1);
             expect(boosted).eq(false);
 
@@ -430,12 +428,12 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             });
 
             it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-              expect(
-                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
-              ).eq(seedData.deposit1);
-              expect(
-                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user2Address),
-              ).eq(seedData.zero);
+              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
+                seedData.deposit1,
+              );
+              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user2Address)).eq(
+                seedData.zero,
+              );
 
               expect(await this.owner2SQRpProRata.isDepositReady()).eq(false);
             });
@@ -512,28 +510,30 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 seedData.deposit1 + seedData.deposit2 - contractConfig.baseGoal,
               );
 
-              const refundAmount1 = calculateAccountRefundAmount(
+              const refundAmount1 = calculateAccountRefund(
                 contractConfig.baseGoal,
                 seedData.deposit1,
                 seedData.deposit12,
               );
 
-              expect(
-                await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
-              ).eq(refundAmount1);
+              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
+                refundAmount1,
+              );
 
               const {
                 baseDeposited,
-                baseDepositAmount,
+                baseDeposit,
+                baseAllocation,
                 baseRefunded,
-                baseRefundAmount,
+                baseRefund,
                 nonce,
                 boosted,
               } = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
               expect(baseDeposited).eq(seedData.deposit1);
-              expect(baseDepositAmount).eq(seedData.deposit1 - refundAmount1);
+              expect(baseDeposit).eq(seedData.deposit1);
+              expect(baseAllocation).eq(seedData.deposit1 - refundAmount1);
               expect(baseRefunded).eq(seedData.zero);
-              expect(baseRefundAmount).eq(refundAmount1);
+              expect(baseRefund).eq(refundAmount1);
               expect(nonce).eq(1);
               expect(boosted).eq(false);
 
@@ -578,9 +578,9 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
               it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
                 expect(
-                  await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user1Address),
+                  await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address),
                 ).closeTo(
-                  calculateAccountRefundAmount(
+                  calculateAccountRefund(
                     contractConfig.baseGoal,
                     seedData.deposit1,
                     seedData.deposit12,
@@ -588,9 +588,9 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   seedData.balanceDelta,
                 );
                 expect(
-                  await this.owner2SQRpProRata.calculateAccountRefundAmount(this.user2Address),
+                  await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user2Address),
                 ).closeTo(
-                  calculateAccountRefundAmount(
+                  calculateAccountRefund(
                     contractConfig.baseGoal,
                     seedData.deposit2,
                     seedData.deposit12,
@@ -600,7 +600,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
                 expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(seedData.zero);
 
-                const refundAmount1 = calculateAccountRefundAmount(
+                const refundAmount1 = calculateAccountRefund(
                   contractConfig.baseGoal,
                   seedData.deposit1,
                   seedData.deposit12,
@@ -610,7 +610,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   seedData.balanceDelta,
                 );
 
-                const refundAmount2 = calculateAccountRefundAmount(
+                const refundAmount2 = calculateAccountRefund(
                   contractConfig.baseGoal,
                   seedData.deposit2,
                   seedData.deposit12,
@@ -622,17 +622,19 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
                 const user1 = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
                 expect(user1.baseDeposited).eq(seedData.deposit1);
-                expect(user1.baseDepositAmount).eq(seedData.deposit1 - refundAmount1);
+                expect(user1.baseDeposit).eq(seedData.deposit1);
+                expect(user1.baseAllocation).eq(seedData.deposit1 - refundAmount1);
+                expect(user1.baseRefund).eq(refundAmount1);
                 expect(user1.baseRefunded).eq(seedData.zero);
-                expect(user1.baseRefundAmount).eq(refundAmount1);
                 expect(user1.nonce).eq(1);
                 expect(user1.boosted).eq(false);
 
                 const user2 = await this.user2SQRpProRata.fetchAccountInfo(this.user2Address);
                 expect(user2.baseDeposited).eq(seedData.deposit2);
-                expect(user2.baseDepositAmount).eq(seedData.deposit2 - refundAmount2);
+                expect(user2.baseDeposit).eq(seedData.deposit2);
+                expect(user2.baseAllocation).eq(seedData.deposit2 - refundAmount2);
+                expect(user2.baseRefund).eq(refundAmount2);
                 expect(user2.baseRefunded).eq(seedData.zero);
-                expect(user2.baseRefundAmount).eq(refundAmount2);
                 expect(user2.nonce).eq(1);
                 expect(user2.boosted).eq(false);
               });
@@ -656,7 +658,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 const [account, amount] = eventLog?.args;
                 expect(account).eq(this.user1Address);
 
-                const refundAmount1 = calculateAccountRefundAmount(
+                const refundAmount1 = calculateAccountRefund(
                   contractConfig.baseGoal,
                   seedData.deposit1,
                   seedData.deposit12,
@@ -710,31 +712,31 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                     seedData.balanceDelta,
                   );
 
-                  const refundAmount1 = calculateAccountRefundAmount(
+                  const refund1 = calculateAccountRefund(
                     contractConfig.baseGoal,
                     seedData.deposit1,
                     seedData.deposit12,
                   );
                   expect(await getBaseTokenBalance(this, this.user1Address)).closeTo(
-                    seedData.userInitBalance - seedData.deposit1 + refundAmount1,
+                    seedData.userInitBalance - seedData.deposit1 + refund1,
                     seedData.balanceDelta,
                   );
 
-                  const refundAmount2 = calculateAccountRefundAmount(
+                  const refund2 = calculateAccountRefund(
                     contractConfig.baseGoal,
                     seedData.deposit2,
                     seedData.deposit12,
                   );
                   expect(await getBaseTokenBalance(this, this.user2Address)).closeTo(
-                    seedData.userInitBalance - seedData.deposit2 + refundAmount2,
+                    seedData.userInitBalance - seedData.deposit2 + refund2,
                     seedData.balanceDelta,
                   );
 
                   expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
-                    seedData.deposit1 - refundAmount1,
+                    seedData.deposit1 - refund1,
                   );
                   expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
-                    seedData.deposit2 - refundAmount2,
+                    seedData.deposit2 - refund2,
                   );
                   expect(await this.ownerSQRpProRata.getTotalDeposited()).eq(
                     contractConfig.baseGoal,
@@ -742,23 +744,19 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
                   expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
 
-                  expect(await this.owner2SQRpProRata.totalBaseRefunded()).eq(
-                    refundAmount1 + refundAmount2,
-                  );
+                  expect(await this.owner2SQRpProRata.totalBaseRefunded()).eq(refund1 + refund2);
 
                   const user1 = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
-                  expect(user1.baseDeposited).eq(seedData.deposit1);
-                  expect(user1.baseDepositAmount).eq(seedData.deposit1 - refundAmount1);
-                  expect(user1.baseRefunded).eq(refundAmount1);
-                  expect(user1.baseRefundAmount).eq(refundAmount1);
+                  expect(user1.baseDeposit).eq(seedData.deposit1);
+                  expect(user1.baseAllocation).eq(seedData.deposit1 - refund1);
+                  expect(user1.baseRefund).eq(refund1);
                   expect(user1.nonce).eq(1);
                   expect(user1.boosted).eq(false);
 
                   const user2 = await this.user2SQRpProRata.fetchAccountInfo(this.user2Address);
-                  expect(user2.baseDeposited).eq(seedData.deposit2);
-                  expect(user2.baseDepositAmount).eq(seedData.deposit2 - refundAmount2);
-                  expect(user2.baseRefunded).eq(refundAmount2);
-                  expect(user2.baseRefundAmount).eq(refundAmount2);
+                  expect(user2.baseDeposit).eq(seedData.deposit2);
+                  expect(user2.baseAllocation).eq(seedData.deposit2 - refund2);
+                  expect(user2.baseRefund).eq(refund2);
                   expect(user2.nonce).eq(1);
                   expect(user2.boosted).eq(false);
                 });
@@ -793,7 +791,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                       seedData.balanceDelta,
                     );
 
-                    const refundAmount1 = calculateAccountRefundAmount(
+                    const refundAmount1 = calculateAccountRefund(
                       contractConfig.baseGoal,
                       seedData.deposit1,
                       seedData.deposit12,
@@ -802,7 +800,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                       await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address),
                     ).eq(seedData.deposit1 - refundAmount1);
 
-                    const refundAmount2 = calculateAccountRefundAmount(
+                    const refundAmount2 = calculateAccountRefund(
                       contractConfig.baseGoal,
                       seedData.deposit2,
                       seedData.deposit12,
