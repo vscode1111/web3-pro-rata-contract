@@ -10,8 +10,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is upgrading...`);
-    const { owner2SqrpProRataFactory, owner2SQRpProRata } =
-      await getSQRpProRataContext(await getUsers(), sqrpProRataAddress);
+    const { owner2SqrpProRataFactory, owner2SQRpProRata } = await getSQRpProRataContext(
+      await getUsers(),
+      sqrpProRataAddress,
+    );
 
     const users = await getUsers();
     const { owner2Address } = users;
@@ -25,12 +27,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     }
 
     await upgrades.upgradeProxy(sqrpProRataAddress, owner2SqrpProRataFactory);
+    // await upgrades.forceImport(sqrpProRataAddress, owner2SqrpProRataFactory);
     console.log(`${SQR_P_PRO_RATA_NAME} upgraded to ${sqrpProRataAddress}`);
     if (verifyRequired) {
       await verifyContract(sqrpProRataAddress, hre);
-      console.log(
-        `${SQR_P_PRO_RATA_NAME} upgraded and verified to ${sqrpProRataAddress}`,
-      );
+      console.log(`${SQR_P_PRO_RATA_NAME} upgraded and verified to ${sqrpProRataAddress}`);
     }
   }, hre);
 };

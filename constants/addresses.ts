@@ -23,7 +23,9 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0x83175Ce87b2a64946419da090A2409e7753786a2', //Test - pro-rata-sqrp-gated
     // bsc: '0xF9d6f73c0bDCd0F2a7734bDCE3aFb9b9030d69F0', //Test - pro-rata-sqrp-gated
     // bsc: '0xcc0e43f876696baa27f848fe1bf2ba0df735a692', //Test - pro-rata-sqrp-gated
-    bsc: '0xC5f282e69dE080DD199Da3f7580b2A4E22cf1fEB', //Test - pro-rata-sqrp-gated
+    // bsc: '0xC5f282e69dE080DD199Da3f7580b2A4E22cf1fEB', //Test - pro-rata-sqrp-gated
+    bsc: '0x48Bb4a3Cc10f82b7EC965994d3A3Df5516F3CDF6', //Test - pro-rata-sqrp-gated
+    // bsc: '0x8eb107544819B24Ed6aF22b75A3e338fb2e0DaE2', //Test - pro-rata-sqrp-gated
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '0x5D27C778759e078BBe6D11A6cd802E41459Fe852', //Main - goal: 15 USDT
     //-------------------------------------------------------------------------------------------------------------
