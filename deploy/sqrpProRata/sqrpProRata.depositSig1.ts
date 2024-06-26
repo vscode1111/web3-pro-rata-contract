@@ -1,7 +1,12 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { toNumberDecimals } from '~common';
-import { callWithTimerHre, formatDate, formatToken, waitTx } from '~common-contract';
+import {
+  callWithTimerHre,
+  formatContractDate,
+  formatContractToken,
+  waitTx,
+} from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
@@ -56,8 +61,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table({
       ...params,
-      amount: formatToken(params.amount, decimals, tokenName),
-      timestampLimit: formatDate(params.timestampLimit),
+      amount: formatContractToken(params.amount, decimals, tokenName),
+      timestampLimit: formatContractDate(params.timestampLimit),
     });
 
     await waitTx(

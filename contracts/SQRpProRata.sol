@@ -10,6 +10,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IDepositable} from "./IDepositable.sol";
 
+import "hardhat/console.sol";
+
 contract SQRpProRata is
   OwnableUpgradeable,
   UUPSUpgradeable,
@@ -29,7 +31,7 @@ contract SQRpProRata is
     address _newOwner,
     address _baseToken,
     address _boostToken,
-    address _verifier,
+    address _depositVerifier,
     uint256 _baseGoal,
     uint32 _startDate, //0 - skip
     uint32 _closeDate
@@ -46,8 +48,8 @@ contract SQRpProRata is
     //   revert BoostTokenNotZeroAddress();
     // }
 
-    if (_verifier == address(0)) {
-      revert VerifierNotZeroAddress();
+    if (_depositVerifier == address(0)) {
+      revert DepositVerifierNotZeroAddress();
     }
 
     if (_baseGoal == 0) {
@@ -71,7 +73,7 @@ contract SQRpProRata is
 
     baseToken = IERC20(_baseToken);
     boostToken = IERC20(_boostToken);
-    verifier = _verifier;
+    depositVerifier = _depositVerifier;
     baseGoal = _baseGoal;
     startDate = _startDate;
     closeDate = _closeDate;
@@ -86,11 +88,13 @@ contract SQRpProRata is
 
   IERC20 public baseToken;
   IERC20 public boostToken;
-  address public verifier;
+  address public depositVerifier;
   uint256 public baseGoal;
   uint32 public startDate;
   uint32 public closeDate;
   uint256 public totalBaseDeposited;
+  uint256 public totalBaseNonBoostDeposited;
+  uint256 public totalBaseBoostDeposited;
   uint256 public totalBaseRefunded;
   uint256 public totalBaseWithdrew;
 
@@ -130,7 +134,7 @@ contract SQRpProRata is
   error NewOwnerNotZeroAddress();
   error BaseTokenNotZeroAddress();
   // error BoostTokenNotZeroAddress();
-  error VerifierNotZeroAddress();
+  error DepositVerifierNotZeroAddress();
   error GoalNotZero();
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
@@ -231,8 +235,8 @@ contract SQRpProRata is
       AccountInfo(
         accountItem.baseDeposited,
         accountItem.baseDeposit,
-        accountItem.baseDeposit - baseRefund,
-        baseRefund,
+        calculateAccountBaseAllocation(account),
+        calculateAccountBaseRefund(account),
         accountItem.baseRefunded,
         accountItem.boostDeposit,
         accountItem.boostDeposit - boostRefund,
@@ -284,14 +288,33 @@ contract SQRpProRata is
     return 0;
   }
 
-  function calculateAccountBaseRefund(address account) public view returns (uint256) {
+  function calculateAccountBaseAllocation(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
 
     if (isReachedBaseGoal()) {
-      return ((totalBaseDeposited - baseGoal) * accountItem.baseDeposit) / totalBaseDeposited;
-    } else {
-      return accountItem.baseDeposit;
+      if (baseGoal >= totalBaseBoostDeposited) {
+        if (accountItem.boosted) {
+          return accountItem.baseDeposit;
+        } else {
+          return
+            ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposit) /
+            totalBaseNonBoostDeposited;
+        }
+      } else if (accountItem.boosted) {
+        return (baseGoal * accountItem.baseDeposit) / totalBaseBoostDeposited;
+      }
     }
+
+    return 0;
+  }
+
+  function calculateAccountBaseRefund(address account) public view returns (uint256) {
+    AccountItem memory accountItem = _accountItems[account];
+
+    uint256 baseAllocation = calculateAccountBaseAllocation(account);
+    // console.log(200, accountItem.baseDeposit, baseAllocation);
+
+    return accountItem.baseDeposit - baseAllocation;
   }
 
   //ToDo: fix
@@ -337,19 +360,26 @@ contract SQRpProRata is
 
   function _deposit(
     address account,
-    uint256 amount,
+    uint256 baseAmount,
+    bool boost,
     string calldata transactionId,
     uint32 timestampLimit
-  ) private nonReentrant baseAmountChecker(amount) timeoutBlocker(timestampLimit) periodBlocker {
-    if (baseToken.allowance(account, address(this)) < amount) {
+  )
+    private
+    nonReentrant
+    baseAmountChecker(baseAmount)
+    timeoutBlocker(timestampLimit)
+    periodBlocker
+  {
+    if (baseToken.allowance(account, address(this)) < baseAmount) {
       revert UserMustAllowToUseFunds();
     }
 
-    if (baseToken.balanceOf(account) < amount) {
+    if (baseToken.balanceOf(account) < baseAmount) {
       revert UserMustHaveFunds();
     }
 
-    _setTransactionId(transactionId, amount);
+    _setTransactionId(transactionId, baseAmount);
 
     AccountItem storage accountItem = _accountItems[account];
 
@@ -357,13 +387,21 @@ contract SQRpProRata is
       _accountAddresses.push(account);
     }
 
-    accountItem.baseDeposited += amount;
-    accountItem.baseDeposit += amount;
+    accountItem.baseDeposited += baseAmount;
+    accountItem.baseDeposit += baseAmount;
     accountItem.nonce += 1;
-    totalBaseDeposited += amount;
+    accountItem.boosted = boost;
 
-    baseToken.safeTransferFrom(account, address(this), amount);
-    emit Deposit(account, amount);
+    if (boost) {
+      totalBaseBoostDeposited += baseAmount;
+    } else {
+      totalBaseNonBoostDeposited += baseAmount;
+    }
+
+    totalBaseDeposited += baseAmount;
+
+    baseToken.safeTransferFrom(account, address(this), baseAmount);
+    emit Deposit(account, baseAmount);
   }
 
   function verifyDepositSignature(
@@ -379,7 +417,7 @@ contract SQRpProRata is
       abi.encode(account, amount, boost, nonce, transactionId, timestampLimit)
     );
     address recover = messageHash.toEthSignedMessageHash().recover(signature);
-    return recover == owner() || recover == verifier;
+    return recover == owner() || recover == depositVerifier;
   }
 
   function depositSig(
@@ -405,7 +443,7 @@ contract SQRpProRata is
     ) {
       revert InvalidSignature();
     }
-    _deposit(account, baseAmount, transactionId, timestampLimit);
+    _deposit(account, baseAmount, boost, transactionId, timestampLimit);
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {

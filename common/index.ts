@@ -1,4 +1,4 @@
-//VERSION 0.0.14;
+//VERSION 0.0.15;
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 
@@ -15,6 +15,7 @@ export * from './cryptography';
 export * from './files';
 export * from './format';
 export * from './log';
+export * from './math';
 export * from './misc';
 export * from './reflection';
 export * from './reliability';

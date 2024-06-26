@@ -4,12 +4,12 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Numeric, TransactionReceipt } from 'ethers';
 import { uniqBy } from 'lodash';
 import { Context } from 'mocha';
-import { formatToken } from '~common';
+import { bigIntSum, formatToken } from '~common';
 import { ContractConfig, seedData, tokenConfig } from '~seeds';
 import { BaseToken } from '~typechain-types/contracts/BaseToken';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { ContextBase } from '~types';
-import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDeposit } from '~utils';
+import { addSecondsToUnixTime, signMessageForProRataDeposit } from '~utils';
 import { loadFixture } from './loadFixture';
 import { deploySQRpProRataContractFixture } from './sqrpProRata.fixture';
 import { DepositRecord, DepositResult } from './types';
@@ -35,7 +35,7 @@ export async function checkTotalSQRBalance(that: ContextBase) {
 
 export async function getTotalSQRBalance(that: ContextBase, accounts: string[]): Promise<bigint> {
   const result = await Promise.all(accounts.map((address) => getBaseTokenBalance(that, address)));
-  return result.reduce((acc, cur) => acc + cur, seedData.zero);
+  return bigIntSum(result);
 }
 
 export function findEvent<T>(receipt: TransactionReceipt) {
@@ -116,7 +116,8 @@ export async function depositSig({
   context,
   userSQRpProRata,
   userAddress,
-  deposit: deposit,
+  deposit,
+  boost = false,
   transactionId,
   timestampLimit: timestampLimit,
 }: {
@@ -124,42 +125,82 @@ export async function depositSig({
   userSQRpProRata: SQRpProRata;
   userAddress: string;
   deposit: bigint;
+  boost?: boolean;
   transactionId: string;
   timestampLimit: number;
 }) {
-  const nonce = await userSQRpProRata.getAccountDepositNonce(userAddress);
+  const nonce = Number(await userSQRpProRata.getAccountDepositNonce(userAddress));
 
   const signature = await signMessageForProRataDeposit(
     context.owner2,
     userAddress,
     deposit,
-    false,
-    Number(nonce),
+    boost,
+    nonce,
     transactionId,
     timestampLimit,
   );
 
-  await userSQRpProRata.depositSig(deposit, false, transactionId, timestampLimit, signature);
+  await userSQRpProRata.depositSig(deposit, boost, transactionId, timestampLimit, signature);
 }
 
 export function printContractStats({
+  baseGoal,
   totalDeposited,
+  totalBaseNonBoostDeposited,
+  totalBaseBoostDeposited,
   decimals,
 }: {
+  baseGoal: bigint;
   totalDeposited: bigint;
+  totalBaseNonBoostDeposited: bigint;
+  totalBaseBoostDeposited: bigint;
   decimals: Numeric;
 }) {
-  console.log(`Total deposited: ${formatToken(totalDeposited, decimals)}`);
+  console.log(
+    `Goal: ${formatToken(baseGoal, decimals)}, total deposited: ${formatToken(totalDeposited, decimals)}, non-boost deposited: ${formatToken(totalBaseNonBoostDeposited, decimals)}, boost deposited: ${formatToken(totalBaseBoostDeposited, decimals)}`,
+  );
 }
 
-export function printDepositResults(depositResults: DepositResult[], decimals: Numeric) {
-  const finalTable = depositResults.map(({ deposit, allocation, refund }) => ({
-    deposit: Number(formatToken(deposit, decimals)),
-    allocation: Number(formatToken(allocation, decimals)),
-    refund: Number(formatToken(refund, decimals)),
-  }));
+export function getUserName(context: Context, userAddress: string) {
+  const addressMap: Record<string, string> = {
+    [context.user1Address]: 'user1',
+    [context.user2Address]: 'user2',
+    [context.user3Address]: 'user3',
+  };
+
+  return addressMap[userAddress] ?? userAddress;
+}
+export function printDepositResults(
+  context: Context,
+  depositResults: DepositResult[],
+  decimals: Numeric,
+) {
+  const finalTable = depositResults.map(
+    ({ userAddress, deposit, allocation, refund, boost = false }) => ({
+      user: getUserName(context, userAddress),
+      deposit: Number(formatToken(deposit, decimals)),
+      boost,
+      allocation: Number(formatToken(allocation, decimals)),
+      refund: Number(formatToken(refund, decimals)),
+    }),
+  );
 
   console.table(finalTable);
+}
+
+export function printContractResults({
+  totalAllocation,
+  totalRefund,
+  decimals,
+}: {
+  totalAllocation: bigint;
+  totalRefund: bigint;
+  decimals: Numeric;
+}) {
+  console.log(
+    `Total allocations: ${formatToken(totalAllocation, decimals)}, total refund: ${formatToken(totalRefund, decimals)}`,
+  );
 }
 
 export async function checkDepositRecords(
@@ -180,46 +221,54 @@ export async function checkDepositRecords(
 
   const timestampLimit = addSecondsToUnixTime(newStartDate, seedData.timeShift);
 
-  for (const { userAddress, deposit, userSQRpProRata, transactionId } of depositRecords) {
+  for (const { userAddress, deposit, userSQRpProRata, transactionId, boost } of depositRecords) {
     await depositSig({
-      context: context,
+      context,
       userSQRpProRata,
       userAddress,
       deposit,
+      boost,
       transactionId,
       timestampLimit,
     });
   }
 
-  const totalDeposit = depositRecords.reduce((acc, cur) => (acc += cur.deposit), BigInt(0));
+  const totalDeposit = bigIntSum(depositRecords, (record) => record.deposit);
+
+  const shouldReachedBaseGoal = totalDeposit >= contractConfig.baseGoal;
 
   expect(await getBaseTokenBalance(context, context.sqrpProRataAddress)).closeTo(
     totalDeposit,
     seedData.balanceDelta,
   );
 
-  expect(await context.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
+  expect(await context.ownerSQRpProRata.isReachedBaseGoal()).eq(shouldReachedBaseGoal);
 
   const closeDate = addSecondsToUnixTime(contractConfig.closeDate, seedData.timeShift);
   await time.increaseTo(closeDate);
 
-  expect(await context.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
+  expect(await context.ownerSQRpProRata.isReachedBaseGoal()).eq(shouldReachedBaseGoal);
 
-  for (const { userAddress, deposit, allocation, refund } of depositRecords) {
-    const localRefund = calculateAccountRefund(contractConfig.baseGoal, deposit, totalDeposit);
+  for (const { userAddress, deposit, boost, allocation, refund } of depositRecords) {
+    // const localRefund = calculateAccountRefund(contractConfig.baseGoal, deposit, totalDeposit);
 
-    if (refund) {
-      expect(localRefund).eq(refund);
+    const contractAllocation =
+      await context.ownerSQRpProRata.calculateAccountBaseAllocation(userAddress);
+    if (allocation) {
+      expect(contractAllocation).eq(allocation);
     }
 
-    const localAllocation = allocation ?? deposit - localRefund;
-    expect(await context.ownerSQRpProRata.getAccountDepositAmount(userAddress)).eq(localAllocation);
+    const contractRefund = await context.ownerSQRpProRata.calculateAccountBaseRefund(userAddress);
+    if (refund) {
+      expect(contractRefund).eq(refund);
+    }
 
     depositResults.push({
       userAddress,
       deposit,
-      allocation: localAllocation,
-      refund: localRefund,
+      boost,
+      allocation: contractAllocation,
+      refund: contractRefund,
     });
   }
 
@@ -233,10 +282,8 @@ export async function checkDepositRecords(
     const filteredResults = depositResults.filter(
       (result) => result.userAddress === uniqUserAddress,
     );
-    const totalAllocation = filteredResults.reduce(
-      (acc, cur) => (acc += cur.allocation),
-      BigInt(0),
-    );
+
+    const totalAllocation = bigIntSum(filteredResults, (result) => result.allocation);
 
     expect(await getBaseTokenBalance(context, uniqUserAddress)).closeTo(
       seedData.userInitBalance - totalAllocation,
@@ -252,7 +299,7 @@ export async function checkDepositRecords(
   );
 
   expect(await getBaseTokenBalance(context, context.sqrpProRataAddress)).closeTo(
-    contractConfig.baseGoal,
+    shouldReachedBaseGoal ? contractConfig.baseGoal : seedData.zero,
     seedData.balanceDelta,
   );
   expect(await getBaseTokenBalance(context, context.owner2Address)).closeTo(
@@ -262,9 +309,18 @@ export async function checkDepositRecords(
 
   const decimals = await context.owner2BaseToken.decimals();
 
+  console.log('----------------------------------------------------------------------------------');
   printContractStats({
+    baseGoal: await context.owner2SQRpProRata.baseGoal(),
     totalDeposited: await context.owner2SQRpProRata.totalBaseDeposited(),
+    totalBaseNonBoostDeposited: await context.owner2SQRpProRata.totalBaseNonBoostDeposited(),
+    totalBaseBoostDeposited: await context.owner2SQRpProRata.totalBaseBoostDeposited(),
     decimals,
   });
-  printDepositResults(depositResults, decimals);
+  printDepositResults(context, depositResults, decimals);
+  printContractResults({
+    totalAllocation: bigIntSum(depositResults, (result) => result.allocation),
+    totalRefund: bigIntSum(depositResults, (result) => result.refund),
+    decimals,
+  });
 }

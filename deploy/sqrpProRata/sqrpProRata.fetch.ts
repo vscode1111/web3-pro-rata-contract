@@ -22,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const result = {
       owner: await ownerSQRpProRata.owner(),
       baseToken,
-      verifier: await ownerSQRpProRata.verifier(),
+      depositVerifier: await ownerSQRpProRata.depositVerifier(),
       baseGoal: formatContractToken(await ownerSQRpProRata.baseGoal(), decimals, tokenName),
       startDate: formatContractDate(await ownerSQRpProRata.startDate()),
       closeDate: formatContractDate(await ownerSQRpProRata.closeDate()),

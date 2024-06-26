@@ -3,7 +3,7 @@ export const customError = {
   newOwnerNotZeroAddress: 'NewOwnerNotZeroAddress',
   baseTokenNotZeroAddress: 'BaseTokenNotZeroAddress',
   // boostTokenNotZeroAddress: 'BoostTokenNotZeroAddress',
-  verifierNotZeroAddress: 'VerifierNotZeroAddress',
+  depositVerifierNotZeroAddress: 'DepositVerifierNotZeroAddress',
   goalNotZero: 'GoalNotZero',
   startDateMustBeGreaterThanCurrentTime: 'StartDateMustBeGreaterThanCurrentTime',
   closeDateMustBeGreaterThanCurrentTime: 'CloseDateMustBeGreaterThanCurrentTime',

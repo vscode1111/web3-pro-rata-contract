@@ -121,7 +121,7 @@ export function shouldBehaveCorrectDeployment(): void {
           ...contractConfig,
           verifier: ZeroAddress,
         }),
-      ).revertedWithCustomError(this.owner2SQRpProRata, customError.verifierNotZeroAddress);
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.depositVerifierNotZeroAddress);
     });
 
     it('owner tries to deploy with zero deposit goal', async function () {

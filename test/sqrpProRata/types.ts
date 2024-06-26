@@ -30,6 +30,7 @@ export interface DepositResult {
   deposit: bigint;
   allocation: bigint;
   refund: bigint;
+  boost?: boolean;
 }
 
 export interface DepositRecord extends Partial<DepositResult> {
@@ -38,5 +39,4 @@ export interface DepositRecord extends Partial<DepositResult> {
   userSQRpProRata: SQRpProRata;
   userBaseToken: BaseToken;
   transactionId: string;
-  boost?: boolean;
 }
