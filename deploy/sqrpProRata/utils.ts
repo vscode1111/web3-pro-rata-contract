@@ -12,11 +12,11 @@ export function getContractArgsEx() {
 
 export function formatContractConfig(contractConfig: ContractConfig) {
   const { decimals, tokenName } = chainTokenDescription.bsc;
-  const { baseGoal: goal, startDate, closeDate } = contractConfig;
+  const { baseGoal, startDate, closeDate } = contractConfig;
 
   return {
     ...contractConfig,
-    baseGoal: formatContractToken(goal, decimals, tokenName),
+    baseGoal: formatContractToken(baseGoal, decimals, tokenName),
     startDate: formatContractDate(startDate),
     closeDate: formatContractDate(closeDate),
   };
@@ -33,12 +33,11 @@ export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
 
 interface FormattedAccountInfo {
   baseDeposited: string;
-  baseDeposit: string;
   baseAllocation: string;
+  baseDeposit: string;
   baseRefund: string;
   baseRefunded: string;
   boostDeposit: string;
-  boostAllocation: string;
   boostRefund: string;
   boostRefunded: string;
   nonce: number;
@@ -51,12 +50,11 @@ export function formatAccountInfo(
 ): FormattedAccountInfo {
   const {
     baseDeposited,
-    baseDeposit,
     baseAllocation,
+    baseDeposit,
     baseRefund,
     baseRefunded,
     boostDeposit,
-    boostAllocation,
     boostRefund,
     boostRefunded,
     nonce,
@@ -69,7 +67,6 @@ export function formatAccountInfo(
     baseRefund: formatContractToken(baseRefund, decimals, tokenName),
     baseRefunded: formatContractToken(baseRefunded, decimals, tokenName),
     boostDeposit: formatContractToken(boostDeposit, decimals, tokenName),
-    boostAllocation: formatContractToken(boostAllocation, decimals, tokenName),
     boostRefund: formatContractToken(boostRefund, decimals, tokenName),
     boostRefunded: formatContractToken(boostRefunded, decimals, tokenName),
     nonce: Number(nonce),

@@ -51,6 +51,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         this.user1Address,
         seedData.deposit1,
         false,
+        seedData.zero,
         seedData.depositNonce1_0,
         seedData.transactionId1,
         seedData.startDatePlus1m,
@@ -60,6 +61,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         this.user1SQRpProRata.depositSig(
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.transactionId1,
           seedData.startDatePlus1m,
           signature,
@@ -77,6 +79,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         this.user1Address,
         seedData.deposit1,
         false,
+        seedData.zero,
         seedData.depositNonce1_0,
         seedData.transactionId1,
         seedData.closeDatePlus1m,
@@ -86,6 +89,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         this.user1SQRpProRata.depositSig(
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.transactionId1,
           seedData.closeDatePlus1m,
           signature,
@@ -110,6 +114,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1Address,
           seedData.zero,
           false,
+          seedData.zero,
           seedData.depositNonce1_0,
           seedData.transactionId1,
           seedData.startDatePlus1m,
@@ -119,6 +124,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1SQRpProRata.depositSig(
             seedData.zero,
             false,
+            seedData.zero,
             seedData.transactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -132,6 +138,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1Address,
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.depositNonce1_0,
           seedData.transactionId1,
           seedData.startDatePlus1m,
@@ -141,6 +148,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1SQRpProRata.depositSig(
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.transactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -156,6 +164,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1Address,
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.depositNonce1_0,
           seedData.transactionId1,
           seedData.startDatePlus1m,
@@ -165,6 +174,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1SQRpProRata.depositSig(
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.transactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -178,6 +188,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1Address,
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.depositNonce1_0,
           seedData.transactionIdWrong,
           seedData.startDatePlus1m,
@@ -187,6 +198,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1SQRpProRata.depositSig(
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.transactionId1,
             seedData.startDatePlus1m,
             wrongSignature,
@@ -202,6 +214,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1Address,
           seedData.deposit1,
           false,
+          seedData.zero,
           seedData.depositNonce1_0,
           seedData.transactionId1,
           seedData.startDatePlus1m,
@@ -211,6 +224,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user1SQRpProRata.depositSig(
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.transactionId1,
             seedData.startDatePlus1m,
             signature,
@@ -224,6 +238,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user2Address,
           seedData.deposit2,
           false,
+          seedData.zero,
           seedData.depositNonce2_0,
           seedData.transactionId2,
           seedData.startDatePlus1m,
@@ -233,6 +248,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           this.user2SQRpProRata.depositSig(
             seedData.deposit2,
             false,
+            seedData.zero,
             seedData.transactionId2,
             seedData.startDatePlus1m,
             signature,
@@ -246,13 +262,13 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             this,
             this.user1BaseToken,
             this.user1Address,
-            seedData.deposit1,
+            seedData.userInitBalance,
           );
           await transferToUserAndApproveForContract(
             this,
             this.user2BaseToken,
             this.user2Address,
-            seedData.deposit2,
+            seedData.userInitBalance,
           );
         });
 
@@ -273,6 +289,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             this.user1Address,
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.depositNonce1_0,
             seedData.transactionId1,
             seedData.startDatePlus1m,
@@ -282,6 +299,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             this.user1SQRpProRata.depositSig(
               seedData.deposit1,
               false,
+              seedData.zero,
               seedData.transactionId1,
               seedData.startDatePlus1m,
               signature,
@@ -299,6 +317,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             this.user1Address,
             seedData.deposit1,
             false,
+            seedData.zero,
             seedData.depositNonce1_0,
             seedData.transactionId1,
             seedData.startDatePlus1m,
@@ -308,6 +327,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             this.user1SQRpProRata.depositSig(
               seedData.deposit1,
               false,
+              seedData.zero,
               seedData.transactionId1,
               seedData.startDatePlus1m,
               signature,
@@ -327,7 +347,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               context: this,
               userSQRpProRata: this.user1SQRpProRata,
               userAddress: this.user1Address,
-              deposit: seedData.deposit1,
+              baseDeposit: seedData.deposit1,
               transactionId: seedData.transactionId1,
               timestampLimit: seedData.startDatePlus1m,
             });
@@ -399,7 +419,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               context: this,
               userSQRpProRata: this.user1SQRpProRata,
               userAddress: this.user1Address,
-              deposit: seedData.deposit1,
+              baseDeposit: seedData.deposit1,
               transactionId: seedData.transactionId1_2,
               timestampLimit: seedData.startDatePlus1m,
             });
@@ -469,6 +489,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               this.user1Address,
               seedData.deposit1,
               false,
+              seedData.zero,
               seedData.depositNonce1_1,
               seedData.transactionId1,
               seedData.startDatePlus1m,
@@ -478,6 +499,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               this.user1SQRpProRata.depositSig(
                 seedData.deposit1,
                 false,
+                seedData.zero,
                 seedData.transactionId1,
                 seedData.startDatePlus1m,
                 signature,
@@ -491,7 +513,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 context: this,
                 userSQRpProRata: this.user2SQRpProRata,
                 userAddress: this.user2Address,
-                deposit: seedData.deposit2,
+                baseDeposit: seedData.deposit2,
                 transactionId: seedData.transactionId2,
                 timestampLimit: seedData.startDatePlus1m,
               });

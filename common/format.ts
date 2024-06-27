@@ -13,6 +13,6 @@ export function formatDate(date: Date | Dayjs | number): string {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 }
 
-export function formatToken(value: bigint, decimals: Numeric, tokenName?: string): string {
+export function formatToken(value: bigint, decimals: Numeric = 18, tokenName?: string): string {
   return `${toNumberDecimals(value, decimals)}${tokenName ? ` ${tokenName}` : ``}`;
 }

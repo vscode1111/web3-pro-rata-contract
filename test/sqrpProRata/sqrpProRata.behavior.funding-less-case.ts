@@ -1,8 +1,8 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime, toWei } from '~common';
-import { ContractConfig, contractConfig, now, seedData, tokenConfig, tokenDecimals } from '~seeds';
-import { addSecondsToUnixTime } from '~utils';
+import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime } from '~common';
+import { ContractConfig, contractConfig, now, seedData, tokenConfig } from '~seeds';
+import { addSecondsToUnixTime, toContractWei } from '~utils';
 import { customError } from './testData';
 import {
   checkTotalSQRBalance,
@@ -15,14 +15,14 @@ import {
 
 const caseContractConfig: ContractConfig = {
   ...contractConfig,
-  baseGoal: toWei(15_000, tokenDecimals),
+  baseGoal: toContractWei(15_000),
   startDate: toUnixTime(now.add(20, 'days').toDate()),
   closeDate: toUnixTime(now.add(22, 'days').toDate()),
 };
 
 const caseSettings = {
-  deposit1: toWei(6_000, tokenDecimals),
-  deposit2: toWei(7_000, tokenDecimals),
+  deposit1: toContractWei(6_000),
+  deposit2: toContractWei(7_000),
 };
 
 export function shouldBehaveCorrectFundingLessCase(): void {
@@ -43,14 +43,14 @@ export function shouldBehaveCorrectFundingLessCase(): void {
         this,
         this.user1BaseToken,
         this.user1Address,
-        caseSettings.deposit1,
+        seedData.userInitBalance,
       );
 
       await transferToUserAndApproveForContract(
         this,
         this.user2BaseToken,
         this.user2Address,
-        caseSettings.deposit2,
+        seedData.userInitBalance,
       );
 
       const newStartDate = addSecondsToUnixTime(caseContractConfig.startDate, seedData.timeShift);
@@ -62,7 +62,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
         context: this,
         userSQRpProRata: this.user1SQRpProRata,
         userAddress: this.user1Address,
-        deposit: caseSettings.deposit1,
+        baseDeposit: caseSettings.deposit1,
         transactionId: seedData.transactionId1,
         timestampLimit,
       });
@@ -71,7 +71,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
         context: this,
         userSQRpProRata: this.user2SQRpProRata,
         userAddress: this.user2Address,
-        deposit: caseSettings.deposit2,
+        baseDeposit: caseSettings.deposit2,
         transactionId: seedData.transactionId2,
         timestampLimit,
       });

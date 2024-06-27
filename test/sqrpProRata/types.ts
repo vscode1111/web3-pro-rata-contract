@@ -25,18 +25,58 @@ export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, number]>;
 
 export type WithdrawGoalEventArgs = WithdrawGoalEvent.Event & EventArgs<[string, number]>;
 
-export interface DepositResult {
-  userAddress: string;
+export interface DepositBase {
   deposit: bigint;
   allocation: bigint;
   refund: bigint;
   boost?: boolean;
 }
 
-export interface DepositRecord extends Partial<DepositResult> {
-  deposit: bigint;
+export type UserType = 'user1' | 'user2' | 'user3';
+
+export interface DepositResult {
+  user: UserType;
+  baseDeposited: bigint;
+  baseAllocation: bigint;
+  baseDeposit: bigint;
+  baseRefund: bigint;
+  baseRefunded: bigint;
+  boostDeposit: bigint;
+  boostRefund: bigint;
+  boostRefunded: bigint;
+  nonce: bigint;
+  boosted: boolean;
+  boostAverageRate: bigint;
+}
+
+export interface DepositRecord {
+  user: UserType;
+  baseDeposit: bigint;
+  transactionId?: string;
+  boost?: boolean;
+  boostRatio?: bigint;
+}
+
+export interface UserEnvironment {
   userAddress: string;
   userSQRpProRata: SQRpProRata;
   userBaseToken: BaseToken;
-  transactionId: string;
+}
+
+export interface UserExpectation {
+  baseDeposited?: bigint;
+  baseAllocation?: bigint;
+  baseDeposit?: bigint;
+  baseRefund?: bigint;
+  baseRefunded?: bigint;
+  boostDeposit?: bigint;
+  boostRefund?: bigint;
+  boostRefunded?: bigint;
+  nonce?: number;
+  boosted?: boolean;
+  boostAverageRate?: bigint;
+}
+
+export interface CaseExpectations {
+  userExpectations?: Partial<Record<UserType, UserExpectation>>;
 }

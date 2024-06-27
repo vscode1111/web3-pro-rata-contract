@@ -74,6 +74,7 @@ export function shouldBehaveCorrectDeployment(): void {
         this.user1Address,
         seedData.deposit1,
         false,
+        seedData.zero,
         seedData.depositNonce1_0,
         seedData.transactionId1,
         seedData.startDatePlus1m,
@@ -82,6 +83,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await this.user1SQRpProRata.depositSig(
         seedData.deposit1,
         false,
+        seedData.zero,
         seedData.transactionId1,
         seedData.startDatePlus1m,
         signature,

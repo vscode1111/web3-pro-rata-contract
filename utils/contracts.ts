@@ -15,5 +15,5 @@ export function calculateAccountRefund(
   userDeposited: bigint,
   totalDeposited: bigint,
 ): bigint {
-  return ((totalDeposited - goal) * userDeposited) / totalDeposited;
+  return ((totalDeposited - goal) * userDeposited) / totalDeposited + BigInt(0);
 }

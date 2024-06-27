@@ -2,7 +2,7 @@ export const customError = {
   ownableUnauthorizedAccount: 'OwnableUnauthorizedAccount',
   newOwnerNotZeroAddress: 'NewOwnerNotZeroAddress',
   baseTokenNotZeroAddress: 'BaseTokenNotZeroAddress',
-  // boostTokenNotZeroAddress: 'BoostTokenNotZeroAddress',
+  boostTokenNotZeroAddress: 'BoostTokenNotZeroAddress',
   depositVerifierNotZeroAddress: 'DepositVerifierNotZeroAddress',
   goalNotZero: 'GoalNotZero',
   startDateMustBeGreaterThanCurrentTime: 'StartDateMustBeGreaterThanCurrentTime',
