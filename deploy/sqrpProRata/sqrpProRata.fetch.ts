@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { callWithTimerHre, formatContractDate, formatContractToken } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME } from '~constants';
-import { getAddressesFromHre, getBaseTokenContext, getSQRpProRataContext, getUsers } from '~utils';
+import { getAddressesFromHre, getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
 import { printAccountInfo } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -14,10 +14,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     const baseToken = await ownerSQRpProRata.baseToken();
 
-    const { ownerBaseToken } = await getBaseTokenContext(users, baseToken);
+    const { ownerERC20Token } = await getERC20TokenContext(users, baseToken);
 
-    const decimals = await ownerBaseToken.decimals();
-    const tokenName = await ownerBaseToken.name();
+    const decimals = await ownerERC20Token.decimals();
+    const tokenName = await ownerERC20Token.name();
 
     const result = {
       owner: await ownerSQRpProRata.owner(),

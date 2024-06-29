@@ -7,8 +7,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
-contract BaseToken is ERC20, ERC20Burnable, ERC20Permit, Ownable, ReentrancyGuard {
-  uint8 _decimals;
+contract ERC20Token is ERC20, ERC20Burnable, ERC20Permit, Ownable, ReentrancyGuard {
+  uint8 internal _decimals;
 
   constructor(
     string memory name_,

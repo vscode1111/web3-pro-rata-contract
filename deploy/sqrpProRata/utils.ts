@@ -3,7 +3,7 @@ import { formatContractDate, formatContractToken } from '~common-contract';
 import { ContractConfig, chainTokenDescription, contractConfig, getContractArgs } from '~seeds';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { Users } from '~types';
-import { getBaseTokenContext } from '~utils';
+import { getERC20TokenContext } from '~utils';
 import { verifyArgsRequired } from './deployData';
 
 export function getContractArgsEx() {
@@ -24,10 +24,10 @@ export function formatContractConfig(contractConfig: ContractConfig) {
 
 export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
   const baseToken = await userSQRpProRata.baseToken();
-  const { ownerBaseToken } = await getBaseTokenContext(users, baseToken);
+  const { ownerERC20Token } = await getERC20TokenContext(users, baseToken);
   return {
-    decimals: Number(await ownerBaseToken.decimals()),
-    tokenName: await ownerBaseToken.name(),
+    decimals: Number(await ownerERC20Token.decimals()),
+    tokenName: await ownerERC20Token.name(),
   };
 }
 

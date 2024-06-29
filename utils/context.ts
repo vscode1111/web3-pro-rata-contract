@@ -2,17 +2,17 @@ import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
 import { ethers, upgrades } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getNetworkName } from '~common-contract';
-import { BASE_TOKEN_NAME, CONTRACTS, SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
+import { CONTRACTS, ERC20_TOKEN_NAME, SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { ContractConfig, getContractArgs, getTokenArgs } from '~seeds';
-import { BaseToken } from '~typechain-types/contracts/BaseToken';
+import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
-import { BaseToken__factory } from '~typechain-types/factories/contracts/BaseToken__factory';
+import { ERC20Token__factory } from '~typechain-types/factories/contracts/ERC20Token__factory';
 import { SQRpProRata__factory } from '~typechain-types/factories/contracts/SQRpProRata__factory';
 import {
   Addresses,
-  BaseTokenContext,
   ContextBase,
   DeployNetworks,
+  ERC20TokenContext,
   SQRpProRataContext,
   Users,
 } from '~types';
@@ -59,40 +59,39 @@ export async function getUsers(): Promise<Users> {
     verifierAddress,
   };
 }
-
-export async function getBaseTokenContext(
+export async function getERC20TokenContext(
   users: Users,
   deployData?: string | { newOwner: string },
-): Promise<BaseTokenContext> {
+): Promise<ERC20TokenContext> {
   const { owner, user1, user2, user3, owner2, owner2Address } = users;
 
-  const testBaseTokenFactory = (await ethers.getContractFactory(
-    BASE_TOKEN_NAME,
-  )) as unknown as BaseToken__factory;
+  const testERC20TokenFactory = (await ethers.getContractFactory(
+    ERC20_TOKEN_NAME,
+  )) as unknown as ERC20Token__factory;
 
-  let ownerBaseToken: BaseToken;
+  let ownerERC20Token: ERC20Token;
 
   if (typeof deployData === 'string') {
-    ownerBaseToken = testBaseTokenFactory.connect(owner).attach(deployData) as BaseToken;
+    ownerERC20Token = testERC20TokenFactory.connect(owner).attach(deployData) as ERC20Token;
   } else {
     const newOwner = deployData?.newOwner ?? owner2Address;
-    ownerBaseToken = await testBaseTokenFactory.connect(owner).deploy(...getTokenArgs(newOwner));
+    ownerERC20Token = await testERC20TokenFactory.connect(owner).deploy(...getTokenArgs(newOwner));
   }
 
-  const baseTokenAddress = await ownerBaseToken.getAddress();
+  const erc20TokenAddress = await ownerERC20Token.getAddress();
 
-  const user1BaseToken = ownerBaseToken.connect(user1);
-  const user2BaseToken = ownerBaseToken.connect(user2);
-  const user3BaseToken = ownerBaseToken.connect(user3);
-  const owner2BaseToken = ownerBaseToken.connect(owner2);
+  const user1ERC20Token = ownerERC20Token.connect(user1);
+  const user2ERC20Token = ownerERC20Token.connect(user2);
+  const user3ERC20Token = ownerERC20Token.connect(user3);
+  const owner2ERC20Token = ownerERC20Token.connect(owner2);
 
   return {
-    baseTokenAddress,
-    ownerBaseToken,
-    user1BaseToken,
-    user2BaseToken,
-    user3BaseToken,
-    owner2BaseToken,
+    erc20TokenAddress,
+    ownerERC20Token,
+    user1ERC20Token,
+    user2ERC20Token,
+    user3ERC20Token,
+    owner2ERC20Token,
   };
 }
 
@@ -142,16 +141,43 @@ export async function getSQRpProRataContext(
 }
 
 export async function getContext(
-  BaseTokenAddress: string,
+  baseTokenAddress: string,
   sqrpProRataAddress: string,
 ): Promise<ContextBase> {
   const users = await getUsers();
-  const BaseTokenContext = await getBaseTokenContext(users, BaseTokenAddress);
+  const {
+    ownerERC20Token: ownerBaseToken,
+    user1ERC20Token: user1BaseToken,
+    user2ERC20Token: user2BaseToken,
+    user3ERC20Token: user3BaseToken,
+    owner2ERC20Token: owner2BaseToken,
+  } = await getERC20TokenContext(users, baseTokenAddress);
+
+  const {
+    erc20TokenAddress: boostTokenAddress,
+    ownerERC20Token: ownerBoostToken,
+    user1ERC20Token: user1BoostToken,
+    user2ERC20Token: user2BoostToken,
+    user3ERC20Token: user3BoostToken,
+    owner2ERC20Token: owner2BoostToken,
+  } = await getERC20TokenContext(users);
+
   const sqrpProRataContext = await getSQRpProRataContext(users, sqrpProRataAddress);
 
   return {
     ...users,
-    ...BaseTokenContext,
     ...sqrpProRataContext,
+    baseTokenAddress,
+    ownerBaseToken,
+    user1BaseToken,
+    user2BaseToken,
+    user3BaseToken,
+    owner2BaseToken,
+    boostTokenAddress,
+    ownerBoostToken,
+    user1BoostToken,
+    user2BoostToken,
+    user3BoostToken,
+    owner2BoostToken,
   };
 }

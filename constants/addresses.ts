@@ -1,7 +1,7 @@
 import { DeployNetworks } from '~types';
 
 export const SQR_P_PRO_RATA_NAME = 'SQRpProRata';
-export const BASE_TOKEN_NAME = 'BaseToken';
+export const ERC20_TOKEN_NAME = 'ERC20Token';
 
 export enum CONTRACT_LIST {
   SQR_P_PRO_RATA = 'SQR_P_PRO_RATA',

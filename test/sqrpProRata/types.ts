@@ -1,4 +1,4 @@
-import { BaseToken } from '~typechain-types/contracts/BaseToken';
+import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import {
   DepositEvent,
   RefundEvent,
@@ -47,6 +47,7 @@ export interface DepositResult {
   nonce: bigint;
   boosted: boolean;
   boostAverageRate: bigint;
+  share: bigint;
 }
 
 export interface DepositRecord {
@@ -54,13 +55,13 @@ export interface DepositRecord {
   baseDeposit: bigint;
   transactionId?: string;
   boost?: boolean;
-  boostRatio?: bigint;
+  boostRate?: bigint;
 }
 
 export interface UserEnvironment {
   userAddress: string;
   userSQRpProRata: SQRpProRata;
-  userBaseToken: BaseToken;
+  userBaseToken: ERC20Token;
 }
 
 export interface UserExpectation {

@@ -34,14 +34,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       amount: 0.123456789,
       transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+25',
       boost: false,
-      boostRatio: 0.233,
+      boostRate: 0.233,
     };
 
     const response = {
       signature:
         '0x386ce0fdf3276585b4ad80824b229fac333e19deb2ca34a8dd6b804dbc0b660438959bec3c9beba1c39904be2d6713930aa60c4e93eb68b8ab952ba5b1ddce801b',
       amountInWei: '12345679',
-      boostRatioInWei: '12345679',
+      boostRateInWei: '12345679',
       nonce: 1,
       timestampNow: 1718637791,
       timestampLimit: 1718638091,
@@ -75,7 +75,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       account,
       BigInt(response.amountInWei),
       false,
-      BigInt(response.boostRatioInWei),
+      BigInt(response.boostRateInWei),
       response.nonce,
       body.transactionId,
       response.timestampLimit,
@@ -89,7 +89,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const params = {
       account,
       amount: BigInt(response.amountInWei),
-      boostRatio: BigInt(response.boostRatioInWei),
+      boostRate: BigInt(response.boostRateInWei),
       transactionId: body.transactionId,
       timestampLimit: response.timestampLimit,
       signature: response.signature,
@@ -116,7 +116,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       user1SQRpProRata.depositSig(
         params.amount,
         false,
-        params.boostRatio,
+        params.boostRate,
         params.transactionId,
         params.timestampLimit,
         params.signature,
