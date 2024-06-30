@@ -45,8 +45,10 @@ interface FormattedAccountInfo {
 
 export function formatAccountInfo(
   accountInfo: SQRpProRata.AccountInfoStruct,
-  decimals: Numeric,
-  tokenName?: string,
+  baseDecimals: Numeric,
+  baseTokenName: string,
+  boostDecimals: Numeric,
+  boostTokenName: string,
 ): FormattedAccountInfo {
   const {
     baseDeposited,
@@ -61,14 +63,14 @@ export function formatAccountInfo(
   } = accountInfo;
 
   return {
-    baseDeposited: formatContractToken(baseDeposited, decimals, tokenName),
-    baseDeposit: formatContractToken(baseDeposit, decimals, tokenName),
-    baseAllocation: formatContractToken(baseAllocation, decimals, tokenName),
-    baseRefund: formatContractToken(baseRefund, decimals, tokenName),
-    baseRefunded: formatContractToken(baseRefunded, decimals, tokenName),
-    boostDeposit: formatContractToken(boostDeposit, decimals, tokenName),
-    boostRefund: formatContractToken(boostRefund, decimals, tokenName),
-    boostRefunded: formatContractToken(boostRefunded, decimals, tokenName),
+    baseDeposited: formatContractToken(baseDeposited, baseDecimals, baseTokenName),
+    baseDeposit: formatContractToken(baseDeposit, baseDecimals, baseTokenName),
+    baseAllocation: formatContractToken(baseAllocation, baseDecimals, baseTokenName),
+    baseRefund: formatContractToken(baseRefund, baseDecimals, baseTokenName),
+    baseRefunded: formatContractToken(baseRefunded, baseDecimals, baseTokenName),
+    boostDeposit: formatContractToken(boostDeposit, boostDecimals, boostTokenName),
+    boostRefund: formatContractToken(boostRefund, boostDecimals, boostTokenName),
+    boostRefunded: formatContractToken(boostRefunded, boostDecimals, boostTokenName),
     nonce: Number(nonce),
   };
 }
@@ -76,10 +78,14 @@ export function formatAccountInfo(
 export async function printAccountInfo(
   ownerSQRpProRata: SQRpProRata,
   account: string,
-  decimals: Numeric,
-  tokenName?: string,
+  baseDecimals: Numeric,
+  baseTokenName: string,
+  boostDecimals: Numeric,
+  boostTokenName: string,
 ) {
   const accountInfo = await ownerSQRpProRata.fetchAccountInfo(account);
   console.log(`User: ${account}`);
-  console.log(formatAccountInfo(accountInfo, decimals, tokenName));
+  console.log(
+    formatAccountInfo(accountInfo, baseDecimals, baseTokenName, boostDecimals, boostTokenName),
+  );
 }

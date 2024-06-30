@@ -1,4 +1,4 @@
-import { ContractConfig, contractConfig } from '~seeds';
+import { ContractConfig, contractConfig, seedData } from '~seeds';
 import { ContextBase } from '~types';
 import { getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
 
@@ -15,7 +15,7 @@ export async function deploySQRpProRataContractFixture(
     user2ERC20Token: user2BaseToken,
     user3ERC20Token: user3BaseToken,
     owner2ERC20Token: owner2BaseToken,
-  } = await getERC20TokenContext(users);
+  } = await getERC20TokenContext(users, undefined, seedData.baseDecimals);
 
   const {
     erc20TokenAddress: boostTokenAddress,
@@ -24,14 +24,14 @@ export async function deploySQRpProRataContractFixture(
     user2ERC20Token: user2BoostToken,
     user3ERC20Token: user3BoostToken,
     owner2ERC20Token: owner2BoostToken,
-  } = await getERC20TokenContext(users);
+  } = await getERC20TokenContext(users, undefined, seedData.boostDecimals);
 
   const config: ContractConfig = {
     ...contractConfig,
     ...contractConfigParam,
     newOwner: owner2Address,
     baseToken: baseTokenAddress,
-    boostToken: baseTokenAddress,
+    boostToken: boostTokenAddress,
   };
 
   const sqrpProRataContext = await getSQRpProRataContext(users, config);

@@ -1,4 +1,4 @@
-import { BigNumberish } from 'ethers';
+import { BigNumberish, Numeric } from 'ethers';
 
 export interface ContractConfig {
   newOwner: string;
@@ -33,5 +33,5 @@ export type DeployTokenArgs = [
   symbol_: string,
   newOwner: string,
   initMint: bigint,
-  decimals_: bigint | number,
+  decimals_: Numeric,
 ];

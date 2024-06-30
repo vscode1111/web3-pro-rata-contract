@@ -1,9 +1,10 @@
 import dayjs from 'dayjs';
+import { Numeric } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
-import { toUnixTime, toUnixTimeUtc, toWei } from '~common';
-import { MINUTES, Token } from '~constants';
+import { MINUTES, toUnixTime, toUnixTimeUtc, toWei } from '~common';
+import { BASE_DECIMALS, BOOST_DECIMALS, Token } from '~constants';
 import { DeployNetworkKey, TokenAddressDescription } from '~types';
-import { addSecondsToUnixTime, toContractWei } from '~utils';
+import { addSecondsToUnixTime, toBaseTokenWei } from '~utils';
 import { getTokenDescription } from '~utils/contracts';
 import { defaultNetwork } from '../hardhat.config';
 import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from './types';
@@ -37,14 +38,14 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     baseToken: tokenAddress,
     // boostToken: ZeroAddress,
     verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-    baseGoal: toContractWei(1_200) / priceDiv,
+    baseGoal: toBaseTokenWei(1_200) / priceDiv,
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
   },
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    baseGoal: toContractWei(10_000),
+    baseGoal: toBaseTokenWei(10_000),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
@@ -53,7 +54,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    baseGoal: toContractWei(15),
+    baseGoal: toBaseTokenWei(15),
     // startDate: 0,
     startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
     // closeDate: 0,
@@ -62,7 +63,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   prod: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
     verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    baseGoal: toContractWei(10),
+    baseGoal: toBaseTokenWei(10),
     startDate: 0,
     // startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
     // closeDate: 0,
@@ -77,7 +78,7 @@ export const contractConfig: ContractConfig = {
   baseToken: tokenAddress,
   boostToken: tokenAddress,
   verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  baseGoal: toContractWei(1_200) / priceDiv,
+  baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
   ...extContractConfig,
@@ -93,24 +94,24 @@ export const tokenConfig: TokenConfig = {
   name: 'empty',
   symbol: 'empty',
   newOwner: '0x81aFFCB2FaCEcCaE727Fa4b1B2ef534a1Da67791',
-  initMint: toContractWei(1_000_000_000),
+  initMint: toBaseTokenWei(1_000_000_000),
   decimals: tokenDecimals,
 };
 
-export function getTokenArgs(newOwner: string): DeployTokenArgs {
+export function getTokenArgs(newOwner: string, decimals?: Numeric): DeployTokenArgs {
   return [
     tokenConfig.name,
     tokenConfig.symbol,
     newOwner,
     tokenConfig.initMint,
-    tokenConfig.decimals,
+    decimals ?? tokenConfig.decimals,
   ];
 }
 
-const userInitBalance = toContractWei(100_000) / priceDiv;
-const deposit1 = toContractWei(1_000) / priceDiv;
-const extraDeposit1 = toContractWei(2_500) / priceDiv;
-const accidentAmount = toContractWei(500) / priceDiv;
+const userInitBalance = toBaseTokenWei(100_000) / priceDiv;
+const deposit1 = toBaseTokenWei(1_000) / priceDiv;
+const extraDeposit1 = toBaseTokenWei(2_500) / priceDiv;
+const accidentAmount = toBaseTokenWei(500) / priceDiv;
 
 const transactionId1 = uuidv4();
 const transactionId1_2 = uuidv4();
@@ -118,7 +119,9 @@ const transactionId2 = uuidv4();
 const transactionId3 = uuidv4();
 
 export const seedData = {
-  zero: toContractWei(0),
+  zero: toBaseTokenWei(0),
+  baseDecimals: BASE_DECIMALS,
+  boostDecimals: BOOST_DECIMALS,
   totalAccountBalance: tokenConfig.initMint,
   userInitBalance,
   deposit1,
@@ -128,8 +131,8 @@ export const seedData = {
   extraDeposit2: extraDeposit1 / userDiv,
   extraDeposit3: extraDeposit1 / userDiv / userDiv,
   accidentAmount,
-  allowance: toContractWei(1000000),
-  balanceDelta: toContractWei(0.001),
+  allowance: toBaseTokenWei(1000000),
+  balanceDelta: toBaseTokenWei(0.001),
   weiDelta: toWei(0.001),
   nowPlus1m: toUnixTime(now.add(1, 'minute').toDate()),
   startDatePlus1m: addSecondsToUnixTime(contractConfig.startDate, 1 * MINUTES),

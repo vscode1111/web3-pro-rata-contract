@@ -5,7 +5,7 @@ import { waitTx } from '~common-contract';
 import { contractConfig, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDeposit } from '~utils';
 import { customError } from './testData';
-import { DepositEventArgs, RefundEventArgs, WithdrawGoalEventArgs } from './types';
+import { DepositEventArgs, RefundEventArgs, WithdrawBaseGoalEventArgs } from './types';
 import {
   checkTotalSQRBalance,
   contractZeroCheck,
@@ -31,15 +31,15 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       await contractZeroCheck(this);
     });
 
-    it('user1 tries to call withdrawGoal without permission', async function () {
-      await expect(this.user1SQRpProRata.withdrawGoal()).revertedWithCustomError(
+    it('user1 tries to call withdrawBaseGoal without permission', async function () {
+      await expect(this.user1SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
         this.owner2SQRpProRata,
         customError.ownableUnauthorizedAccount,
       );
     });
 
-    it('owner tries to call withdrawGoal to early', async function () {
-      await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+    it('owner tries to call withdrawBaseGoal to early', async function () {
+      await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
         this.owner2SQRpProRata,
         customError.tooEarly,
       );
@@ -260,12 +260,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         beforeEach(async function () {
           await transferToUserAndApproveForContract(
             this,
+            this.owner2BaseToken,
             this.user1BaseToken,
             this.user1Address,
             seedData.userInitBalance,
           );
           await transferToUserAndApproveForContract(
             this,
+            this.owner2BaseToken,
             this.user2BaseToken,
             this.user2Address,
             seedData.userInitBalance,
@@ -467,14 +469,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 seedData.accidentAmount,
               );
 
-              await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+              await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
                 this.owner2SQRpProRata,
                 customError.unreachedGoal,
               );
             });
 
             it('owner2 tries to withdraw unreached goal', async function () {
-              await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+              await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
                 this.owner2SQRpProRata,
                 customError.unreachedGoal,
               );
@@ -662,8 +664,8 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               });
 
               it('owner is allowed to withdraw goal (check event)', async function () {
-                const receipt = await waitTx(this.owner2SQRpProRata.withdrawGoal());
-                const eventLog = findEvent<WithdrawGoalEventArgs>(receipt);
+                const receipt = await waitTx(this.owner2SQRpProRata.withdrawBaseGoal());
+                const eventLog = findEvent<WithdrawBaseGoalEventArgs>(receipt);
 
                 expect(eventLog).not.undefined;
                 const [account, amount] = eventLog?.args;
@@ -714,7 +716,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   seedData.accidentAmount,
                 );
 
-                await this.owner2SQRpProRata.withdrawGoal();
+                await this.owner2SQRpProRata.withdrawBaseGoal();
 
                 expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(
                   seedData.accidentAmount,
@@ -783,7 +785,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   expect(user2.boosted).eq(false);
                 });
 
-                it('owner2 tries to call withdrawGoal again', async function () {
+                it('owner2 tries to call withdrawBaseGoal again', async function () {
                   await expect(this.owner2SQRpProRata.refundAll()).revertedWithCustomError(
                     this.owner2SQRpProRata,
                     customError.allUsersProcessed,
@@ -791,8 +793,8 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 });
 
                 it('owner is allowed to withdraw goal (check event)', async function () {
-                  const receipt = await waitTx(this.owner2SQRpProRata.withdrawGoal());
-                  const eventLog = findEvent<WithdrawGoalEventArgs>(receipt);
+                  const receipt = await waitTx(this.owner2SQRpProRata.withdrawBaseGoal());
+                  const eventLog = findEvent<WithdrawBaseGoalEventArgs>(receipt);
 
                   expect(eventLog).not.undefined;
                   const [account, amount] = eventLog?.args;
@@ -802,7 +804,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
                 describe('owner2 withdrew goal', () => {
                   beforeEach(async function () {
-                    await this.owner2SQRpProRata.withdrawGoal();
+                    await this.owner2SQRpProRata.withdrawBaseGoal();
                   });
 
                   it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {

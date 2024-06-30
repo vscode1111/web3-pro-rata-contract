@@ -17,7 +17,7 @@ export function toWeiWithFixed(value: BigNumberish, unitName?: BigNumberish): bi
   return BigInt(parseUnits(String(newValue), unitName));
 }
 
-export function toNumberFixed(value: StringNumber, fractionDigits: number): number {
+export function toNumberFixed(value: StringNumber, fractionDigits = 3): number {
   return Number(Number(value).toFixed(fractionDigits));
 }
 
@@ -27,6 +27,14 @@ export function toNumber(value: bigint, factor = 1): number {
 
 export function toNumberDecimals(value: BigNumberish, decimals: Numeric = 18): number {
   return Number(formatUnits(value, decimals));
+}
+
+export function toNumberDecimalsFixed(
+  value: bigint,
+  decimals: Numeric = 18,
+  fractionDigits = 3,
+): number {
+  return toNumberFixed(toNumberDecimals(value, decimals), fractionDigits);
 }
 
 export function toDec(value: string | undefined): number {

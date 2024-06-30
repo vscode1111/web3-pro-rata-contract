@@ -15,8 +15,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const { owner2SQRpProRata, sqrpProRataFactory } = context;
 
     await waitTx(
-      owner2SQRpProRata.withdrawGoal(TX_OVERRIDES),
-      'withdrawGoal',
+      owner2SQRpProRata.withdrawBaseGoal(TX_OVERRIDES),
+      'withdrawBaseGoal',
       deployParams.attempts,
       deployParams.delay,
       sqrpProRataFactory,

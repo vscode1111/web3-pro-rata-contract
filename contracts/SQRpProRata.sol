@@ -74,7 +74,7 @@ contract SQRpProRata is
     startDate = _startDate;
     closeDate = _closeDate;
 
-    // console.log(111, address(baseToken), address(boostToken));
+    console.log(111, address(baseToken), address(boostToken));
   }
 
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -190,7 +190,7 @@ contract SQRpProRata is
 
   event Deposit(address indexed account, uint256 amount);
   event Refund(address indexed account, uint256 amount);
-  event WithdrawGoal(address indexed account, uint256 amount);
+  event WithdrawBaseGoal(address indexed account, uint256 amount);
 
   //Read methods-------------------------------------------
 
@@ -256,6 +256,10 @@ contract SQRpProRata is
 
   function getBaseBalance() public view returns (uint256) {
     return baseToken.balanceOf(address(this));
+  }
+
+  function getBoostBalance() public view returns (uint256) {
+    return boostToken.balanceOf(address(this));
   }
 
   function balanceOf(
@@ -365,6 +369,47 @@ contract SQRpProRata is
 
   function getProcessedAccountIndex() external view returns (uint32) {
     return _processedAccountIndex;
+  }
+
+  function calculatedTotalBoostRefundAmount() public view returns (uint256) {
+    uint256 total = 0;
+    uint32 accountCount = getAccountCount();
+    for (uint32 i = 0; i < accountCount; i++) {
+      address account = getAccountByIndex(i);
+      total += calculateAccountBoostRefund(account);
+    }
+    return total;
+  }
+
+  function calculatedRequiredBoostAmount() external view returns (uint256) {
+    uint256 contractBoostBalance = getBoostBalance();
+    uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
+    if (totalBoostRefundAmount > contractBoostBalance) {
+      return totalBoostRefundAmount - contractBoostBalance;
+    }
+    return 0;
+  }
+
+  function calculateExcessBoostAmount() external view returns (uint256) {
+    uint256 contractBoostBalance = getBoostBalance();
+    uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
+    if (contractBoostBalance > totalBoostRefundAmount) {
+      return contractBoostBalance - totalBoostRefundAmount;
+    }
+    return 0;
+  }
+
+  function calculatedBaseSwappedAmount() public view returns (uint256) {
+    uint256 total = 0;
+    uint32 accountCount = getAccountCount();
+    for (uint32 i = 0; i < accountCount; i++) {
+      address account = getAccountByIndex(i);
+      AccountItem memory accountItem = _accountItems[account];
+      if (accountItem.boosted) {
+        total += accountItem.baseDeposited - calculateAccountBaseAllocation(account);
+      }
+    }
+    return total;
   }
 
   //Write methods-------------------------------------------
@@ -531,7 +576,7 @@ contract SQRpProRata is
     refund(getAccountCount());
   }
 
-  function withdrawGoal() external nonReentrant onlyOwner afterCloseDate {
+  function withdrawBaseGoal() external nonReentrant onlyOwner afterCloseDate {
     if (!isReachedBaseGoal()) {
       revert UnreachedGoal();
     }
@@ -539,6 +584,15 @@ contract SQRpProRata is
     address to = owner();
     baseToken.safeTransfer(to, baseGoal);
     totalBaseWithdrew += baseGoal;
-    emit WithdrawGoal(to, baseGoal);
+    emit WithdrawBaseGoal(to, baseGoal);
+  }
+
+  function withdrawBaseSwappedAmount() external nonReentrant onlyOwner afterCloseDate {
+    uint256 baseSwappedAmount = calculatedBaseSwappedAmount();
+
+    address to = owner();
+    baseToken.safeTransfer(to, baseSwappedAmount);
+    totalBaseWithdrew += baseGoal;
+    emit WithdrawBaseGoal(to, baseGoal);
   }
 }

@@ -1,5 +1,5 @@
 import { toUnixTime } from '~common';
-import { toContractWei } from '~utils';
+import { toBaseTokenWei } from '~utils';
 
 export const verifyRequired = false;
 export const verifyArgsRequired = false;
@@ -10,8 +10,8 @@ export const deployData = {
   now: toUnixTime(),
   nullAddress: '0x0000000000000000000000000000000000000000',
   userMintAmount: 100000,
-  deposit1: isTiny ? toContractWei(0.001) : toContractWei(7_000),
-  deposit2: isTiny ? toContractWei(0.002) : toContractWei(4_000),
+  deposit1: isTiny ? toBaseTokenWei(0.001) : toBaseTokenWei(7_000),
+  deposit2: isTiny ? toBaseTokenWei(0.002) : toBaseTokenWei(4_000),
 };
 
 export const deployParams = {

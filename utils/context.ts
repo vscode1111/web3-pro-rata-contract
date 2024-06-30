@@ -1,4 +1,5 @@
 import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
+import { Numeric } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getNetworkName } from '~common-contract';
@@ -62,6 +63,7 @@ export async function getUsers(): Promise<Users> {
 export async function getERC20TokenContext(
   users: Users,
   deployData?: string | { newOwner: string },
+  decimals?: Numeric,
 ): Promise<ERC20TokenContext> {
   const { owner, user1, user2, user3, owner2, owner2Address } = users;
 
@@ -75,7 +77,9 @@ export async function getERC20TokenContext(
     ownerERC20Token = testERC20TokenFactory.connect(owner).attach(deployData) as ERC20Token;
   } else {
     const newOwner = deployData?.newOwner ?? owner2Address;
-    ownerERC20Token = await testERC20TokenFactory.connect(owner).deploy(...getTokenArgs(newOwner));
+    ownerERC20Token = await testERC20TokenFactory
+      .connect(owner)
+      .deploy(...getTokenArgs(newOwner, decimals));
   }
 
   const erc20TokenAddress = await ownerERC20Token.getAddress();

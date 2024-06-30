@@ -2,7 +2,7 @@ import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime } from '~common';
 import { ContractConfig, contractConfig, now, seedData, tokenConfig } from '~seeds';
-import { addSecondsToUnixTime, toContractWei } from '~utils';
+import { addSecondsToUnixTime, toBaseTokenWei } from '~utils';
 import { customError } from './testData';
 import {
   checkTotalSQRBalance,
@@ -15,14 +15,14 @@ import {
 
 const caseContractConfig: ContractConfig = {
   ...contractConfig,
-  baseGoal: toContractWei(15_000),
+  baseGoal: toBaseTokenWei(15_000),
   startDate: toUnixTime(now.add(20, 'days').toDate()),
   closeDate: toUnixTime(now.add(22, 'days').toDate()),
 };
 
 const caseSettings = {
-  deposit1: toContractWei(6_000),
-  deposit2: toContractWei(7_000),
+  deposit1: toBaseTokenWei(6_000),
+  deposit2: toBaseTokenWei(7_000),
 };
 
 export function shouldBehaveCorrectFundingLessCase(): void {
@@ -41,6 +41,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       await transferToUserAndApproveForContract(
         this,
+        this.owner2BaseToken,
         this.user1BaseToken,
         this.user1Address,
         seedData.userInitBalance,
@@ -48,6 +49,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       await transferToUserAndApproveForContract(
         this,
+        this.owner2BaseToken,
         this.user2BaseToken,
         this.user2Address,
         seedData.userInitBalance,
@@ -112,7 +114,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
         seedData.balanceDelta,
       );
 
-      await expect(this.owner2SQRpProRata.withdrawGoal()).revertedWithCustomError(
+      await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
         this.owner2SQRpProRata,
         customError.unreachedGoal,
       );
