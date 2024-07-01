@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-export function exists(value: any): boolean {
+export function exist(value: any): boolean {
   return typeof value !== 'undefined';
 }
 

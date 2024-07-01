@@ -1,7 +1,7 @@
 {
   "name": "sqr-p-pro-rata-contract",
   "description": "Solidity smart contracts for SQRp Pro-rata functionality",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "scripts": {
     "clean": "shx rm -rf ./dist ./artifacts ./cache ./coverage ./typechain-types ./coverage.json && yarn typechain",
     "commit": "git-cz",

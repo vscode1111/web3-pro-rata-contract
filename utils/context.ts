@@ -1,10 +1,9 @@
 import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
-import { Numeric } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getNetworkName } from '~common-contract';
 import { CONTRACTS, ERC20_TOKEN_NAME, SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
-import { ContractConfig, getContractArgs, getTokenArgs } from '~seeds';
+import { ContractConfig, TokenConfig, getContractArgs, getTokenArgs } from '~seeds';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { ERC20Token__factory } from '~typechain-types/factories/contracts/ERC20Token__factory';
@@ -36,14 +35,14 @@ export function getAddressesFromHre(hre: HardhatRuntimeEnvironment) {
 }
 
 export async function getUsers(): Promise<Users> {
-  const [owner, user1, user2, user3, owner2, verifier] = await ethers.getSigners();
+  const [owner, user1, user2, user3, owner2, depositVerifier] = await ethers.getSigners();
 
   const ownerAddress = await owner.getAddress();
   const user1Address = await user1.getAddress();
   const user2Address = await user2.getAddress();
   const user3Address = await user3.getAddress();
   const owner2Address = await owner2.getAddress();
-  const verifierAddress = await verifier.getAddress();
+  const depositVerifierAddress = await depositVerifier.getAddress();
 
   return {
     owner,
@@ -56,16 +55,15 @@ export async function getUsers(): Promise<Users> {
     user3Address,
     owner2,
     owner2Address,
-    verifier,
-    verifierAddress,
+    depositVerifier,
+    depositVerifierAddress,
   };
 }
 export async function getERC20TokenContext(
   users: Users,
-  deployData?: string | { newOwner: string },
-  decimals?: Numeric,
+  deployData?: string | TokenConfig,
 ): Promise<ERC20TokenContext> {
-  const { owner, user1, user2, user3, owner2, owner2Address } = users;
+  const { owner, user1, user2, user3, owner2 } = users;
 
   const testERC20TokenFactory = (await ethers.getContractFactory(
     ERC20_TOKEN_NAME,
@@ -76,10 +74,9 @@ export async function getERC20TokenContext(
   if (typeof deployData === 'string') {
     ownerERC20Token = testERC20TokenFactory.connect(owner).attach(deployData) as ERC20Token;
   } else {
-    const newOwner = deployData?.newOwner ?? owner2Address;
     ownerERC20Token = await testERC20TokenFactory
       .connect(owner)
-      .deploy(...getTokenArgs(newOwner, decimals));
+      .deploy(...getTokenArgs(deployData as TokenConfig));
   }
 
   const erc20TokenAddress = await ownerERC20Token.getAddress();

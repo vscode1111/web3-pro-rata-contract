@@ -1,6 +1,6 @@
 import { toUnixTime, toWei } from '~common';
 import { ContractConfig, contractConfig, now, seedData } from '~seeds';
-import { toBaseTokenWei } from '~utils';
+import { toBaseTokenWei, toBoostTokenWei } from '~utils';
 import { checkTotalSQRBalance, loadSQRpProRataFixture, testContract } from './utils';
 
 const caseContractConfig: ContractConfig = {
@@ -13,7 +13,7 @@ const caseContractConfig: ContractConfig = {
 export function shouldBehaveCorrectFundingBaseCase(): void {
   describe('funding: different positive cases', () => {
     beforeEach(async function () {
-      await loadSQRpProRataFixture(this, caseContractConfig);
+      await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
       await checkTotalSQRBalance(this);
     });
 
@@ -49,7 +49,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseRefunded: toBaseTokenWei(10),
               boostDeposit: toBaseTokenWei(0),
               boostRefund: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
             },
@@ -61,7 +61,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseRefunded: toBaseTokenWei(20),
               boostDeposit: toBaseTokenWei(0),
               boostRefund: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
             },
@@ -73,7 +73,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseRefunded: toBaseTokenWei(30),
               boostDeposit: toBaseTokenWei(0),
               boostRefund: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
             },
@@ -228,17 +228,17 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user1: {
               baseAllocation: toBaseTokenWei(50),
               baseRefunded: toBaseTokenWei(100),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(20),
               baseRefunded: toBaseTokenWei(40),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
             },
             user3: {
               baseAllocation: toBaseTokenWei(30),
               baseRefunded: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
             },
           },
         },
@@ -276,12 +276,12 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user2: {
               baseAllocation: toBaseTokenWei(90),
               baseRefunded: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(180),
+              boostRefunded: toBoostTokenWei(180),
             },
             user3: {
               baseAllocation: toBaseTokenWei(10),
               baseRefunded: toBaseTokenWei(0),
-              boostRefunded: toBaseTokenWei(20),
+              boostRefunded: toBoostTokenWei(20),
             },
           },
         },
@@ -314,12 +314,86 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseDeposit: toBaseTokenWei(0),
               baseRefund: toBaseTokenWei(0),
               baseRefunded: toBaseTokenWei(0),
-              boostDeposit: toBaseTokenWei(550),
-              boostRefund: toBaseTokenWei(126.923),
-              boostRefunded: toBaseTokenWei(126.923),
+              boostDeposit: toBoostTokenWei(550),
+              boostRefund: toBoostTokenWei(126.923),
+              boostRefunded: toBoostTokenWei(126.923),
               nonce: 2,
               boosted: true,
               boostAverageRate: toWei(0.236),
+            },
+          },
+        },
+      );
+    });
+
+    it('simple and boost from one user, unreached goal', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(10),
+            boost: false,
+          },
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(20),
+            boost: true,
+            boostRate: toWei(0.3),
+          },
+        ],
+        {
+          userExpectations: {
+            user1: {
+              baseDeposited: toBaseTokenWei(30),
+              baseAllocation: toBaseTokenWei(0),
+              baseDeposit: toBaseTokenWei(0),
+              baseRefund: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(100),
+              boostRefund: toBoostTokenWei(100),
+              boostRefunded: toBoostTokenWei(100),
+              nonce: 2,
+              boosted: true,
+              boostAverageRate: toWei(0.3),
+            },
+          },
+        },
+      );
+    });
+
+    it('simple and boost from one user', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(70),
+            boost: false,
+          },
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(60),
+            boost: true,
+            boostRate: toWei(0.3),
+          },
+        ],
+        {
+          userExpectations: {
+            user1: {
+              baseDeposited: toBaseTokenWei(130),
+              baseAllocation: toBaseTokenWei(100),
+              baseDeposit: toBaseTokenWei(0),
+              baseRefund: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(433.333),
+              boostRefund: toBoostTokenWei(100),
+              boostRefunded: toBoostTokenWei(100),
+              nonce: 2,
+              boosted: true,
+              boostAverageRate: toWei(0.3),
             },
           },
         },

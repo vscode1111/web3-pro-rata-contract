@@ -1,5 +1,12 @@
+import { ContractConfig, TokenConfig } from '~seeds';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
+
+export interface SQRpProRataFixtureParamConfig {
+  baseTokenConfig?: Partial<TokenConfig>;
+  boostTokenConfig?: Partial<TokenConfig>;
+  contractConfig?: Partial<ContractConfig>;
+}
 
 export interface DepositBase {
   deposit: bigint;

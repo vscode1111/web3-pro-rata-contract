@@ -3,8 +3,10 @@ import { BigNumberish, Numeric } from 'ethers';
 export interface ContractConfig {
   newOwner: string;
   baseToken: string;
+  baseDecimals: number;
   boostToken: string;
-  verifier: string;
+  boostDecimals: number;
+  depositVerifier: string;
   baseGoal: bigint;
   startDate: number;
   closeDate: number;
@@ -13,8 +15,10 @@ export interface ContractConfig {
 export type DeployContractArgs = [
   newOwner: string,
   baseToken: string,
+  baseDecimals: number,
   boostToken: string,
-  verifier: string,
+  boostDecimals: number,
+  depositVerifier: string,
   baseGoal: BigNumberish,
   startDate: number,
   closeDate: number,

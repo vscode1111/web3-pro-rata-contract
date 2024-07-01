@@ -27,7 +27,7 @@ const caseSettings = {
 export function shouldBehaveCorrectFundingEqualCase(): void {
   describe('funding: equal case', () => {
     beforeEach(async function () {
-      await loadSQRpProRataFixture(this, caseContractConfig);
+      await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
       await checkTotalSQRBalance(this);
     });
 
@@ -79,7 +79,7 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
 
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         caseSettings.deposit1 + caseSettings.deposit2,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
 
       expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
@@ -93,31 +93,31 @@ export function shouldBehaveCorrectFundingEqualCase(): void {
 
       expect(await getBaseTokenBalance(this, this.user1Address)).closeTo(
         seedData.userInitBalance - caseSettings.deposit1,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.user2Address)).closeTo(
         seedData.userInitBalance - caseSettings.deposit2,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         caseContractConfig.baseGoal,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
 
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
         tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
 
       await this.owner2SQRpProRata.withdrawBaseGoal();
 
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         seedData.zero,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
         tokenConfig.initMint - BigInt(2) * seedData.userInitBalance + caseContractConfig.baseGoal,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
     });
   });

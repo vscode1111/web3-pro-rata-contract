@@ -3,11 +3,12 @@ import { expect } from 'chai';
 import dayjs, { Dayjs } from 'dayjs';
 import { TransactionReceipt } from 'ethers';
 import { Context } from 'mocha';
-import { ContractConfig, seedData, tokenConfig } from '~seeds';
+import { seedData, tokenConfig } from '~seeds';
 import { ContextBase } from '~types';
 import { loadFixture } from '../loadFixture';
 import { deploySQRpProRataContractFixture } from '../sqrpProRata.fixture';
 import { checkTotalSQRBalance, getBaseTokenBalance, getBoostTokenBalance } from './balance';
+import { SQRpProRataFixtureParamConfig } from './types';
 
 export function findEvent<T>(receipt: TransactionReceipt) {
   return receipt.logs.find((log: any) => log.fragment) as T;
@@ -20,15 +21,15 @@ export async function getChainTime() {
 
 export async function loadSQRpProRataFixture(
   that: Context,
-  contractConfig?: Partial<ContractConfig>,
+  fixtureConfig?: SQRpProRataFixtureParamConfig,
   onNewSnapshot?: (
     chainTime: Dayjs,
-    contractConfig?: Partial<ContractConfig | undefined>,
-  ) => Promise<Partial<ContractConfig> | undefined>,
+    contractConfig?: SQRpProRataFixtureParamConfig,
+  ) => Promise<SQRpProRataFixtureParamConfig | undefined>,
 ) {
   const fixture = await loadFixture(
     deploySQRpProRataContractFixture,
-    contractConfig,
+    fixtureConfig,
     async (config) => {
       const chainTime = await getChainTime();
       const newConfig = await onNewSnapshot?.(chainTime, config);

@@ -19,8 +19,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
     const baseTokenAddress = contractConfig.baseToken;
     const context = await getContext(baseTokenAddress, sqrpProRataAddress);
-    const { verifier, user1Address, user2BaseToken, user1SQRpProRata, sqrpProRataFactory } =
-      context;
+    const {
+      depositVerifier: verifier,
+      user1Address,
+      user2BaseToken,
+      user1SQRpProRata,
+      sqrpProRataFactory,
+    } = context;
 
     const { decimals, tokenName } = await getTokenInfo(await getUsers(), user1SQRpProRata);
 

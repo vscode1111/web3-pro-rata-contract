@@ -30,7 +30,7 @@ export async function checkTotalSQRBalance(that: ContextBase) {
       that.user3Address,
       that.ownerAddress,
       that.owner2Address,
-      that.verifierAddress,
+      that.depositVerifierAddress,
       that.baseTokenAddress,
       that.sqrpProRataAddress,
     ]),

@@ -14,8 +14,8 @@ export interface Users {
   user3Address: string;
   owner2: Signer;
   owner2Address: string;
-  verifier: Signer;
-  verifierAddress: string;
+  depositVerifier: Signer;
+  depositVerifierAddress: string;
 }
 
 export interface ERC20TokenContext {

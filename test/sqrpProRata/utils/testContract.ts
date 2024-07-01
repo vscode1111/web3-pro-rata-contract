@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { uniqBy } from 'lodash';
 import { Context } from 'mocha';
 import { v4 as uuidv4 } from 'uuid';
-import { bigIntSum, exists } from '~common';
+import { bigIntSum, exist } from '~common';
 import { ContractConfig, seedData } from '~seeds';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
@@ -170,7 +170,7 @@ export async function testContract(
 
   expect(await getBaseTokenBalance(context, sqrpProRataAddress)).closeTo(
     totalDeposit,
-    seedData.balanceDelta,
+    seedData.baseBalanceDelta,
   );
 
   expect(await ownerSQRpProRata.isReachedBaseGoal()).eq(shouldReachedBaseGoal);
@@ -182,6 +182,8 @@ export async function testContract(
 
   const requiredBoostAmount = await ownerSQRpProRata.calculatedRequiredBoostAmount();
   const baseSwappedAmount = await ownerSQRpProRata.calculatedBaseSwappedAmount();
+
+  expect(await ownerSQRpProRata.calculateExcessBoostAmount()).eq(seedData.zero);
 
   await owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount);
 
@@ -300,40 +302,40 @@ export async function testContract(
       boostAverageRate,
     } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
 
-    if (exists(expectedBaseDeposited)) {
-      expect(baseDeposited).closeTo(expectedBaseDeposited, seedData.balanceDelta);
+    if (exist(expectedBaseDeposited)) {
+      expect(baseDeposited).closeTo(expectedBaseDeposited, seedData.baseBalanceDelta);
     }
-    if (exists(expectedBaseAllocation)) {
-      expect(baseAllocation).closeTo(expectedBaseAllocation, seedData.balanceDelta);
-    }
-
-    if (exists(expectedBaseDeposit)) {
-      expect(baseDeposit).closeTo(expectedBaseDeposit, seedData.balanceDelta);
-    }
-    if (exists(expectedBaseRefund)) {
-      expect(baseRefund).closeTo(expectedBaseRefund, seedData.balanceDelta);
-    }
-    if (exists(expectedBaseRefunded)) {
-      expect(baseRefunded).closeTo(expectedBaseRefunded, seedData.balanceDelta);
+    if (exist(expectedBaseAllocation)) {
+      expect(baseAllocation).closeTo(expectedBaseAllocation, seedData.baseBalanceDelta);
     }
 
-    if (exists(expectedBoostDeposit)) {
-      expect(boostDeposit).closeTo(expectedBoostDeposit, seedData.balanceDelta);
+    if (exist(expectedBaseDeposit)) {
+      expect(baseDeposit).closeTo(expectedBaseDeposit, seedData.baseBalanceDelta);
     }
-    if (exists(expectedBoostRefund)) {
-      expect(boostRefund).closeTo(expectedBoostRefund, seedData.balanceDelta);
+    if (exist(expectedBaseRefund)) {
+      expect(baseRefund).closeTo(expectedBaseRefund, seedData.baseBalanceDelta);
     }
-    if (exists(expectedBoostRefunded)) {
-      expect(boostRefunded).closeTo(expectedBoostRefunded, seedData.balanceDelta);
+    if (exist(expectedBaseRefunded)) {
+      expect(baseRefunded).closeTo(expectedBaseRefunded, seedData.baseBalanceDelta);
     }
 
-    if (exists(expectedNonce)) {
+    if (exist(expectedBoostDeposit)) {
+      expect(boostDeposit).closeTo(expectedBoostDeposit, seedData.boostBalanceDelta);
+    }
+    if (exist(expectedBoostRefund)) {
+      expect(boostRefund).closeTo(expectedBoostRefund, seedData.boostBalanceDelta);
+    }
+    if (exist(expectedBoostRefunded)) {
+      expect(boostRefunded).closeTo(expectedBoostRefunded, seedData.boostBalanceDelta);
+    }
+
+    if (exist(expectedNonce)) {
       expect(nonce).eq(expectedNonce);
     }
-    if (exists(expectedBoosted)) {
+    if (exist(expectedBoosted)) {
       expect(boosted).eq(expectedBoosted);
     }
-    if (exists(expectedBoostAverageRate)) {
+    if (exist(expectedBoostAverageRate)) {
       expect(boostAverageRate).closeTo(expectedBoostAverageRate, seedData.weiDelta);
     }
   }

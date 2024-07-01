@@ -1,10 +1,9 @@
 import dayjs from 'dayjs';
-import { Numeric } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { MINUTES, toUnixTime, toUnixTimeUtc, toWei } from '~common';
 import { BASE_DECIMALS, BOOST_DECIMALS, Token } from '~constants';
 import { DeployNetworkKey, TokenAddressDescription } from '~types';
-import { addSecondsToUnixTime, toBaseTokenWei } from '~utils';
+import { addSecondsToUnixTime, toBaseTokenWei, toBoostTokenWei } from '~utils';
 import { getTokenDescription } from '~utils/contracts';
 import { defaultNetwork } from '../hardhat.config';
 import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from './types';
@@ -36,15 +35,19 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   test: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
     baseToken: tokenAddress,
+    // baseDecimals: getTokenDescription(Token.tSQR).decimals,
+    // boostDecimals: getTokenDescription(Token.tSQR).decimals,
+    baseDecimals: BASE_DECIMALS,
+    boostDecimals: BOOST_DECIMALS,
     // boostToken: ZeroAddress,
-    verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
+    depositVerifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
     baseGoal: toBaseTokenWei(1_200) / priceDiv,
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
   },
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
-    verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
+    depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     baseGoal: toBaseTokenWei(10_000),
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
@@ -53,7 +56,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
-    verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
+    depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     baseGoal: toBaseTokenWei(15),
     // startDate: 0,
     startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
@@ -62,7 +65,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   },
   prod: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
-    verifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
+    depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     baseGoal: toBaseTokenWei(10),
     startDate: 0,
     // startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
@@ -76,8 +79,10 @@ const extContractConfig = contractConfigDeployMap[deployType];
 export const contractConfig: ContractConfig = {
   newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   baseToken: tokenAddress,
+  baseDecimals: getTokenDescription(Token.tSQR).decimals,
   boostToken: tokenAddress,
-  verifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
+  boostDecimals: getTokenDescription(Token.tSQR).decimals,
+  depositVerifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
@@ -85,9 +90,28 @@ export const contractConfig: ContractConfig = {
 };
 
 export function getContractArgs(contractConfig: ContractConfig): DeployContractArgs {
-  const { newOwner, baseToken, boostToken, verifier, baseGoal, startDate, closeDate } =
-    contractConfig;
-  return [newOwner, baseToken, boostToken, verifier, baseGoal, startDate, closeDate];
+  const {
+    newOwner,
+    baseToken,
+    baseDecimals,
+    boostToken,
+    boostDecimals,
+    depositVerifier: verifier,
+    baseGoal,
+    startDate,
+    closeDate,
+  } = contractConfig;
+  return [
+    newOwner,
+    baseToken,
+    baseDecimals,
+    boostToken,
+    boostDecimals,
+    verifier,
+    baseGoal,
+    startDate,
+    closeDate,
+  ];
 }
 
 export const tokenConfig: TokenConfig = {
@@ -98,14 +122,9 @@ export const tokenConfig: TokenConfig = {
   decimals: tokenDecimals,
 };
 
-export function getTokenArgs(newOwner: string, decimals?: Numeric): DeployTokenArgs {
-  return [
-    tokenConfig.name,
-    tokenConfig.symbol,
-    newOwner,
-    tokenConfig.initMint,
-    decimals ?? tokenConfig.decimals,
-  ];
+export function getTokenArgs(tokenConfig: TokenConfig): DeployTokenArgs {
+  const { name, symbol, newOwner, initMint, decimals } = tokenConfig;
+  return [name, symbol, newOwner, initMint, decimals];
 }
 
 const userInitBalance = toBaseTokenWei(100_000) / priceDiv;
@@ -132,7 +151,8 @@ export const seedData = {
   extraDeposit3: extraDeposit1 / userDiv / userDiv,
   accidentAmount,
   allowance: toBaseTokenWei(1000000),
-  balanceDelta: toBaseTokenWei(0.001),
+  baseBalanceDelta: toBaseTokenWei(0.001),
+  boostBalanceDelta: toBoostTokenWei(0.001),
   weiDelta: toWei(0.001),
   nowPlus1m: toUnixTime(now.add(1, 'minute').toDate()),
   startDatePlus1m: addSecondsToUnixTime(contractConfig.startDate, 1 * MINUTES),

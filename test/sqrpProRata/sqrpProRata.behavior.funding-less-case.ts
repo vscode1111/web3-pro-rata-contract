@@ -28,7 +28,7 @@ const caseSettings = {
 export function shouldBehaveCorrectFundingLessCase(): void {
   describe('funding: less case', () => {
     beforeEach(async function () {
-      await loadSQRpProRataFixture(this, caseContractConfig);
+      await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
       await checkTotalSQRBalance(this);
     });
 
@@ -80,7 +80,7 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         caseSettings.deposit1 + caseSettings.deposit2,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
 
       expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(false);
@@ -101,17 +101,17 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       expect(await getBaseTokenBalance(this, this.user1Address)).closeTo(
         seedData.userInitBalance,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.user2Address)).closeTo(
         seedData.userInitBalance,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).eq(seedData.zero);
 
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
         tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
 
       await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
@@ -121,11 +121,11 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
         seedData.zero,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
       expect(await getBaseTokenBalance(this, this.owner2Address)).closeTo(
         tokenConfig.initMint - BigInt(2) * seedData.userInitBalance,
-        seedData.balanceDelta,
+        seedData.baseBalanceDelta,
       );
     });
   });

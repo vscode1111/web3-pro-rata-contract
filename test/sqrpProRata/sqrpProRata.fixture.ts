@@ -1,13 +1,20 @@
-import { ContractConfig, contractConfig, seedData } from '~seeds';
+import { ContractConfig, TokenConfig, contractConfig, tokenConfig } from '~seeds';
 import { ContextBase } from '~types';
 import { getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
+import { SQRpProRataFixtureParamConfig } from './utils';
 
 export async function deploySQRpProRataContractFixture(
-  contractConfigParam?: Partial<ContractConfig>,
+  fixtureConfig?: SQRpProRataFixtureParamConfig,
 ): Promise<ContextBase> {
   const users = await getUsers();
   const { owner2Address } = users;
 
+  const finalBaseTokenConfig: TokenConfig = {
+    ...tokenConfig,
+    decimals: fixtureConfig?.contractConfig?.baseDecimals ?? tokenConfig.decimals,
+    ...fixtureConfig?.baseTokenConfig,
+    newOwner: owner2Address,
+  };
   const {
     erc20TokenAddress: baseTokenAddress,
     ownerERC20Token: ownerBaseToken,
@@ -15,8 +22,14 @@ export async function deploySQRpProRataContractFixture(
     user2ERC20Token: user2BaseToken,
     user3ERC20Token: user3BaseToken,
     owner2ERC20Token: owner2BaseToken,
-  } = await getERC20TokenContext(users, undefined, seedData.baseDecimals);
+  } = await getERC20TokenContext(users, finalBaseTokenConfig);
 
+  const finalBoostTokenConfig: TokenConfig = {
+    ...tokenConfig,
+    decimals: fixtureConfig?.contractConfig?.boostDecimals ?? tokenConfig.decimals,
+    ...fixtureConfig?.boostTokenConfig,
+    newOwner: owner2Address,
+  };
   const {
     erc20TokenAddress: boostTokenAddress,
     ownerERC20Token: ownerBoostToken,
@@ -24,17 +37,16 @@ export async function deploySQRpProRataContractFixture(
     user2ERC20Token: user2BoostToken,
     user3ERC20Token: user3BoostToken,
     owner2ERC20Token: owner2BoostToken,
-  } = await getERC20TokenContext(users, undefined, seedData.boostDecimals);
+  } = await getERC20TokenContext(users, finalBoostTokenConfig);
 
-  const config: ContractConfig = {
+  const finalContractConfig: ContractConfig = {
     ...contractConfig,
-    ...contractConfigParam,
+    ...fixtureConfig?.contractConfig,
     newOwner: owner2Address,
     baseToken: baseTokenAddress,
     boostToken: boostTokenAddress,
   };
-
-  const sqrpProRataContext = await getSQRpProRataContext(users, config);
+  const sqrpProRataContext = await getSQRpProRataContext(users, finalContractConfig);
 
   return {
     ...users,

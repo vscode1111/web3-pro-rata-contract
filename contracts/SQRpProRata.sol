@@ -30,7 +30,9 @@ contract SQRpProRata is
   function initialize(
     address _newOwner,
     address _baseToken,
+    uint8 _baseDecimals,
     address _boostToken,
+    uint8 _boostDecimals,
     address _depositVerifier,
     uint256 _baseGoal,
     uint32 _startDate, //0 - skip
@@ -68,13 +70,15 @@ contract SQRpProRata is
     __UUPSUpgradeable_init();
 
     baseToken = IERC20(_baseToken);
+    baseDecimals = _baseDecimals;
     boostToken = IERC20(_boostToken);
+    boostDecimals = _boostDecimals;
     depositVerifier = _depositVerifier;
     baseGoal = _baseGoal;
     startDate = _startDate;
     closeDate = _closeDate;
 
-    console.log(111, address(baseToken), address(boostToken));
+    (decimalsFactor1, decimalsFactor2) = calculateDecimalsFactors(baseDecimals, boostDecimals);
   }
 
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -82,14 +86,18 @@ contract SQRpProRata is
   //Variables, structs, errors, modifiers, events------------------------
 
   string public constant VERSION = "2.0";
-  uint256 public constant DIVIDER = 1e18;
+  uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
+  uint8 public baseDecimals;
   IERC20 public boostToken;
+  uint8 public boostDecimals;
   address public depositVerifier;
   uint256 public baseGoal;
   uint32 public startDate;
   uint32 public closeDate;
+  uint256 public decimalsFactor1;
+  uint256 public decimalsFactor2;
   uint256 public totalBaseDeposited;
   uint256 public totalBaseNonBoostDeposited;
   uint256 public totalBaseBoostDeposited;
@@ -336,7 +344,10 @@ contract SQRpProRata is
     if (accountItem.boosted) {
       uint256 boostAverageRate = calculateAccountBoostAverageRate(account);
       return
-        ((accountItem.baseDeposited - calculateAccountBaseAllocation(account)) * DIVIDER) /
+        ((accountItem.baseDeposited - calculateAccountBaseAllocation(account)) *
+          PRECISION_FACTOR *
+          decimalsFactor1) /
+        decimalsFactor2 /
         boostAverageRate;
     }
     return 0;
@@ -345,13 +356,16 @@ contract SQRpProRata is
   function calculateAccountBoostAverageRate(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (accountItem.boostDeposit > 0) {
-      return (accountItem.baseDeposited * DIVIDER) / accountItem.boostDeposit;
+      return
+        (accountItem.baseDeposited * PRECISION_FACTOR * decimalsFactor1) /
+        decimalsFactor2 /
+        accountItem.boostDeposit;
     }
     return 0;
   }
 
   function calculateAccountShare(address account) public view returns (uint256) {
-    return (calculateAccountBaseAllocation(account) * DIVIDER) / baseGoal;
+    return (calculateAccountBaseAllocation(account) * PRECISION_FACTOR) / baseGoal;
   }
 
   function fetchTransactionItem(
@@ -412,6 +426,17 @@ contract SQRpProRata is
     return total;
   }
 
+  function calculateDecimalsFactors(
+    uint8 _baseDecimals,
+    uint8 _boostDecimals
+  ) public pure returns (uint256 factor1, uint256 factor2) {
+    if (_baseDecimals >= _boostDecimals) {
+      return (1, 10 ** (_baseDecimals - _boostDecimals));
+    } else {
+      return (10 ** (_boostDecimals - _baseDecimals), 1);
+    }
+  }
+
   //Write methods-------------------------------------------
   function _setTransactionId(string calldata transactionId, uint256 amount) private {
     (bytes32 transactionIdHash, TransactionItem memory transactionItem) = _getTransactionItem(
@@ -470,13 +495,16 @@ contract SQRpProRata is
         accountItem.baseDeposit = 0;
       }
 
-      uint256 boostDeposit = (baseDeposit * DIVIDER) / boostRate;
+      uint256 boostDeposit = (baseDeposit * PRECISION_FACTOR * decimalsFactor1) /
+        decimalsFactor2 /
+        boostRate;
+
       accountItem.boostDeposit += boostDeposit;
       totalBaseBoostDeposited += baseDeposit;
       totalBoostSwapped += boostDeposit;
     } else {
       if (accountItem.boosted) {
-        revert UserMustAllowToUseFunds();
+        revert UserHasBoostedDeposit();
       }
 
       accountItem.baseDeposit += baseAmount;

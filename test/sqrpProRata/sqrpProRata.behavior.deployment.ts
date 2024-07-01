@@ -62,8 +62,10 @@ export function shouldBehaveCorrectDeployment(): void {
       const { user3Address } = users;
 
       await loadSQRpProRataFixture(this, {
-        startDate: 0,
-        verifier: user3Address,
+        contractConfig: {
+          startDate: 0,
+          depositVerifier: user3Address,
+        },
       });
 
       await this.owner2BaseToken.transfer(this.user1Address, seedData.userInitBalance);
@@ -121,7 +123,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await expect(
         getSQRpProRataContext(users, {
           ...contractConfig,
-          verifier: ZeroAddress,
+          depositVerifier: ZeroAddress,
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.depositVerifierNotZeroAddress);
     });
