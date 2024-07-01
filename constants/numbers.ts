@@ -6,4 +6,4 @@ export const MAX_INT = BigInt(
 
 export const BASE_DECIMALS = 8;
 
-export const BOOST_DECIMALS = 13;
+export const BOOST_DECIMALS = 5;

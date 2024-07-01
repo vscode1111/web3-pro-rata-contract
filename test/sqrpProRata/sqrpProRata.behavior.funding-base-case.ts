@@ -21,7 +21,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       await checkTotalSQRBalance(this);
     });
 
-    it('3 simple deposits, unreached goal', async function () {
+    it('1. 3 simple deposits, unreached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -82,7 +82,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('3 simple deposits, exact reached goal', async function () {
+    it('2. 3 simple deposits, exact reached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -119,7 +119,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('1 extra simple, 1 simple, 1 extra simple + simple', async function () {
+    it('3. 1 extra simple, 1 simple, 1 extra simple + simple', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -160,7 +160,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('3 boost deposits, exact reached goal', async function () {
+    it('4. 3 boost deposits, exact reached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -203,7 +203,56 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('1 extra simple, 1 simple, 1 boost', async function () {
+    it('5. 3 boost deposits, unreached goal', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(10),
+            boost: true,
+            boostRate: seedData.boostRate,
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(20),
+            boost: true,
+            boostRate: seedData.boostRate,
+          },
+          {
+            baseDeposit: toBaseTokenWei(30),
+            user: 'user3',
+            boost: true,
+            boostRate: seedData.boostRate,
+          },
+        ],
+        {
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(50),
+              boostRefunded: toBoostTokenWei(50),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(100),
+              boostRefunded: toBoostTokenWei(100),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(150),
+              boostRefunded: toBoostTokenWei(150),
+            },
+          },
+        },
+      );
+    });
+
+    it('6. 1 extra simple, 1 simple, 1 boost', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -245,7 +294,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('1 extra simple, 1 extra boost, 1 boost', async function () {
+    it('7. 1 extra simple, 1 extra boost, 1 boost', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -276,19 +325,19 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user2: {
               baseAllocation: toBaseTokenWei(90),
               baseRefunded: toBaseTokenWei(0),
-              boostRefunded: toBoostTokenWei(180),
+              boostRefunded: toBoostTokenWei(900),
             },
             user3: {
               baseAllocation: toBaseTokenWei(10),
               baseRefunded: toBaseTokenWei(0),
-              boostRefunded: toBoostTokenWei(20),
+              boostRefunded: toBoostTokenWei(100),
             },
           },
         },
       );
     });
 
-    it('2 simple boost from one user', async function () {
+    it('8. 2 simple boost from one user', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -326,7 +375,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('simple and boost from one user, unreached goal', async function () {
+    it('9. simple and boost from one user, unreached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -363,7 +412,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
       );
     });
 
-    it('simple and boost from one user', async function () {
+    it('10. simple and boost from one user', async function () {
       await testContract(
         this,
         caseContractConfig,

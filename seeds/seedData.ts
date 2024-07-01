@@ -159,7 +159,7 @@ export const seedData = {
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),
   timeShift: 10,
   batchSize: 1,
-  boostRate: toWei(1),
+  boostRate: toWei(0.2),
   transactionId1,
   transactionId1_2,
   transactionId2,
