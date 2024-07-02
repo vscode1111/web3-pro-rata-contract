@@ -24,6 +24,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:withdraw-base-excess`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:withdraw-excess-tokens`];
 
 export default func;
