@@ -15,7 +15,7 @@ const caseContractConfig: ContractConfig = {
 };
 
 export function shouldBehaveCorrectFundingDifferentDecimalsCase2(): void {
-  describe.skip(`funding: base decimals: ${BASE_DECIMALS}, boost decimals: ${BOOST_DECIMALS} case`, () => {
+  describe(`funding: base decimals: ${BASE_DECIMALS}, boost decimals: ${BOOST_DECIMALS} case`, () => {
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, {
         baseTokenConfig: {
@@ -67,6 +67,8 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase2(): void {
               boostAverageRate: toWei(0.236),
             },
           },
+          baseBalanceDelta: toWei(0.001, BASE_DECIMALS),
+          boostBalanceDelta: toWei(0.001, BOOST_DECIMALS),
         },
       );
     });

@@ -9,14 +9,14 @@ import { deployParams } from './deployData';
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
-    console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is refunding tokens for users...`);
+    console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is withdrawing goal...`);
     const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const { owner2SQRpProRata, sqrpProRataFactory } = context;
 
     await waitTx(
-      owner2SQRpProRata.refundAll(TX_OVERRIDES),
-      'refundAll',
+      owner2SQRpProRata.withdrawBaseGoal(TX_OVERRIDES),
+      'withdrawBaseGoal',
       deployParams.attempts,
       deployParams.delay,
       sqrpProRataFactory,
@@ -24,6 +24,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:refund-all`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:withdraw-base-goal`];
 
 export default func;

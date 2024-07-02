@@ -58,14 +58,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       );
 
       await expect(
-        this.user1SQRpProRata.depositSig(
-          seedData.deposit1,
-          false,
-          seedData.zero,
-          seedData.transactionId1,
-          seedData.startDatePlus1m,
+        this.user1SQRpProRata.depositSig({
+          baseAmount: seedData.deposit1,
+          boost: false,
+          boostRate: seedData.zero,
+          transactionId: seedData.transactionId1,
+          timestampLimit: seedData.startDatePlus1m,
           signature,
-        ),
+        }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.tooEarly);
     });
 
@@ -86,14 +86,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       );
 
       await expect(
-        this.user1SQRpProRata.depositSig(
-          seedData.deposit1,
-          false,
-          seedData.zero,
-          seedData.transactionId1,
-          seedData.closeDatePlus1m,
+        this.user1SQRpProRata.depositSig({
+          baseAmount: seedData.deposit1,
+          boost: false,
+          boostRate: seedData.zero,
+          transactionId: seedData.transactionId1,
+          timestampLimit: seedData.closeDatePlus1m,
           signature,
-        ),
+        }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.tooLate);
     });
 
@@ -121,14 +121,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user1SQRpProRata.depositSig(
-            seedData.zero,
-            false,
-            seedData.zero,
-            seedData.transactionId1,
-            seedData.startDatePlus1m,
+          this.user1SQRpProRata.depositSig({
+            baseAmount: seedData.zero,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId1,
+            timestampLimit: seedData.startDatePlus1m,
             signature,
-          ),
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.baseAmountNotZero);
       });
 
@@ -145,14 +145,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user1SQRpProRata.depositSig(
-            seedData.deposit1,
-            false,
-            seedData.zero,
-            seedData.transactionId1,
-            seedData.startDatePlus1m,
+          this.user1SQRpProRata.depositSig({
+            baseAmount: seedData.deposit1,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId1,
+            timestampLimit: seedData.startDatePlus1m,
             signature,
-          ),
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.userMustAllowToUseFunds);
       });
 
@@ -171,14 +171,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user1SQRpProRata.depositSig(
-            seedData.deposit1,
-            false,
-            seedData.zero,
-            seedData.transactionId1,
-            seedData.startDatePlus1m,
+          this.user1SQRpProRata.depositSig({
+            baseAmount: seedData.deposit1,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId1,
+            timestampLimit: seedData.startDatePlus1m,
             signature,
-          ),
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.timeoutBlocker);
       });
 
@@ -195,14 +195,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user1SQRpProRata.depositSig(
-            seedData.deposit1,
-            false,
-            seedData.zero,
-            seedData.transactionId1,
-            seedData.startDatePlus1m,
-            wrongSignature,
-          ),
+          this.user1SQRpProRata.depositSig({
+            baseAmount: seedData.deposit1,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId1,
+            timestampLimit: seedData.startDatePlus1m,
+            signature: wrongSignature,
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.invalidSignature);
       });
 
@@ -221,14 +221,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user1SQRpProRata.depositSig(
-            seedData.deposit1,
-            false,
-            seedData.zero,
-            seedData.transactionId1,
-            seedData.startDatePlus1m,
+          this.user1SQRpProRata.depositSig({
+            baseAmount: seedData.deposit1,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId1,
+            timestampLimit: seedData.startDatePlus1m,
             signature,
-          ),
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.userMustHaveFunds);
       });
 
@@ -245,14 +245,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         );
 
         await expect(
-          this.user2SQRpProRata.depositSig(
-            seedData.deposit2,
-            false,
-            seedData.zero,
-            seedData.transactionId2,
-            seedData.startDatePlus1m,
+          this.user2SQRpProRata.depositSig({
+            baseAmount: seedData.deposit2,
+            boost: false,
+            boostRate: seedData.zero,
+            transactionId: seedData.transactionId2,
+            timestampLimit: seedData.startDatePlus1m,
             signature,
-          ),
+          }),
         ).revertedWithCustomError(this.owner2SQRpProRata, customError.userMustAllowToUseFunds);
       });
 
@@ -298,14 +298,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           );
 
           const depositSig = () =>
-            this.user1SQRpProRata.depositSig(
-              seedData.deposit1,
-              false,
-              seedData.zero,
-              seedData.transactionId1,
-              seedData.startDatePlus1m,
+            this.user1SQRpProRata.depositSig({
+              baseAmount: seedData.deposit1,
+              boost: false,
+              boostRate: seedData.zero,
+              transactionId: seedData.transactionId1,
+              timestampLimit: seedData.startDatePlus1m,
               signature,
-            );
+            });
 
           await expect(Promise.all([depositSig(), depositSig()])).revertedWithCustomError(
             this.owner2SQRpProRata,
@@ -326,14 +326,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           );
 
           const receipt = await waitTx(
-            this.user1SQRpProRata.depositSig(
-              seedData.deposit1,
-              false,
-              seedData.zero,
-              seedData.transactionId1,
-              seedData.startDatePlus1m,
+            this.user1SQRpProRata.depositSig({
+              baseAmount: seedData.deposit1,
+              boost: false,
+              boostRate: seedData.zero,
+              transactionId: seedData.transactionId1,
+              timestampLimit: seedData.startDatePlus1m,
               signature,
-            ),
+            }),
           );
           const eventLog = findEvent<DepositEventArgs>(receipt);
 
@@ -498,14 +498,14 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             );
 
             await expect(
-              this.user1SQRpProRata.depositSig(
-                seedData.deposit1,
-                false,
-                seedData.zero,
-                seedData.transactionId1,
-                seedData.startDatePlus1m,
+              this.user1SQRpProRata.depositSig({
+                baseAmount: seedData.deposit1,
+                boost: false,
+                boostRate: seedData.zero,
+                transactionId: seedData.transactionId1,
+                timestampLimit: seedData.startDatePlus1m,
                 signature,
-              ),
+              }),
             ).revertedWithCustomError(this.owner2SQRpProRata, customError.usedTransactionId);
           });
 

@@ -27,56 +27,50 @@ contract SQRpProRata is
     _disableInitializers();
   }
 
-  function initialize(
-    address _newOwner,
-    address _baseToken,
-    uint8 _baseDecimals,
-    address _boostToken,
-    uint8 _boostDecimals,
-    address _depositVerifier,
-    uint256 _baseGoal,
-    uint32 _startDate, //0 - skip
-    uint32 _closeDate
-  ) public initializer {
-    if (_newOwner == address(0)) {
+  function initialize(ContractParams calldata contractParams) public initializer {
+    if (contractParams.newOwner == address(0)) {
       revert NewOwnerNotZeroAddress();
     }
 
-    if (_baseToken == address(0)) {
+    if (contractParams.baseToken == address(0)) {
       revert BaseTokenNotZeroAddress();
     }
 
-    if (_depositVerifier == address(0)) {
+    if (contractParams.depositVerifier == address(0)) {
       revert DepositVerifierNotZeroAddress();
     }
 
-    if (_baseGoal == 0) {
+    if (contractParams.baseGoal == 0) {
       revert GoalNotZero();
     }
 
-    if (0 < _startDate && _startDate < uint32(block.timestamp)) {
+    if (0 < contractParams.startDate && contractParams.startDate < uint32(block.timestamp)) {
       revert StartDateMustBeGreaterThanCurrentTime();
     }
 
-    if (_closeDate < uint32(block.timestamp)) {
+    if (contractParams.closeDate < uint32(block.timestamp)) {
       revert CloseDateMustBeGreaterThanCurrentTime();
     }
 
-    if (_startDate > 0 && _closeDate > 0 && _startDate > _closeDate) {
+    if (
+      contractParams.startDate > 0 &&
+      contractParams.closeDate > 0 &&
+      contractParams.startDate > contractParams.closeDate
+    ) {
       revert CloseDateMustBeGreaterThanStartDate();
     }
 
-    __Ownable_init(_newOwner);
+    __Ownable_init(contractParams.newOwner);
     __UUPSUpgradeable_init();
 
-    baseToken = IERC20(_baseToken);
-    baseDecimals = _baseDecimals;
-    boostToken = IERC20(_boostToken);
-    boostDecimals = _boostDecimals;
-    depositVerifier = _depositVerifier;
-    baseGoal = _baseGoal;
-    startDate = _startDate;
-    closeDate = _closeDate;
+    baseToken = IERC20(contractParams.baseToken);
+    baseDecimals = contractParams.baseDecimals;
+    boostToken = IERC20(contractParams.boostToken);
+    boostDecimals = contractParams.boostDecimals;
+    depositVerifier = contractParams.depositVerifier;
+    baseGoal = contractParams.baseGoal;
+    startDate = contractParams.startDate;
+    closeDate = contractParams.closeDate;
 
     (decimalsFactor1, decimalsFactor2) = calculateDecimalsFactors(baseDecimals, boostDecimals);
   }
@@ -103,6 +97,7 @@ contract SQRpProRata is
   uint256 public totalBaseBoostDeposited;
   uint256 public totalBaseRefunded;
   uint256 public totalBaseWithdrew;
+  uint256 public totalBoostWithdrew;
   uint256 public totalBoostRefunded;
   uint256 public totalBoostSwapped;
 
@@ -110,6 +105,18 @@ contract SQRpProRata is
   mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
   address[] private _accountAddresses;
   uint32 private _processedAccountIndex;
+
+  struct ContractParams {
+    address newOwner;
+    address baseToken;
+    uint8 baseDecimals;
+    address boostToken;
+    uint8 boostDecimals;
+    address depositVerifier;
+    uint256 baseGoal;
+    uint32 startDate; //0 - skip
+    uint32 closeDate;
+  }
 
   struct AccountItem {
     uint256 baseDeposited;
@@ -140,6 +147,15 @@ contract SQRpProRata is
     uint256 share;
   }
 
+  struct DepositSigParams {
+    uint256 baseAmount;
+    bool boost;
+    uint256 boostRate;
+    string transactionId;
+    uint32 timestampLimit;
+    bytes signature;
+  }
+
   struct TransactionItem {
     uint256 amount;
   }
@@ -164,6 +180,8 @@ contract SQRpProRata is
   error TooLate();
   error UnreachedGoal();
   error AllUsersProcessed();
+  error NotRefunded();
+  error NotWithdrawBaseGoal();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
     if (block.timestamp > timestampLimit) {
@@ -196,9 +214,11 @@ contract SQRpProRata is
     _;
   }
 
-  event Deposit(address indexed account, uint256 amount);
-  event Refund(address indexed account, uint256 amount);
-  event WithdrawBaseGoal(address indexed account, uint256 amount);
+  event Deposit(address indexed account, uint256 baseAmount);
+  event Refund(address indexed account, uint256 baseAmount, uint256 boostAmount);
+  event WithdrawBaseGoal(address indexed account, uint256 baseAmount);
+  event WithdrawSwappedAmount(address indexed account, uint256 baseAmount);
+  event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostAmount);
 
   //Read methods-------------------------------------------
 
@@ -437,6 +457,11 @@ contract SQRpProRata is
     }
   }
 
+  function calculateRemainProcessedAccountAmount() public view returns (uint256) {
+    uint32 accountCount = getAccountCount();
+    return accountCount - _processedAccountIndex;
+  }
+
   //Write methods-------------------------------------------
   function _setTransactionId(string calldata transactionId, uint256 amount) private {
     (bytes32 transactionIdHash, TransactionItem memory transactionItem) = _getTransactionItem(
@@ -537,32 +562,32 @@ contract SQRpProRata is
     return recover == owner() || recover == depositVerifier;
   }
 
-  function depositSig(
-    uint256 baseAmount,
-    bool boost,
-    uint256 boostRate,
-    string calldata transactionId,
-    uint32 timestampLimit,
-    bytes calldata signature
-  ) external {
+  function depositSig(DepositSigParams calldata depositSigParams) external {
     address account = _msgSender();
 
     uint32 nonce = getAccountDepositNonce(account);
     if (
       !verifyDepositSignature(
         account,
-        baseAmount,
-        boost,
-        boostRate,
+        depositSigParams.baseAmount,
+        depositSigParams.boost,
+        depositSigParams.boostRate,
         nonce,
-        transactionId,
-        timestampLimit,
-        signature
+        depositSigParams.transactionId,
+        depositSigParams.timestampLimit,
+        depositSigParams.signature
       )
     ) {
       revert InvalidSignature();
     }
-    _deposit(account, baseAmount, boost, boostRate, transactionId, timestampLimit);
+    _deposit(
+      account,
+      depositSigParams.baseAmount,
+      depositSigParams.boost,
+      depositSigParams.boostRate,
+      depositSigParams.transactionId,
+      depositSigParams.timestampLimit
+    );
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
@@ -585,7 +610,7 @@ contract SQRpProRata is
         accountItem.baseRefunded = baseRefund;
         baseToken.safeTransfer(account, baseRefund);
         totalBaseRefunded += baseRefund;
-        emit Refund(account, baseRefund);
+        emit Refund(account, baseRefund, 0);
       }
 
       uint256 boostRefund = calculateAccountBoostRefund(account);
@@ -594,7 +619,7 @@ contract SQRpProRata is
         accountItem.boostRefunded = boostRefund;
         boostToken.safeTransfer(account, boostRefund);
         totalBoostRefunded += boostRefund;
-        emit Refund(account, boostRefund);
+        emit Refund(account, 0, boostRefund);
       }
     }
     _processedAccountIndex = endIndex;
@@ -620,7 +645,33 @@ contract SQRpProRata is
 
     address to = owner();
     baseToken.safeTransfer(to, baseSwappedAmount);
-    totalBaseWithdrew += baseGoal;
-    emit WithdrawBaseGoal(to, baseGoal);
+    totalBaseWithdrew += baseSwappedAmount;
+    emit WithdrawSwappedAmount(to, baseSwappedAmount);
+  }
+
+  function withdrawExcessTokens() external nonReentrant onlyOwner afterCloseDate {
+    if (calculateRemainProcessedAccountAmount() > 0) {
+      revert NotRefunded();
+    }
+
+    if (isReachedBaseGoal() && totalBaseWithdrew < baseGoal) {
+      revert NotWithdrawBaseGoal();
+    }
+
+    address to = owner();
+
+    uint256 baseBalance = getBaseBalance();
+    if (baseBalance > 0) {
+      baseToken.safeTransfer(to, baseBalance);
+      totalBaseWithdrew += baseBalance;
+    }
+
+    uint256 boostBalance = getBoostBalance();
+    if (boostBalance > 0) {
+      boostToken.safeTransfer(to, boostBalance);
+      totalBoostWithdrew += boostBalance;
+    }
+
+    emit WithdrawExcessTokens(to, baseBalance, boostBalance);
   }
 }

@@ -3,8 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { MINUTES, toUnixTime, toUnixTimeUtc, toWei } from '~common';
 import { BASE_DECIMALS, BOOST_DECIMALS, Token } from '~constants';
 import { DeployNetworkKey, TokenAddressDescription } from '~types';
-import { addSecondsToUnixTime, toBaseTokenWei, toBoostTokenWei } from '~utils';
+import { addSecondsToUnixTime } from '~utils';
 import { getTokenDescription } from '~utils/contracts';
+import { toBaseTokenWei, toBoostTokenWei } from '~utils/converts';
 import { defaultNetwork } from '../hardhat.config';
 import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from './types';
 
@@ -15,13 +16,13 @@ const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
 const isSqr = ['test', 'main'].includes(deployType);
 // const isSqr = false;
 
-// const isProd = deployType === ('prod' as any);
-// if (isProd) {
-//   throw 'Are you sure? It is PROD!';
-// }
+const isProd = deployType === ('prod' as any);
+if (isProd) {
+  throw 'Are you sure? It is PROD!';
+}
 
 export const chainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
-  bsc: isSqr ? getTokenDescription(Token.tSQR) : getTokenDescription(Token.USDT), //SQR/USDT
+  bsc: isSqr ? getTokenDescription(Token.tUSDT2) : getTokenDescription(Token.USDT), //SQR/USDT
 };
 
 export const { address: tokenAddress, decimals: tokenDecimals } =
@@ -45,6 +46,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
   },
+  //0xCC2d63ff928996Ad8CdE064c80A1348f6809e043
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
@@ -52,7 +54,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2025, 5, 10, 20, 38, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 6, 2, 13, 40, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -78,10 +80,10 @@ const extContractConfig = contractConfigDeployMap[deployType];
 
 export const contractConfig: ContractConfig = {
   newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  baseToken: tokenAddress,
-  baseDecimals: getTokenDescription(Token.tSQR).decimals,
-  boostToken: tokenAddress,
-  boostDecimals: getTokenDescription(Token.tSQR).decimals,
+  baseToken: Token.tUSDT2,
+  baseDecimals: getTokenDescription(Token.tUSDT2).decimals,
+  boostToken: Token.tSQR2,
+  boostDecimals: getTokenDescription(Token.tSQR2).decimals,
   depositVerifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
@@ -96,21 +98,23 @@ export function getContractArgs(contractConfig: ContractConfig): DeployContractA
     baseDecimals,
     boostToken,
     boostDecimals,
-    depositVerifier: verifier,
+    depositVerifier,
     baseGoal,
     startDate,
     closeDate,
   } = contractConfig;
   return [
-    newOwner,
-    baseToken,
-    baseDecimals,
-    boostToken,
-    boostDecimals,
-    verifier,
-    baseGoal,
-    startDate,
-    closeDate,
+    {
+      newOwner,
+      baseToken,
+      baseDecimals,
+      boostToken,
+      boostDecimals,
+      depositVerifier,
+      baseGoal,
+      startDate,
+      closeDate,
+    },
   ];
 }
 

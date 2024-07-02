@@ -13,15 +13,17 @@ export interface ContractConfig {
 }
 
 export type DeployContractArgs = [
-  newOwner: string,
-  baseToken: string,
-  baseDecimals: number,
-  boostToken: string,
-  boostDecimals: number,
-  depositVerifier: string,
-  baseGoal: BigNumberish,
-  startDate: number,
-  closeDate: number,
+  {
+    newOwner: string;
+    baseToken: string;
+    baseDecimals: number;
+    boostToken: string;
+    boostDecimals: number;
+    depositVerifier: string;
+    baseGoal: BigNumberish;
+    startDate: number;
+    closeDate: number;
+  },
 ];
 
 export interface TokenConfig {

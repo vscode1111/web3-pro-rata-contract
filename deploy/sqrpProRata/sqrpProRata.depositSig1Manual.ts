@@ -17,8 +17,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
-    const baseTokenAddress = contractConfig.baseToken;
-    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
+    const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const {
       depositVerifier: verifier,
       user1Address,
@@ -119,12 +119,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     await waitTx(
       user1SQRpProRata.depositSig(
-        params.amount,
-        false,
-        params.boostRate,
-        params.transactionId,
-        params.timestampLimit,
-        params.signature,
+        {
+          baseAmount: params.amount,
+          boost: false,
+          boostRate: params.boostRate,
+          transactionId: params.transactionId,
+          timestampLimit: params.timestampLimit,
+          signature: params.signature,
+        },
         TX_OVERRIDES,
       ),
       'depositSig',

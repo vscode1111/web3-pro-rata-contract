@@ -42,6 +42,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
         baseDecimals,
         baseTokenName,
       ),
+      reequiredBoostAmount: formatContractToken(
+        await ownerSQRpProRata.calculatedRequiredBoostAmount(),
+        boostDecimals,
+        boostTokenName,
+      ),
     };
 
     console.table(result);

@@ -68,6 +68,8 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase1(): void {
               boostAverageRate: toWei(0.236),
             },
           },
+          baseBalanceDelta: toWei(0.001, BASE_DECIMALS),
+          boostBalanceDelta: toWei(0.0001, BOOST_DECIMALS),
         },
       );
     });

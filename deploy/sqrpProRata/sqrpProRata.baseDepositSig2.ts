@@ -17,8 +17,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
-    const baseTokenAddress = contractConfig.baseToken;
-    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
+    const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const {
       user2Address,
       user2BaseToken,
@@ -72,12 +72,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     await waitTx(
       user2SQRpProRata.depositSig(
-        params.amount,
-        false,
-        seedData.zero,
-        params.transactionId,
-        params.timestampLimit,
-        params.signature,
+        {
+          baseAmount: params.amount,
+          boost: params.boost,
+          boostRate: seedData.zero,
+          transactionId: params.transactionId,
+          timestampLimit: params.timestampLimit,
+          signature: params.signature,
+        },
         TX_OVERRIDES,
       ),
       'depositSig',
@@ -88,6 +90,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:deposit-sig2`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:base-deposit-sig2`];
 
 export default func;

@@ -17,29 +17,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
-    const baseTokenAddress = contractConfig.baseToken;
-    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
+    const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const {
-      depositVerifier: verifier,
-      user1Address,
-      user1BaseToken,
-      user1SQRpProRata,
+      user2Address,
+      user2BaseToken,
+      user2SQRpProRata,
       sqrpProRataFactory,
+      depositVerifier: verifier,
     } = context;
 
-    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user1SQRpProRata);
+    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user2SQRpProRata);
 
-    const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
-    console.log(`${toNumberDecimals(currentAllowance, decimals)} token was allowed`);
+    const currentAllowance = await user2BaseToken.allowance(user2Address, sqrpProRataAddress);
+    console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
 
-    const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);
+    const nonce = await user2SQRpProRata.getAccountDepositNonce(user2Address);
+
     const params = {
-      account: user1Address,
-      amount: deployData.deposit1,
+      transactionId: seedData.transactionId2,
+      amount: deployData.deposit2,
+      boost: true,
+      account: user2Address,
+      boostRate: seedData.boostRate,
       nonce: Number(nonce),
-      boost: false,
-      boostRate: seedData.zero,
-      transactionId: seedData.transactionId1,
       timestampLimit: seedData.nowPlus1m,
       signature: '',
     };
@@ -57,10 +58,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     if (params.amount > currentAllowance) {
       const askAllowance = seedData.allowance;
-      await waitTx(
-        user1BaseToken.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
-        'approve',
-      );
+      await waitTx(user2BaseToken.approve(sqrpProRataAddress, askAllowance), 'approve');
       console.log(
         `${toNumberDecimals(askAllowance, decimals)} SQR was approved to ${sqrpProRataAddress}`,
       );
@@ -73,13 +71,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     });
 
     await waitTx(
-      user1SQRpProRata.depositSig(
-        params.amount,
-        false,
-        params.boostRate,
-        params.transactionId,
-        params.timestampLimit,
-        params.signature,
+      user2SQRpProRata.depositSig(
+        {
+          baseAmount: params.amount,
+          boost: params.boost,
+          boostRate: params.boostRate,
+          transactionId: params.transactionId,
+          timestampLimit: params.timestampLimit,
+          signature: params.signature,
+        },
+        TX_OVERRIDES,
       ),
       'depositSig',
       deployParams.attempts,
@@ -89,6 +90,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:deposit-sig1`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:boost-deposit-sig2`];
 
 export default func;

@@ -143,6 +143,7 @@ export async function getSQRpProRataContext(
 
 export async function getContext(
   baseTokenAddress: string,
+  boostTokenAddress: string,
   sqrpProRataAddress: string,
 ): Promise<ContextBase> {
   const users = await getUsers();
@@ -155,13 +156,12 @@ export async function getContext(
   } = await getERC20TokenContext(users, baseTokenAddress);
 
   const {
-    erc20TokenAddress: boostTokenAddress,
     ownerERC20Token: ownerBoostToken,
     user1ERC20Token: user1BoostToken,
     user2ERC20Token: user2BoostToken,
     user3ERC20Token: user3BoostToken,
     owner2ERC20Token: owner2BoostToken,
-  } = await getERC20TokenContext(users);
+  } = await getERC20TokenContext(users, boostTokenAddress);
 
   const sqrpProRataContext = await getSQRpProRataContext(users, sqrpProRataAddress);
 

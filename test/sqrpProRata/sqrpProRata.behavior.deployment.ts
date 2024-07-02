@@ -82,14 +82,14 @@ export function shouldBehaveCorrectDeployment(): void {
         seedData.startDatePlus1m,
       );
 
-      await this.user1SQRpProRata.depositSig(
-        seedData.deposit1,
-        false,
-        seedData.zero,
-        seedData.transactionId1,
-        seedData.startDatePlus1m,
+      await this.user1SQRpProRata.depositSig({
+        baseAmount: seedData.deposit1,
+        boost: false,
+        boostRate: seedData.zero,
+        transactionId: seedData.transactionId1,
+        timestampLimit: seedData.startDatePlus1m,
         signature,
-      );
+      });
     });
 
     it('owner tries to deploy with invalid start date', async function () {

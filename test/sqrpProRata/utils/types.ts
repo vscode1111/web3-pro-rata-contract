@@ -74,6 +74,8 @@ export interface UserExpectation {
   boostAverageRate?: bigint;
 }
 
-export interface CaseExpectations {
+export interface CaseExpectation {
   userExpectations?: Partial<Record<UserType, UserExpectation>>;
+  baseBalanceDelta?: bigint;
+  boostBalanceDelta?: bigint;
 }

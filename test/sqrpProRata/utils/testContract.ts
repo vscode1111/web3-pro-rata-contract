@@ -19,7 +19,7 @@ import {
   printDepositResults,
   printDiffBalances,
 } from './print';
-import { CaseExpectations, DepositRecord, DepositResult, UserType } from './types';
+import { CaseExpectation, DepositRecord, DepositResult, UserType } from './types';
 
 export async function transferToUserAndApproveForContract(
   context: Context,
@@ -39,7 +39,7 @@ export async function depositSig({
   userAddress,
   baseDeposit,
   boost = false,
-  boostRate: boostRate = seedData.zero,
+  boostRate = seedData.zero,
   transactionId,
   timestampLimit,
 }: {
@@ -65,21 +65,21 @@ export async function depositSig({
     timestampLimit,
   );
 
-  await userSQRpProRata.depositSig(
-    baseDeposit,
+  await userSQRpProRata.depositSig({
+    baseAmount: baseDeposit,
     boost,
     boostRate,
     transactionId,
     timestampLimit,
     signature,
-  );
+  });
 }
 
 export async function testContract(
   context: Context,
   contractConfig: ContractConfig,
   depositRecords: DepositRecord[],
-  caseExpectations?: CaseExpectations,
+  caseExpectation?: CaseExpectation,
 ) {
   console.log('----------------------------------------------------------------------------------');
 
@@ -95,6 +95,9 @@ export async function testContract(
     getBaseDecimals(context),
     getBoostDecimals(context),
   ]);
+
+  const baseBalanceDelta = caseExpectation?.baseBalanceDelta ?? seedData.baseBalanceDelta;
+  const boostBalanceDelta = caseExpectation?.boostBalanceDelta ?? seedData.boostBalanceDelta;
 
   depositRecords.forEach((record) => {
     if (!record.transactionId) {
@@ -170,7 +173,7 @@ export async function testContract(
 
   expect(await getBaseTokenBalance(context, sqrpProRataAddress)).closeTo(
     totalDeposit,
-    seedData.baseBalanceDelta,
+    baseBalanceDelta,
   );
 
   expect(await ownerSQRpProRata.isReachedBaseGoal()).eq(shouldReachedBaseGoal);
@@ -193,7 +196,9 @@ export async function testContract(
     await owner2SQRpProRata.withdrawBaseGoal();
   }
 
-  await owner2SQRpProRata.withdrawBaseSwappedAmount();
+  // await owner2SQRpProRata.withdrawBaseSwappedAmount();
+
+  await owner2SQRpProRata.withdrawExcessTokens();
 
   for (const uniqUser of uniqUsers) {
     const user = uniqUser as UserType;
@@ -255,11 +260,11 @@ export async function testContract(
 
   printDiffBalances(balanceTable1, balanceTable2);
 
-  if (!caseExpectations?.userExpectations) {
+  if (!caseExpectation?.userExpectations) {
     return;
   }
 
-  const { userExpectations } = caseExpectations;
+  const { userExpectations } = caseExpectation;
 
   if (!userExpectations) {
     return;
@@ -303,30 +308,30 @@ export async function testContract(
     } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
 
     if (exist(expectedBaseDeposited)) {
-      expect(baseDeposited).closeTo(expectedBaseDeposited, seedData.baseBalanceDelta);
+      expect(baseDeposited).closeTo(expectedBaseDeposited, baseBalanceDelta);
     }
     if (exist(expectedBaseAllocation)) {
-      expect(baseAllocation).closeTo(expectedBaseAllocation, seedData.baseBalanceDelta);
+      expect(baseAllocation).closeTo(expectedBaseAllocation, baseBalanceDelta);
     }
 
     if (exist(expectedBaseDeposit)) {
-      expect(baseDeposit).closeTo(expectedBaseDeposit, seedData.baseBalanceDelta);
+      expect(baseDeposit).closeTo(expectedBaseDeposit, baseBalanceDelta);
     }
     if (exist(expectedBaseRefund)) {
-      expect(baseRefund).closeTo(expectedBaseRefund, seedData.baseBalanceDelta);
+      expect(baseRefund).closeTo(expectedBaseRefund, baseBalanceDelta);
     }
     if (exist(expectedBaseRefunded)) {
-      expect(baseRefunded).closeTo(expectedBaseRefunded, seedData.baseBalanceDelta);
+      expect(baseRefunded).closeTo(expectedBaseRefunded, baseBalanceDelta);
     }
 
     if (exist(expectedBoostDeposit)) {
-      expect(boostDeposit).closeTo(expectedBoostDeposit, seedData.boostBalanceDelta);
+      expect(boostDeposit).closeTo(expectedBoostDeposit, boostBalanceDelta);
     }
     if (exist(expectedBoostRefund)) {
-      expect(boostRefund).closeTo(expectedBoostRefund, seedData.boostBalanceDelta);
+      expect(boostRefund).closeTo(expectedBoostRefund, boostBalanceDelta);
     }
     if (exist(expectedBoostRefunded)) {
-      expect(boostRefunded).closeTo(expectedBoostRefunded, seedData.boostBalanceDelta);
+      expect(boostRefunded).closeTo(expectedBoostRefunded, boostBalanceDelta);
     }
 
     if (exist(expectedNonce)) {
