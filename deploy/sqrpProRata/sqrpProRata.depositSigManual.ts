@@ -34,23 +34,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From Postman
     const body = {
-      contractAddress: '0xb33CA002BfAA37CC98Daa6eDc39D9DCBD937873d',
+      contractAddress: '0x491F8F96C7ab36df65C092917566eA87cAFf1757',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
       baseAmount: 0.123456789,
       boost: true,
       boostExchangeRate: 0.163,
-      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+25',
+      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+26',
     };
 
     const response = {
       signature:
-        '0xc6ffdbf29dfcf62357ad4a0879830ea9c3683c35261ff4cd455ba3381399a3f10e20cac1a9c236c5d81746cae5ddb4593c27a0443c4d87e101c6a2e3229fca581c',
+        '0xa207fb5b234f99667bc84721b2cacf0a7885c861b3f28c5b99ce6bab499549b576d35ccab547cba1541813a89faa46ec2e5403dcf2c2abe9ee81210bca4792d91c',
       baseAmountInWei: '123456789000000000',
       boostExchangeRateInWei: '163000000000000000',
-      nonce: 4,
-      timestampNow: 1720015898,
-      timestampLimit: 1720016198,
-      dateLimit: '2024-07-03T14:21:39.305Z',
+      nonce: 2,
+      timestampNow: 1720018728,
+      timestampLimit: 1720019028,
+      dateLimit: '2024-07-03T15:08:48.874Z',
     };
 
     //Checks
@@ -138,6 +138,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:deposit-sig1-manual`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:deposit-sig-manual`];
 
 export default func;
