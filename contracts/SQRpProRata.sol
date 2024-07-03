@@ -79,7 +79,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "2.0";
+  string public constant VERSION = "2.1";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
