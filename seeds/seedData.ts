@@ -54,7 +54,7 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: 0,
     // startDate: toUnixTime(new Date(2024, 4, 17, 9, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 6, 2, 13, 40, 0)),
+    closeDate: toUnixTimeUtc(new Date(2025, 6, 2, 13, 40, 0)),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -163,7 +163,7 @@ export const seedData = {
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),
   timeShift: 10,
   batchSize: 1,
-  boostRate: toWei(0.2),
+  boostExchangeRate: toWei(0.2),
   transactionId1,
   transactionId1_2,
   transactionId2,

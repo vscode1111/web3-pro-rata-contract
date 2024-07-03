@@ -39,7 +39,7 @@ export async function depositSig({
   userAddress,
   baseDeposit,
   boost = false,
-  boostRate = seedData.zero,
+  boostExchangeRate = seedData.zero,
   transactionId,
   timestampLimit,
 }: {
@@ -48,7 +48,7 @@ export async function depositSig({
   userAddress: string;
   baseDeposit: bigint;
   boost?: boolean;
-  boostRate?: bigint;
+  boostExchangeRate?: bigint;
   transactionId: string;
   timestampLimit: number;
 }) {
@@ -59,7 +59,7 @@ export async function depositSig({
     userAddress,
     baseDeposit,
     boost,
-    boostRate,
+    boostExchangeRate,
     nonce,
     transactionId,
     timestampLimit,
@@ -68,7 +68,7 @@ export async function depositSig({
   await userSQRpProRata.depositSig({
     baseAmount: baseDeposit,
     boost,
-    boostRate,
+    boostExchangeRate,
     transactionId,
     timestampLimit,
     signature,
@@ -148,7 +148,7 @@ export async function testContract(
   const timestampLimit = addSecondsToUnixTime(newStartDate, seedData.timeShift);
 
   for (const depositRecord of depositRecords) {
-    const { baseDeposit, transactionId, boost, boostRate = seedData.zero } = depositRecord;
+    const { baseDeposit, transactionId, boost, boostExchangeRate = seedData.zero } = depositRecord;
     const { userAddress, userSQRpProRata } = getUserEnvironment(context, depositRecord.user);
 
     if (!transactionId) {
@@ -161,7 +161,7 @@ export async function testContract(
       userAddress,
       baseDeposit,
       boost,
-      boostRate: boostRate,
+      boostExchangeRate: boostExchangeRate,
       transactionId,
       timestampLimit,
     });

@@ -7,7 +7,7 @@ export async function signMessageForProRataDeposit(
   account: string,
   amount: bigint,
   boost: boolean,
-  amountRatio: bigint,
+  boostExchangeRate: bigint,
   nonce: number,
   transactionId: string,
   timestampLimit: number,
@@ -16,7 +16,7 @@ export async function signMessageForProRataDeposit(
     signer,
     //  account, amount, boost, amountRatio, nonce, transactionId, timestampLimit
     ['address', 'uint256', 'bool', 'uint256', 'uint32', 'string', 'uint32'],
-    [account, amount, boost, amountRatio, nonce, transactionId, timestampLimit],
+    [account, amount, boost, boostExchangeRate, nonce, transactionId, timestampLimit],
   );
 }
 

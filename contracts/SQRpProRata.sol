@@ -150,7 +150,7 @@ contract SQRpProRata is
   struct DepositSigParams {
     uint256 baseAmount;
     bool boost;
-    uint256 boostRate;
+    uint256 boostExchangeRate;
     string transactionId;
     uint32 timestampLimit;
     bytes signature;
@@ -170,7 +170,7 @@ contract SQRpProRata is
   error CloseDateMustBeGreaterThanStartDate();
   error TimeoutBlocker();
   error BaseAmountNotZero();
-  error BoostRateNotZero();
+  error BoostExchangeRateNotZero();
   error InvalidSignature();
   error UsedTransactionId();
   error UserMustAllowToUseFunds();
@@ -477,7 +477,7 @@ contract SQRpProRata is
     address account,
     uint256 baseAmount,
     bool boost,
-    uint256 boostRate,
+    uint256 boostExchangeRate,
     string calldata transactionId,
     uint32 timestampLimit
   )
@@ -510,8 +510,8 @@ contract SQRpProRata is
         revert BoostTokenNotZeroAddress();
       }
 
-      if (boostRate == 0) {
-        revert BoostRateNotZero();
+      if (boostExchangeRate == 0) {
+        revert BoostExchangeRateNotZero();
       }
 
       uint256 baseDeposit = baseAmount;
@@ -522,7 +522,7 @@ contract SQRpProRata is
 
       uint256 boostDeposit = (baseDeposit * PRECISION_FACTOR * decimalsFactor1) /
         decimalsFactor2 /
-        boostRate;
+        boostExchangeRate;
 
       accountItem.boostDeposit += boostDeposit;
       totalBaseBoostDeposited += baseDeposit;
@@ -547,16 +547,24 @@ contract SQRpProRata is
 
   function verifyDepositSignature(
     address account,
-    uint256 amount,
+    uint256 baseAmount,
     bool boost,
-    uint256 boostRate,
+    uint256 boostExchangeRate,
     uint32 nonce,
     string calldata transactionId,
     uint32 timestampLimit,
     bytes calldata signature
   ) private view returns (bool) {
     bytes32 messageHash = keccak256(
-      abi.encode(account, amount, boost, boostRate, nonce, transactionId, timestampLimit)
+      abi.encode(
+        account,
+        baseAmount,
+        boost,
+        boostExchangeRate,
+        nonce,
+        transactionId,
+        timestampLimit
+      )
     );
     address recover = messageHash.toEthSignedMessageHash().recover(signature);
     return recover == owner() || recover == depositVerifier;
@@ -571,7 +579,7 @@ contract SQRpProRata is
         account,
         depositSigParams.baseAmount,
         depositSigParams.boost,
-        depositSigParams.boostRate,
+        depositSigParams.boostExchangeRate,
         nonce,
         depositSigParams.transactionId,
         depositSigParams.timestampLimit,
@@ -584,7 +592,7 @@ contract SQRpProRata is
       account,
       depositSigParams.baseAmount,
       depositSigParams.boost,
-      depositSigParams.boostRate,
+      depositSigParams.boostExchangeRate,
       depositSigParams.transactionId,
       depositSigParams.timestampLimit
     );

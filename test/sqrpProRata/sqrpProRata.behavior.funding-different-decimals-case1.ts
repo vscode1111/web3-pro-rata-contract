@@ -43,13 +43,13 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase1(): void {
             user: 'user1',
             baseDeposit: toWei(70, BASE_DECIMALS),
             boost: true,
-            boostRate: toWei(0.2),
+            boostExchangeRate: toWei(0.2),
           },
           {
             user: 'user1',
             baseDeposit: toWei(60, BASE_DECIMALS),
             boost: true,
-            boostRate: toWei(0.3),
+            boostExchangeRate: toWei(0.3),
           },
         ],
         {

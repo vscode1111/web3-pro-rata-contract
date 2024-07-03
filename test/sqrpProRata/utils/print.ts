@@ -116,12 +116,12 @@ export function getUserEnvironment(context: Context, user: UserType): UserEnviro
 export function printDepositRecords(depositRecords: DepositRecord[], decimals: Numeric) {
   console.log('Deposits:');
   const formattedTable = depositRecords.map(
-    ({ user, baseDeposit, transactionId, boost, boostRate }) => ({
+    ({ user, baseDeposit, transactionId, boost, boostExchangeRate }) => ({
       user,
       baseDeposit: Number(formatToken(baseDeposit, decimals)),
       transactionId,
       boost,
-      boostRate: boostRate ? toNumberDecimals(boostRate) : 0,
+      boostExchangeRate: boostExchangeRate ? toNumberDecimals(boostExchangeRate) : 0,
     }),
   );
   console.table(formattedTable);

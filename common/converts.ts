@@ -30,7 +30,7 @@ export function toNumberDecimals(value: BigNumberish, decimals: Numeric = 18): n
 }
 
 export function toNumberDecimalsFixed(
-  value: bigint,
+  value: BigNumberish,
   decimals: Numeric = 18,
   fractionDigits = 3,
 ): number {

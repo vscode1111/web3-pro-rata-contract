@@ -34,23 +34,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From Postman
     const body = {
-      contractAddress: '0x5Ef6854EeA6eBdEaC4840a249df638d03ad0A426',
+      contractAddress: '0xb33CA002BfAA37CC98Daa6eDc39D9DCBD937873d',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
-      amount: 0.123456789,
+      baseAmount: 0.123456789,
+      boost: true,
+      boostExchangeRate: 0.163,
       transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+25',
-      boost: false,
-      boostRate: 0.233,
     };
 
     const response = {
       signature:
-        '0x386ce0fdf3276585b4ad80824b229fac333e19deb2ca34a8dd6b804dbc0b660438959bec3c9beba1c39904be2d6713930aa60c4e93eb68b8ab952ba5b1ddce801b',
-      amountInWei: '12345679',
-      boostRateInWei: '12345679',
-      nonce: 1,
-      timestampNow: 1718637791,
-      timestampLimit: 1718638091,
-      dateLimit: '2024-06-17T15:33:16.798Z',
+        '0xc6ffdbf29dfcf62357ad4a0879830ea9c3683c35261ff4cd455ba3381399a3f10e20cac1a9c236c5d81746cae5ddb4593c27a0443c4d87e101c6a2e3229fca581c',
+      baseAmountInWei: '123456789000000000',
+      boostExchangeRateInWei: '163000000000000000',
+      nonce: 4,
+      timestampNow: 1720015898,
+      timestampLimit: 1720016198,
+      dateLimit: '2024-07-03T14:21:39.305Z',
     };
 
     //Checks
@@ -63,7 +63,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     const balance = await user2BaseToken.balanceOf(account);
     console.log(`User balance: ${toNumberDecimals(balance, decimals)}`);
-    if (Number(response.amountInWei) > Number(balance)) {
+    if (Number(response.baseAmountInWei) > Number(balance)) {
       console.error(`User balance is lower`);
       return;
     }
@@ -78,9 +78,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const signature = await signMessageForProRataDeposit(
       verifier,
       account,
-      BigInt(response.amountInWei),
-      false,
-      BigInt(response.boostRateInWei),
+      BigInt(response.baseAmountInWei),
+      body.boost,
+      BigInt(response.boostExchangeRateInWei),
       response.nonce,
       body.transactionId,
       response.timestampLimit,
@@ -93,14 +93,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     const params = {
       account,
-      amount: BigInt(response.amountInWei),
-      boostRate: BigInt(response.boostRateInWei),
+      baseAmount: BigInt(response.baseAmountInWei),
+      boost: body.boost,
+      boostExchangeRate: BigInt(response.boostExchangeRateInWei),
       transactionId: body.transactionId,
       timestampLimit: response.timestampLimit,
       signature: response.signature,
     };
 
-    if (params.amount > currentAllowance) {
+    if (params.baseAmount > currentAllowance) {
       const askAllowance = seedData.allowance;
       await waitTx(
         user2BaseToken.approve(sqrpProRataAddress, askAllowance, TX_OVERRIDES),
@@ -113,16 +114,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table({
       ...params,
-      amount: formatContractToken(params.amount, decimals, tokenName),
+      amount: formatContractToken(params.baseAmount, decimals, tokenName),
       timestampLimit: formatContractDate(params.timestampLimit),
     });
 
     await waitTx(
       user1SQRpProRata.depositSig(
         {
-          baseAmount: params.amount,
-          boost: false,
-          boostRate: params.boostRate,
+          baseAmount: params.baseAmount,
+          boost: params.boost,
+          boostExchangeRate: params.boostExchangeRate,
           transactionId: params.transactionId,
           timestampLimit: params.timestampLimit,
           signature: params.signature,

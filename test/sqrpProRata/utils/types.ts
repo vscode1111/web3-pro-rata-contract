@@ -40,7 +40,7 @@ export interface DepositRecord {
   baseDeposit: bigint;
   transactionId?: string;
   boost?: boolean;
-  boostRate?: bigint;
+  boostExchangeRate?: bigint;
 }
 
 export interface UserEnvironment {

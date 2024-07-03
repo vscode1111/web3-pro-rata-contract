@@ -1,4 +1,5 @@
 import { Numeric } from 'ethers';
+import { toNumberDecimalsFixed } from '~common';
 import { formatContractDate, formatContractToken } from '~common-contract';
 import { ContractConfig, chainTokenDescription, contractConfig, getContractArgs } from '~seeds';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
@@ -33,6 +34,7 @@ export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
 
 interface FormattedAccountInfo {
   baseDeposited: string;
+  boosted: boolean;
   baseAllocation: string;
   baseDeposit: string;
   baseRefund: string;
@@ -41,6 +43,8 @@ interface FormattedAccountInfo {
   boostRefund: string;
   boostRefunded: string;
   nonce: number;
+  boostAverageRate: number;
+  share: number;
 }
 
 export function formatAccountInfo(
@@ -52,6 +56,7 @@ export function formatAccountInfo(
 ): FormattedAccountInfo {
   const {
     baseDeposited,
+    boosted,
     baseAllocation,
     baseDeposit,
     baseRefund,
@@ -60,18 +65,23 @@ export function formatAccountInfo(
     boostRefund,
     boostRefunded,
     nonce,
+    boostAverageRate,
+    share,
   } = accountInfo;
 
   return {
     baseDeposited: formatContractToken(baseDeposited, baseDecimals, baseTokenName),
-    baseDeposit: formatContractToken(baseDeposit, baseDecimals, baseTokenName),
+    boosted,
     baseAllocation: formatContractToken(baseAllocation, baseDecimals, baseTokenName),
+    baseDeposit: formatContractToken(baseDeposit, baseDecimals, baseTokenName),
     baseRefund: formatContractToken(baseRefund, baseDecimals, baseTokenName),
     baseRefunded: formatContractToken(baseRefunded, baseDecimals, baseTokenName),
     boostDeposit: formatContractToken(boostDeposit, boostDecimals, boostTokenName),
     boostRefund: formatContractToken(boostRefund, boostDecimals, boostTokenName),
     boostRefunded: formatContractToken(boostRefunded, boostDecimals, boostTokenName),
     nonce: Number(nonce),
+    boostAverageRate: toNumberDecimalsFixed(boostAverageRate, undefined),
+    share: toNumberDecimalsFixed(share, undefined),
   };
 }
 

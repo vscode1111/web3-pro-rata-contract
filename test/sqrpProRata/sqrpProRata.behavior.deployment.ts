@@ -85,7 +85,7 @@ export function shouldBehaveCorrectDeployment(): void {
       await this.user1SQRpProRata.depositSig({
         baseAmount: seedData.deposit1,
         boost: false,
-        boostRate: seedData.zero,
+        boostExchangeRate: seedData.zero,
         transactionId: seedData.transactionId1,
         timestampLimit: seedData.startDatePlus1m,
         signature,
