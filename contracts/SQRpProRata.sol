@@ -79,7 +79,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "2.1";
+  string public constant VERSION = "2.5";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
@@ -143,7 +143,7 @@ contract SQRpProRata is
     uint256 boostRefunded;
     //extra
     uint32 nonce;
-    uint256 boostAverageRate;
+    uint256 boostAverageExchangeRate;
     uint256 share;
   }
 
@@ -214,11 +214,22 @@ contract SQRpProRata is
     _;
   }
 
-  event Deposit(address indexed account, uint256 baseAmount);
-  event Refund(address indexed account, uint256 baseAmount, uint256 boostAmount);
+  event Deposit(
+    address indexed account,
+    bool indexed isBoost,
+    uint256 baseAmount,
+    uint256 boostAmount
+  );
+  event Refund(
+    address indexed account,
+    bool indexed isBoost,
+    uint256 baseAmount,
+    uint256 boostAmount,
+    uint256 boostAverageExchangeRate
+  );
   event WithdrawBaseGoal(address indexed account, uint256 baseAmount);
   event WithdrawSwappedAmount(address indexed account, uint256 baseAmount);
-  event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostAmount);
+  event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostDeposit);
 
   //Read methods-------------------------------------------
 
@@ -277,7 +288,7 @@ contract SQRpProRata is
         calculateAccountBoostRefund(account),
         accountItem.boostRefunded,
         accountItem.nonce,
-        calculateAccountBoostAverageRate(account),
+        calculateAccountBoostAverageExchangeRate(account),
         calculateAccountShare(account)
       );
   }
@@ -362,18 +373,18 @@ contract SQRpProRata is
   function calculateAccountBoostRefund(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (accountItem.boosted) {
-      uint256 boostAverageRate = calculateAccountBoostAverageRate(account);
+      uint256 boostAverageExchangeRate = calculateAccountBoostAverageExchangeRate(account);
       return
         ((accountItem.baseDeposited - calculateAccountBaseAllocation(account)) *
           PRECISION_FACTOR *
           decimalsFactor1) /
         decimalsFactor2 /
-        boostAverageRate;
+        boostAverageExchangeRate;
     }
     return 0;
   }
 
-  function calculateAccountBoostAverageRate(address account) public view returns (uint256) {
+  function calculateAccountBoostAverageExchangeRate(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (accountItem.boostDeposit > 0) {
       return
@@ -505,6 +516,8 @@ contract SQRpProRata is
 
     accountItem.baseDeposited += baseAmount;
 
+    uint256 boostDeposit = 0;
+
     if (boost) {
       if (address(boostToken) == address(0)) {
         revert BoostTokenNotZeroAddress();
@@ -520,7 +533,8 @@ contract SQRpProRata is
         accountItem.baseDeposit = 0;
       }
 
-      uint256 boostDeposit = (baseDeposit * PRECISION_FACTOR * decimalsFactor1) /
+      boostDeposit =
+        (baseDeposit * PRECISION_FACTOR * decimalsFactor1) /
         decimalsFactor2 /
         boostExchangeRate;
 
@@ -542,7 +556,7 @@ contract SQRpProRata is
     totalBaseDeposited += baseAmount;
 
     baseToken.safeTransferFrom(account, address(this), baseAmount);
-    emit Deposit(account, baseAmount);
+    emit Deposit(account, boost, baseAmount, boostDeposit);
   }
 
   function verifyDepositSignature(
@@ -611,6 +625,7 @@ contract SQRpProRata is
     uint32 endIndex = _processedAccountIndex + _batchSize;
     for (uint32 i = _processedAccountIndex; i < endIndex; i++) {
       address account = getAccountByIndex(i);
+      uint256 boostAverageExchangeRate = calculateAccountBoostAverageExchangeRate(account);
 
       uint256 baseRefund = calculateAccountBaseRefund(account);
       if (baseRefund > 0) {
@@ -618,7 +633,7 @@ contract SQRpProRata is
         accountItem.baseRefunded = baseRefund;
         baseToken.safeTransfer(account, baseRefund);
         totalBaseRefunded += baseRefund;
-        emit Refund(account, baseRefund, 0);
+        emit Refund(account, accountItem.boosted, baseRefund, 0, boostAverageExchangeRate);
       }
 
       uint256 boostRefund = calculateAccountBoostRefund(account);
@@ -627,7 +642,7 @@ contract SQRpProRata is
         accountItem.boostRefunded = boostRefund;
         boostToken.safeTransfer(account, boostRefund);
         totalBoostRefunded += boostRefund;
-        emit Refund(account, 0, boostRefund);
+        emit Refund(account, accountItem.boosted, 0, boostRefund, boostAverageExchangeRate);
       }
     }
     _processedAccountIndex = endIndex;

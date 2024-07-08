@@ -65,7 +65,7 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase1(): void {
               boostRefunded: toWei(126.923, BOOST_DECIMALS),
               nonce: 2,
               boosted: true,
-              boostAverageRate: toWei(0.236),
+              boostAverageExchangeRate: toWei(0.236),
             },
           },
           baseBalanceDelta: toWei(0.001, BASE_DECIMALS),

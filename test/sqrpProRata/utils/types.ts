@@ -31,7 +31,7 @@ export interface DepositResult {
   boostRefunded: bigint;
   nonce: bigint;
   boosted: boolean;
-  boostAverageRate: bigint;
+  boostAverageExchangeRate: bigint;
   share: bigint;
 }
 
@@ -71,7 +71,7 @@ export interface UserExpectation {
   boostRefunded?: bigint;
   nonce?: number;
   boosted?: boolean;
-  boostAverageRate?: bigint;
+  boostAverageExchangeRate?: bigint;
 }
 
 export interface CaseExpectation {

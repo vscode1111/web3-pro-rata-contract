@@ -215,7 +215,7 @@ export async function testContract(
       boostRefunded,
       nonce,
       boosted,
-      boostAverageRate,
+      boostAverageExchangeRate,
       share,
     } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
 
@@ -231,7 +231,7 @@ export async function testContract(
       boostRefunded,
       nonce,
       boosted,
-      boostAverageRate,
+      boostAverageExchangeRate,
       share,
     });
   }
@@ -289,7 +289,7 @@ export async function testContract(
       boostRefunded: expectedBoostRefunded,
       nonce: expectedNonce,
       boosted: expectedBoosted,
-      boostAverageRate: expectedBoostAverageRate,
+      boostAverageExchangeRate: expectedBoostAverageExchangeRate,
     } = userExpectation;
     const { userAddress } = getUserEnvironment(context, user);
 
@@ -304,7 +304,7 @@ export async function testContract(
       boostRefunded,
       nonce,
       boosted,
-      boostAverageRate,
+      boostAverageExchangeRate,
     } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
 
     if (exist(expectedBaseDeposited)) {
@@ -340,8 +340,8 @@ export async function testContract(
     if (exist(expectedBoosted)) {
       expect(boosted).eq(expectedBoosted);
     }
-    if (exist(expectedBoostAverageRate)) {
-      expect(boostAverageRate).closeTo(expectedBoostAverageRate, seedData.weiDelta);
+    if (exist(expectedBoostAverageExchangeRate)) {
+      expect(boostAverageExchangeRate).closeTo(expectedBoostAverageExchangeRate, seedData.weiDelta);
     }
   }
 

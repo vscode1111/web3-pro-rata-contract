@@ -2,7 +2,7 @@ import { TransactionRequest } from 'ethers';
 import { TokenDescription } from '~types';
 import { BASE_DECIMALS, BOOST_DECIMALS } from './numbers';
 
-export const VERSION = '2.0';
+export const VERSION = '2.5';
 
 export const TX_OVERRIDES: TransactionRequest = {
   // gasPrice: 3_000_000_000,

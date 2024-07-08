@@ -338,9 +338,11 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
           const eventLog = findEvent<DepositEventArgs>(receipt);
 
           expect(eventLog).not.undefined;
-          const [account, amount] = eventLog?.args;
+          const [account, isBoost, baseAmount, boostDeposit] = eventLog?.args;
           expect(account).eq(this.user1Address);
-          expect(amount).eq(seedData.deposit1);
+          expect(isBoost).eq(false);
+          expect(baseAmount).eq(seedData.deposit1);
+          expect(boostDeposit).eq(seedData.zero);
         });
 
         describe('user1 deposited base tokens', () => {
@@ -679,15 +681,17 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 const eventLog = findEvent<RefundEventArgs>(receipt);
 
                 expect(eventLog).not.undefined;
-                const [account, amount] = eventLog?.args;
+                const [account, isBoost, baseRefund, boostRefund] = eventLog?.args;
                 expect(account).eq(this.user1Address);
+                expect(isBoost).eq(false);
 
                 const refundAmount1 = calculateAccountRefund(
                   contractConfig.baseGoal,
                   seedData.deposit1,
                   seedData.deposit12,
                 );
-                expect(amount).eq(refundAmount1);
+                expect(baseRefund).eq(refundAmount1);
+                expect(boostRefund).eq(seedData.zero);
 
                 expect(await this.owner2SQRpProRata.getProcessedAccountIndex()).eq(1);
               });

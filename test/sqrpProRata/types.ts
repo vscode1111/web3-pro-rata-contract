@@ -17,8 +17,8 @@ export interface EventArgs<T> {
   args: T;
 }
 
-export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, number]>;
+export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, boolean, number, number]>;
 
-export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, number]>;
+export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, boolean, number, number]>;
 
 export type WithdrawBaseGoalEventArgs = WithdrawBaseGoalEvent.Event & EventArgs<[string, number]>;

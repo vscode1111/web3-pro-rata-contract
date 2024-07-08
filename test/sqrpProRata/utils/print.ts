@@ -147,7 +147,7 @@ export function printDepositResults(
       boostRefund,
       boostRefunded,
       nonce,
-      boostAverageRate,
+      boostAverageExchangeRate,
       share,
     }) => ({
       user,
@@ -161,7 +161,7 @@ export function printDepositResults(
       boostRefund: toNumberDecimalsFixed(boostRefund, boostDecimals),
       boostRefunded: toNumberDecimalsFixed(boostRefunded, boostDecimals),
       nonce: Number(nonce),
-      boostAverageRate: toNumberDecimalsFixed(boostAverageRate, undefined),
+      boostAverageExchangeRate: toNumberDecimalsFixed(boostAverageExchangeRate, undefined),
       share: toNumberDecimalsFixed(share, undefined),
     }),
   );

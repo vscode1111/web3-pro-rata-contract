@@ -43,7 +43,7 @@ interface FormattedAccountInfo {
   boostRefund: string;
   boostRefunded: string;
   nonce: number;
-  boostAverageRate: number;
+  boostAverageExchangeRate: number;
   share: number;
 }
 
@@ -65,7 +65,7 @@ export function formatAccountInfo(
     boostRefund,
     boostRefunded,
     nonce,
-    boostAverageRate,
+    boostAverageExchangeRate,
     share,
   } = accountInfo;
 
@@ -80,7 +80,7 @@ export function formatAccountInfo(
     boostRefund: formatContractToken(boostRefund, boostDecimals, boostTokenName),
     boostRefunded: formatContractToken(boostRefunded, boostDecimals, boostTokenName),
     nonce: Number(nonce),
-    boostAverageRate: toNumberDecimalsFixed(boostAverageRate, undefined),
+    boostAverageExchangeRate: toNumberDecimalsFixed(boostAverageExchangeRate, undefined),
     share: toNumberDecimalsFixed(share, undefined),
   };
 }
