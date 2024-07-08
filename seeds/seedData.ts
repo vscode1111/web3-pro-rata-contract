@@ -53,8 +53,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     baseGoal: toBaseTokenWei(10_000),
     startDate: 0,
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2025, 6, 8, 8, 40, 0)),
-    // closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
+    // closeDate: toUnixTimeUtc(new Date(2025, 6, 8, 8, 40, 0)),
+    closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
