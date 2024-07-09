@@ -345,7 +345,7 @@ contract SQRpProRata is
   function calculateAccountBaseAllocation(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (isReachedBaseGoal()) {
-      if (baseGoal >= totalBaseBoostDeposited) {
+      if (baseGoal > totalBaseBoostDeposited) {
         if (accountItem.boosted) {
           return accountItem.baseDeposited;
         } else {
@@ -438,6 +438,7 @@ contract SQRpProRata is
   function calculateExcessBoostAmount() external view returns (uint256) {
     uint256 contractBoostBalance = getBoostBalance();
     uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
+    console.log(111, contractBoostBalance, totalBoostRefundAmount);
     if (contractBoostBalance > totalBoostRefundAmount) {
       return contractBoostBalance - totalBoostRefundAmount;
     }

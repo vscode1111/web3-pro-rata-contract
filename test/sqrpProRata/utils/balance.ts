@@ -1,10 +1,11 @@
 import { expect } from 'chai';
+import { Numeric } from 'ethers';
 import { Context } from 'mocha';
 import { bigIntSum, toNumberDecimalsFixed } from '~common';
 import { seedData } from '~seeds';
 import { ContextBase } from '~types';
 import { getUserContractEnvironmentMap } from './print';
-import { UserInfo, UserType } from './types';
+import { PrintUserInfo, UserInfos, UserType } from './types';
 
 export async function getBaseTokenBalance(that: ContextBase, address: string) {
   return that.owner2BaseToken.balanceOf(address);
@@ -42,19 +43,40 @@ export async function getTotalSQRBalance(that: ContextBase, accounts: string[]):
   return bigIntSum(result);
 }
 
+export function printUserInfos(
+  userInfos: UserInfos,
+  baseDecimals: Numeric,
+  boostDecimals: Numeric,
+) {
+  const printUserInfos: PrintUserInfo[] = [];
+
+  for (const userKey of Object.keys(userInfos)) {
+    const user = userKey as UserType;
+    const { baseBalance, boostBalance } = userInfos[user];
+    printUserInfos.push({
+      user,
+      baseBalance: toNumberDecimalsFixed(baseBalance, baseDecimals),
+      boostBalance: toNumberDecimalsFixed(boostBalance, boostDecimals),
+    });
+  }
+
+  console.table(printUserInfos);
+}
+
 export async function getBalances(
   context: Context,
-  baseDecimals: bigint,
-  boostDecimals: bigint,
-  print = false,
-): Promise<UserInfo[]> {
+  baseDecimals?: Numeric,
+  boostDecimals?: Numeric,
+): Promise<UserInfos> {
+  const print = baseDecimals && boostDecimals;
+
   if (print) {
     console.log(
       `Account balances (base decimals: ${baseDecimals}, boost decimals: ${boostDecimals}):`,
     );
   }
 
-  const formattedTable: UserInfo[] = [];
+  const userInfos: UserInfos = {} as any;
 
   const userContractEnvironmentMap = getUserContractEnvironmentMap(context);
   for (const userKey of Object.keys(userContractEnvironmentMap)) {
@@ -67,16 +89,26 @@ export async function getBalances(
       getBoostTokenBalance(context, address),
     ]);
 
-    formattedTable.push({
-      user,
-      baseBalance: toNumberDecimalsFixed(baseBalance, baseDecimals),
-      boostBalance: toNumberDecimalsFixed(boostBalance, boostDecimals),
-    });
+    userInfos[user] = {
+      baseBalance,
+      boostBalance,
+    };
   }
 
   if (print) {
-    console.table(formattedTable);
+    printUserInfos(userInfos, baseDecimals, boostDecimals);
   }
 
-  return formattedTable;
+  return userInfos;
+}
+
+export function calculateDecimalsFactors(
+  baseDecimals: bigint,
+  boostDecimals: bigint,
+): [bigint, bigint] {
+  if (baseDecimals >= boostDecimals) {
+    return [BigInt(1), BigInt(10 ** Number(baseDecimals - boostDecimals))];
+  } else {
+    return [BigInt(10 ** Number(boostDecimals - baseDecimals)), BigInt(1)];
+  }
 }

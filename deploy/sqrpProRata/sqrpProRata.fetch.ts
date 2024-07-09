@@ -33,6 +33,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const result = {
       owner: await ownerSQRpProRata.owner(),
       baseToken,
+      boostToken,
       depositVerifier: await ownerSQRpProRata.depositVerifier(),
       baseGoal: formatContractToken(await ownerSQRpProRata.baseGoal(), baseDecimals, baseTokenName),
       startDate: formatContractDate(await ownerSQRpProRata.startDate()),

@@ -8,18 +8,24 @@ import { ContractConfig, seedData } from '~seeds';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { addSecondsToUnixTime, signMessageForProRataDeposit } from '~utils';
-import { getBalances, getBaseDecimals, getBaseTokenBalance, getBoostDecimals } from './balance';
+import {
+  calculateDecimalsFactors,
+  getBalances,
+  getBaseDecimals,
+  getBaseTokenBalance,
+  getBoostDecimals,
+} from './balance';
 import { contractZeroCheck } from './misc';
 import {
+  getDiffBalances,
   getUserEnvironment,
   printContractConfig,
   printContractResults,
   printContractStats,
   printDepositRecords,
   printDepositResults,
-  printDiffBalances,
 } from './print';
-import { CaseExpectation, DepositRecord, DepositResult, UserType } from './types';
+import { CaseBehaviour, DepositRecord, DepositResult, UserType } from './types';
 
 export async function transferToUserAndApproveForContract(
   context: Context,
@@ -42,6 +48,7 @@ export async function depositSig({
   boostExchangeRate = seedData.zero,
   transactionId,
   timestampLimit,
+  revertDeposit,
 }: {
   context: Context;
   userSQRpProRata: SQRpProRata;
@@ -51,6 +58,7 @@ export async function depositSig({
   boostExchangeRate?: bigint;
   transactionId: string;
   timestampLimit: number;
+  revertDeposit?: string;
 }) {
   const nonce = Number(await userSQRpProRata.getAccountDepositNonce(userAddress));
 
@@ -65,21 +73,34 @@ export async function depositSig({
     timestampLimit,
   );
 
-  await userSQRpProRata.depositSig({
-    baseAmount: baseDeposit,
-    boost,
-    boostExchangeRate,
-    transactionId,
-    timestampLimit,
-    signature,
-  });
+  if (!revertDeposit) {
+    await userSQRpProRata.depositSig({
+      baseAmount: baseDeposit,
+      boost,
+      boostExchangeRate,
+      transactionId,
+      timestampLimit,
+      signature,
+    });
+  } else {
+    await expect(
+      userSQRpProRata.depositSig({
+        baseAmount: baseDeposit,
+        boost,
+        boostExchangeRate,
+        transactionId,
+        timestampLimit,
+        signature,
+      }),
+    ).revertedWithCustomError(context.owner2SQRpProRata, revertDeposit);
+  }
 }
 
 export async function testContract(
   context: Context,
   contractConfig: ContractConfig,
   depositRecords: DepositRecord[],
-  caseExpectation?: CaseExpectation,
+  caseBehaviour?: CaseBehaviour,
 ) {
   console.log('----------------------------------------------------------------------------------');
 
@@ -91,13 +112,17 @@ export async function testContract(
     ownerSQRpProRata,
   } = context;
 
+  if (!caseBehaviour) {
+    return;
+  }
+
   const [baseDecimals, boostDecimals] = await Promise.all([
     getBaseDecimals(context),
     getBoostDecimals(context),
   ]);
 
-  const baseBalanceDelta = caseExpectation?.baseBalanceDelta ?? seedData.baseBalanceDelta;
-  const boostBalanceDelta = caseExpectation?.boostBalanceDelta ?? seedData.boostBalanceDelta;
+  const baseBalanceDelta = caseBehaviour?.baseBalanceDelta ?? seedData.baseBalanceDelta;
+  const boostBalanceDelta = caseBehaviour?.boostBalanceDelta ?? seedData.boostBalanceDelta;
 
   depositRecords.forEach((record) => {
     if (!record.transactionId) {
@@ -123,7 +148,19 @@ export async function testContract(
 
   for (const depositRecord of depositRecords) {
     const { user, baseDeposit } = depositRecord;
-    const { userAddress, userBaseToken, userBoostToken } = getUserEnvironment(context, user);
+
+    const userEnvironment = getUserEnvironment(context, user);
+    if (!userEnvironment) {
+      continue;
+    }
+
+    const { userAddress, userBaseToken, userBoostToken } = userEnvironment;
+
+    const [decimalsFactor1, decimalsFactor2] = calculateDecimalsFactors(
+      baseDecimals,
+      boostDecimals,
+    );
+
     await transferToUserAndApproveForContract(
       context,
       owner2BaseToken,
@@ -136,11 +173,11 @@ export async function testContract(
       owner2BoostToken,
       userBoostToken,
       userAddress,
-      baseDeposit,
+      (baseDeposit * decimalsFactor1) / decimalsFactor2,
     );
   }
 
-  const balanceTable1 = await getBalances(context, baseDecimals, boostDecimals);
+  const balanceTable1 = await getBalances(context);
 
   const newStartDate = addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift);
   await time.increaseTo(newStartDate);
@@ -148,8 +185,15 @@ export async function testContract(
   const timestampLimit = addSecondsToUnixTime(newStartDate, seedData.timeShift);
 
   for (const depositRecord of depositRecords) {
+    const { user } = depositRecord;
     const { baseDeposit, transactionId, boost, boostExchangeRate = seedData.zero } = depositRecord;
-    const { userAddress, userSQRpProRata } = getUserEnvironment(context, depositRecord.user);
+
+    const userEnvironment = getUserEnvironment(context, user);
+    if (!userEnvironment) {
+      continue;
+    }
+
+    const { userAddress, userSQRpProRata } = userEnvironment;
 
     if (!transactionId) {
       return;
@@ -161,10 +205,15 @@ export async function testContract(
       userAddress,
       baseDeposit,
       boost,
-      boostExchangeRate: boostExchangeRate,
+      boostExchangeRate,
       transactionId,
       timestampLimit,
+      revertDeposit: caseBehaviour?.revertDeposit,
     });
+  }
+
+  if (caseBehaviour?.revertDeposit) {
+    return;
   }
 
   const totalDeposit = bigIntSum(depositRecords, (record) => record.baseDeposit);
@@ -186,8 +235,6 @@ export async function testContract(
   const requiredBoostAmount = await ownerSQRpProRata.calculatedRequiredBoostAmount();
   const baseSwappedAmount = await ownerSQRpProRata.calculatedBaseSwappedAmount();
 
-  expect(await ownerSQRpProRata.calculateExcessBoostAmount()).eq(seedData.zero);
-
   await owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount);
 
   await owner2SQRpProRata.refundAll();
@@ -196,13 +243,40 @@ export async function testContract(
     await owner2SQRpProRata.withdrawBaseGoal();
   }
 
-  // await owner2SQRpProRata.withdrawBaseSwappedAmount();
+  // await getBalances(context, baseDecimals, boostDecimals);
 
-  await owner2SQRpProRata.withdrawExcessTokens();
+  if (caseBehaviour?.sendTokensToContract) {
+    const { baseAmount, boostAmount } = caseBehaviour?.sendTokensToContract;
+    if (baseAmount) {
+      await owner2BaseToken.transfer(sqrpProRataAddress, baseAmount);
+    }
+    if (boostAmount) {
+      await owner2BoostToken.transfer(sqrpProRataAddress, boostAmount);
+    }
+  }
+
+  // await getBalances(context, baseDecimals, boostDecimals);
+
+  if (caseBehaviour?.excessBoostAmount) {
+    expect(await ownerSQRpProRata.calculateExcessBoostAmount()).eq(
+      caseBehaviour?.excessBoostAmount,
+    );
+  }
+
+  if (caseBehaviour?.invokeWithdrawBaseSwappedAmount) {
+    await owner2SQRpProRata.withdrawBaseSwappedAmount();
+  } else {
+    await owner2SQRpProRata.withdrawExcessTokens();
+  }
 
   for (const uniqUser of uniqUsers) {
     const user = uniqUser as UserType;
-    const { userAddress } = getUserEnvironment(context, user);
+    const userEnvironment = getUserEnvironment(context, user);
+    if (!userEnvironment) {
+      continue;
+    }
+
+    const { userAddress } = userEnvironment;
 
     const {
       baseDeposited,
@@ -238,7 +312,7 @@ export async function testContract(
 
   printDepositResults(depositResults, baseDecimals, boostDecimals);
 
-  const balanceTable2 = await getBalances(context, baseDecimals, boostDecimals);
+  const balanceTable2 = await getBalances(context);
 
   printContractResults({
     totalBaseAllocation: bigIntSum(depositResults, (result) => result.baseAllocation),
@@ -258,19 +332,15 @@ export async function testContract(
     boostDecimals,
   });
 
-  printDiffBalances(balanceTable1, balanceTable2);
+  const diffBalances = getDiffBalances(balanceTable1, balanceTable2, baseDecimals, boostDecimals);
 
-  if (!caseExpectation?.userExpectations) {
+  if (!caseBehaviour) {
     return;
   }
 
-  const { userExpectations } = caseExpectation;
+  const { userExpectations = {} } = caseBehaviour;
 
-  if (!userExpectations) {
-    return;
-  }
-
-  for (const userKey of Object.keys(userExpectations ?? {})) {
+  for (const userKey of Object.keys(userExpectations)) {
     const user = userKey as UserType;
     const userExpectation = userExpectations[user];
 
@@ -290,73 +360,76 @@ export async function testContract(
       nonce: expectedNonce,
       boosted: expectedBoosted,
       boostAverageExchangeRate: expectedBoostAverageExchangeRate,
+      diffBaseBalance: expectedDiffBaseBalance,
+      diffBoostBalance: expectedDiffBoostBalance,
     } = userExpectation;
-    const { userAddress } = getUserEnvironment(context, user);
 
-    const {
-      baseDeposited,
-      baseAllocation,
-      baseDeposit,
-      baseRefund,
-      baseRefunded,
-      boostDeposit,
-      boostRefund,
-      boostRefunded,
-      nonce,
-      boosted,
-      boostAverageExchangeRate,
-    } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
+    const userEnvironment = getUserEnvironment(context, user);
+    if (userEnvironment) {
+      const { userAddress } = userEnvironment;
 
-    if (exist(expectedBaseDeposited)) {
-      expect(baseDeposited).closeTo(expectedBaseDeposited, baseBalanceDelta);
-    }
-    if (exist(expectedBaseAllocation)) {
-      expect(baseAllocation).closeTo(expectedBaseAllocation, baseBalanceDelta);
+      const {
+        baseDeposited,
+        baseAllocation,
+        baseDeposit,
+        baseRefund,
+        baseRefunded,
+        boostDeposit,
+        boostRefund,
+        boostRefunded,
+        nonce,
+        boosted,
+        boostAverageExchangeRate,
+      } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
+
+      if (exist(expectedBaseDeposited)) {
+        expect(baseDeposited).closeTo(expectedBaseDeposited, baseBalanceDelta);
+      }
+      if (exist(expectedBaseAllocation)) {
+        expect(baseAllocation).closeTo(expectedBaseAllocation, baseBalanceDelta);
+      }
+
+      if (exist(expectedBaseDeposit)) {
+        expect(baseDeposit).closeTo(expectedBaseDeposit, baseBalanceDelta);
+      }
+      if (exist(expectedBaseRefund)) {
+        expect(baseRefund).closeTo(expectedBaseRefund, baseBalanceDelta);
+      }
+      if (exist(expectedBaseRefunded)) {
+        expect(baseRefunded).closeTo(expectedBaseRefunded, baseBalanceDelta);
+      }
+
+      if (exist(expectedBoostDeposit)) {
+        expect(boostDeposit).closeTo(expectedBoostDeposit, boostBalanceDelta);
+      }
+      if (exist(expectedBoostRefund)) {
+        expect(boostRefund).closeTo(expectedBoostRefund, boostBalanceDelta);
+      }
+      if (exist(expectedBoostRefunded)) {
+        expect(boostRefunded).closeTo(expectedBoostRefunded, boostBalanceDelta);
+      }
+
+      if (exist(expectedNonce)) {
+        expect(nonce).eq(expectedNonce);
+      }
+      if (exist(expectedBoosted)) {
+        expect(boosted).eq(expectedBoosted);
+      }
+      if (exist(expectedBoostAverageExchangeRate)) {
+        expect(boostAverageExchangeRate).closeTo(
+          expectedBoostAverageExchangeRate,
+          seedData.weiDelta,
+        );
+      }
     }
 
-    if (exist(expectedBaseDeposit)) {
-      expect(baseDeposit).closeTo(expectedBaseDeposit, baseBalanceDelta);
-    }
-    if (exist(expectedBaseRefund)) {
-      expect(baseRefund).closeTo(expectedBaseRefund, baseBalanceDelta);
-    }
-    if (exist(expectedBaseRefunded)) {
-      expect(baseRefunded).closeTo(expectedBaseRefunded, baseBalanceDelta);
-    }
+    const { baseBalance: diffBaseBalance, boostBalance: diffBoostBalance } = diffBalances[user];
 
-    if (exist(expectedBoostDeposit)) {
-      expect(boostDeposit).closeTo(expectedBoostDeposit, boostBalanceDelta);
+    if (exist(expectedDiffBaseBalance)) {
+      expect(diffBaseBalance).closeTo(expectedDiffBaseBalance, baseBalanceDelta);
     }
-    if (exist(expectedBoostRefund)) {
-      expect(boostRefund).closeTo(expectedBoostRefund, boostBalanceDelta);
-    }
-    if (exist(expectedBoostRefunded)) {
-      expect(boostRefunded).closeTo(expectedBoostRefunded, boostBalanceDelta);
-    }
-
-    if (exist(expectedNonce)) {
-      expect(nonce).eq(expectedNonce);
-    }
-    if (exist(expectedBoosted)) {
-      expect(boosted).eq(expectedBoosted);
-    }
-    if (exist(expectedBoostAverageExchangeRate)) {
-      expect(boostAverageExchangeRate).closeTo(expectedBoostAverageExchangeRate, seedData.weiDelta);
+    if (exist(expectedDiffBoostBalance)) {
+      expect(diffBoostBalance).closeTo(expectedDiffBoostBalance, boostBalanceDelta);
     }
   }
-
-  // const userCount = uniqUsers.length;
-
-  // expect(await getBaseTokenBalance(context, owner2Address)).closeTo(
-  //   tokenConfig.initMint - BigInt(userCount) * seedData.userInitBalance,
-  //   seedData.balanceDelta,
-  // );
-  // expect(await getBaseTokenBalance(context, sqrpProRataAddress)).closeTo(
-  //   shouldReachedBaseGoal ? contractConfig.baseGoal : seedData.zero,
-  //   seedData.balanceDelta,
-  // );
-  // expect(await getBaseTokenBalance(context, owner2Address)).closeTo(
-  //   tokenConfig.initMint - BigInt(userCount) * seedData.userInitBalance,
-  //   seedData.balanceDelta,
-  // );
 }

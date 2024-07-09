@@ -10,7 +10,7 @@ const caseContractConfig: ContractConfig = {
   closeDate: toUnixTime(now.add(32, 'days').toDate()),
 };
 
-export function shouldBehaveCorrectFundingBaseCase(): void {
+export function shouldBehaveCorrectFundingPositiveCases(): void {
   describe('funding: different positive cases', () => {
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
@@ -40,6 +40,7 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
           },
         ],
         {
+          excessBoostAmount: toBoostTokenWei(0),
           userExpectations: {
             user1: {
               baseDeposited: toBaseTokenWei(10),
@@ -52,6 +53,8 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseDeposited: toBaseTokenWei(20),
@@ -64,6 +67,8 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user3: {
               baseDeposited: toBaseTokenWei(30),
@@ -76,6 +81,16 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               boostRefunded: toBoostTokenWei(0),
               nonce: 1,
               boosted: false,
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
             },
           },
         },
@@ -105,14 +120,28 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user1: {
               baseAllocation: toBaseTokenWei(20),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-20),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(30),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user3: {
               baseAllocation: toBaseTokenWei(50),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-50),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100),
+              diffBoostBalance: toBoostTokenWei(0),
             },
           },
         },
@@ -146,14 +175,28 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user1: {
               baseAllocation: toBaseTokenWei(50),
               baseRefunded: toBaseTokenWei(150),
+              diffBaseBalance: toBaseTokenWei(-50),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(15),
               baseRefunded: toBaseTokenWei(45),
+              diffBaseBalance: toBaseTokenWei(-15),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user3: {
               baseAllocation: toBaseTokenWei(35),
               baseRefunded: toBaseTokenWei(105),
+              diffBaseBalance: toBaseTokenWei(-35),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100),
+              diffBoostBalance: toBoostTokenWei(0),
             },
           },
         },
@@ -189,14 +232,28 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user1: {
               baseAllocation: toBaseTokenWei(20),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-20),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(30),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user3: {
               baseAllocation: toBaseTokenWei(50),
               baseRefunded: toBaseTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-50),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100),
+              diffBoostBalance: toBoostTokenWei(0),
             },
           },
         },
@@ -234,18 +291,32 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseRefunded: toBaseTokenWei(0),
               boostDeposit: toBoostTokenWei(50),
               boostRefunded: toBoostTokenWei(50),
+              diffBaseBalance: toBaseTokenWei(-10),
+              diffBoostBalance: toBoostTokenWei(50),
             },
             user2: {
               baseAllocation: toBaseTokenWei(0),
               baseRefunded: toBaseTokenWei(0),
               boostDeposit: toBoostTokenWei(100),
               boostRefunded: toBoostTokenWei(100),
+              diffBaseBalance: toBaseTokenWei(-20),
+              diffBoostBalance: toBoostTokenWei(100),
             },
             user3: {
               baseAllocation: toBaseTokenWei(0),
               baseRefunded: toBaseTokenWei(0),
               boostDeposit: toBoostTokenWei(150),
               boostRefunded: toBoostTokenWei(150),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(150),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(60),
+              diffBoostBalance: toBoostTokenWei(-300),
             },
           },
         },
@@ -278,16 +349,30 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               baseAllocation: toBaseTokenWei(50),
               baseRefunded: toBaseTokenWei(100),
               boostRefunded: toBoostTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-50),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(20),
               baseRefunded: toBaseTokenWei(40),
               boostRefunded: toBoostTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-20),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user3: {
               baseAllocation: toBaseTokenWei(30),
               baseRefunded: toBaseTokenWei(0),
               boostRefunded: toBoostTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100),
+              diffBoostBalance: toBoostTokenWei(0),
             },
           },
         },
@@ -321,23 +406,218 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
             user1: {
               baseAllocation: toBaseTokenWei(0),
               baseRefunded: toBaseTokenWei(200),
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
             },
             user2: {
               baseAllocation: toBaseTokenWei(90),
               baseRefunded: toBaseTokenWei(0),
               boostRefunded: toBoostTokenWei(900),
+              diffBaseBalance: toBaseTokenWei(-270),
+              diffBoostBalance: toBoostTokenWei(900),
             },
             user3: {
               baseAllocation: toBaseTokenWei(10),
               baseRefunded: toBaseTokenWei(0),
               boostRefunded: toBoostTokenWei(100),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(300),
+              diffBoostBalance: toBoostTokenWei(-1000),
             },
           },
         },
       );
     });
 
-    it('8. 2 simple boost from one user', async function () {
+    it('8. 1 extra simple, 1 extra boost, 1 boost. Invoke WithdrawBaseSwappedAmount method', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(200),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(270),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(30),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+        ],
+        {
+          invokeWithdrawBaseSwappedAmount: true,
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(200),
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(90),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(900),
+              diffBaseBalance: toBaseTokenWei(-270),
+              diffBoostBalance: toBoostTokenWei(900),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(10),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(100),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(300),
+              diffBoostBalance: toBoostTokenWei(-1000),
+            },
+          },
+        },
+      );
+    });
+
+    it('9. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(200),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(270),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(30),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+        ],
+        {
+          invokeWithdrawBaseSwappedAmount: true,
+          sendTokensToContract: {
+            boostAmount: toBoostTokenWei(3456),
+          },
+          excessBoostAmount: toBoostTokenWei(2456),
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(200),
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(90),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(900),
+              diffBaseBalance: toBaseTokenWei(-270),
+              diffBoostBalance: toBoostTokenWei(900),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(10),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(100),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(3456),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(300),
+              diffBoostBalance: toBoostTokenWei(-4456),
+            },
+          },
+        },
+      );
+    });
+
+    it('10. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(200),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(270),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(30),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+        ],
+        {
+          sendTokensToContract: {
+            boostAmount: toBoostTokenWei(3456),
+          },
+          excessBoostAmount: toBoostTokenWei(2456),
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(200),
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(90),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(900),
+              diffBaseBalance: toBaseTokenWei(-270),
+              diffBoostBalance: toBoostTokenWei(900),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(10),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(100),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(300),
+              diffBoostBalance: toBoostTokenWei(-1000),
+            },
+          },
+        },
+      );
+    });
+
+    it('11. 2 simple boost from one user', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -370,12 +650,28 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               boosted: true,
               boostAverageExchangeRate: toWei(0.236),
             },
+            user2: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user3: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(130),
+              diffBoostBalance: toBoostTokenWei(-126.923),
+            },
           },
         },
       );
     });
 
-    it('9. simple and boost from one user, unreached goal', async function () {
+    it('12. simple and boost from one user, unreached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -406,13 +702,31 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               nonce: 2,
               boosted: true,
               boostAverageExchangeRate: toWei(0.3),
+              diffBaseBalance: toBaseTokenWei(-30),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            user2: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user3: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(30),
+              diffBoostBalance: toBoostTokenWei(-100),
             },
           },
         },
       );
     });
 
-    it('10. simple and boost from one user', async function () {
+    it('13. simple and boost from one user', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -443,6 +757,24 @@ export function shouldBehaveCorrectFundingBaseCase(): void {
               nonce: 2,
               boosted: true,
               boostAverageExchangeRate: toWei(0.3),
+              diffBaseBalance: toBaseTokenWei(-130),
+              diffBoostBalance: toBoostTokenWei(100),
+            },
+            user2: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user3: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(130),
+              diffBoostBalance: toBoostTokenWei(-100),
             },
           },
         },

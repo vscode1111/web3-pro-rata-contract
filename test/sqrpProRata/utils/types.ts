@@ -15,9 +15,9 @@ export interface DepositBase {
   boost?: boolean;
 }
 
-export type UserType = 'user1' | 'user2' | 'user3' | 'owner2';
+export type UserType = 'user1' | 'user2' | 'user3' | 'owner2' | 'contract';
 
-export type UserContractType = UserType | 'contract';
+// export type UserContractType = UserType | 'contract';
 
 export interface DepositResult {
   user: UserType;
@@ -55,6 +55,11 @@ export interface UserContractEnvironment {
 }
 
 export interface UserInfo {
+  baseBalance: bigint;
+  boostBalance: bigint;
+}
+
+export interface PrintUserInfo {
   user: UserType;
   baseBalance: number;
   boostBalance: number;
@@ -72,10 +77,21 @@ export interface UserExpectation {
   nonce?: number;
   boosted?: boolean;
   boostAverageExchangeRate?: bigint;
+  diffBaseBalance?: bigint;
+  diffBoostBalance?: bigint;
 }
 
-export interface CaseExpectation {
+export interface CaseBehaviour {
+  invokeWithdrawBaseSwappedAmount?: boolean;
+  sendTokensToContract?: {
+    baseAmount?: bigint;
+    boostAmount?: bigint;
+  };
+  excessBoostAmount?: bigint;
   userExpectations?: Partial<Record<UserType, UserExpectation>>;
+  revertDeposit?: string;
   baseBalanceDelta?: bigint;
   boostBalanceDelta?: bigint;
 }
+
+export type UserInfos = Record<UserType, UserInfo>;

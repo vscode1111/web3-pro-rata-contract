@@ -18,7 +18,6 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase1(): void {
   describe(`funding: base decimals: ${BASE_DECIMALS}, boost decimals: ${BOOST_DECIMALS} case`, () => {
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, {
-        //RATE_PRECISION
         baseTokenConfig: {
           decimals: BASE_DECIMALS,
         },
@@ -66,6 +65,12 @@ export function shouldBehaveCorrectFundingDifferentDecimalsCase1(): void {
               nonce: 2,
               boosted: true,
               boostAverageExchangeRate: toWei(0.236),
+              diffBaseBalance: toWei(-130, BASE_DECIMALS),
+              diffBoostBalance: toWei(126.923, BOOST_DECIMALS),
+            },
+            owner2: {
+              diffBaseBalance: toWei(130, BASE_DECIMALS),
+              diffBoostBalance: toWei(-126.923, BOOST_DECIMALS),
             },
           },
           baseBalanceDelta: toWei(0.001, BASE_DECIMALS),

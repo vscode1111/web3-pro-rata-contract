@@ -32,6 +32,7 @@ export function shouldBehaveCorrectFetching(): void {
       expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
         seedData.zero,
       );
+      expect(await this.ownerSQRpProRata.calculateExcessBoostAmount()).eq(seedData.zero);
     });
 
     it('should be correct balances', async function () {

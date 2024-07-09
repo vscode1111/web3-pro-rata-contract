@@ -1,13 +1,13 @@
 import { Numeric } from 'ethers';
 import { Context } from 'mocha';
-import { formatToken, toNumberDecimals, toNumberDecimalsFixed, toNumberFixed } from '~common';
+import { formatToken, toNumberDecimals, toNumberDecimalsFixed } from '~common';
+import { printUserInfos } from './balance';
 import {
   DepositRecord,
   DepositResult,
   UserContractEnvironment,
-  UserContractType,
   UserEnvironment,
-  UserInfo,
+  UserInfos,
   UserType,
 } from './types';
 
@@ -49,7 +49,9 @@ export function printContractStats({
   );
 }
 
-export function getUserEnvironmentMap(context: Context): Record<UserType, UserEnvironment> {
+export function getUserEnvironmentMap(
+  context: Context,
+): Partial<Record<UserType, UserEnvironment>> {
   return {
     user1: {
       userAddress: context.user1Address,
@@ -86,7 +88,7 @@ export function getUserEnvironmentMap(context: Context): Record<UserType, UserEn
 
 export function getUserContractEnvironmentMap(
   context: Context,
-): Record<UserContractType, UserContractEnvironment> {
+): Record<UserType, UserContractEnvironment> {
   return {
     user1: {
       address: context.user1Address,
@@ -109,7 +111,7 @@ export function getUserContractEnvironmentMap(
   };
 }
 
-export function getUserEnvironment(context: Context, user: UserType): UserEnvironment {
+export function getUserEnvironment(context: Context, user: UserType): UserEnvironment | undefined {
   return getUserEnvironmentMap(context)[user];
 }
 
@@ -186,23 +188,29 @@ export function printContractResults({
   );
 }
 
-export async function printDiffBalances(userInfos1: UserInfo[], userInfos2: UserInfo[]) {
+export function getDiffBalances(
+  userInfos1: UserInfos,
+  userInfos2: UserInfos,
+  baseDecimals?: Numeric,
+  boostDecimals?: Numeric,
+): UserInfos {
   console.log(`Account diff balances:`);
 
-  const formattedTable: UserInfo[] = [];
+  const diffUserInfos: UserInfos = {} as any;
 
-  for (let i = 0; i < userInfos1.length; i++) {
-    const userInfo1 = userInfos1[i];
-    const userInfo2 = userInfos2[i];
-
-    formattedTable.push({
-      user: userInfo1.user,
-      baseBalance: toNumberFixed(userInfo2.baseBalance - userInfo1.baseBalance),
-      boostBalance: toNumberFixed(userInfo2.boostBalance - userInfo1.boostBalance),
-    });
+  for (const userKey of Object.keys(userInfos1)) {
+    const user = userKey as UserType;
+    const userInfoValue1 = userInfos1[user];
+    const userInfoValue2 = userInfos2[user];
+    diffUserInfos[user] = {
+      baseBalance: userInfoValue2.baseBalance - userInfoValue1.baseBalance,
+      boostBalance: userInfoValue2.boostBalance - userInfoValue1.boostBalance,
+    };
   }
 
-  console.table(formattedTable);
+  if (baseDecimals && boostDecimals) {
+    printUserInfos(diffUserInfos, baseDecimals, boostDecimals);
+  }
 
-  return formattedTable;
+  return diffUserInfos;
 }
