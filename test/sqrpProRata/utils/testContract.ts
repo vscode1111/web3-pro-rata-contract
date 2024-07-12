@@ -19,13 +19,19 @@ import { contractZeroCheck } from './misc';
 import {
   getDiffBalances,
   getUserEnvironment,
+  printAccountInfoResults,
   printContractConfig,
   printContractResults,
   printContractStats,
   printDepositRecords,
-  printDepositResults,
 } from './print';
-import { CaseBehaviour, DepositRecord, DepositResult, UserType } from './types';
+import {
+  AccountInfoResult,
+  CaseBehaviour,
+  DepositRecord,
+  FormattedDepositRecord,
+  UserType,
+} from './types';
 
 export async function transferToUserAndApproveForContract(
   context: Context,
@@ -112,10 +118,6 @@ export async function testContract(
     ownerSQRpProRata,
   } = context;
 
-  if (!caseBehaviour) {
-    return;
-  }
-
   const [baseDecimals, boostDecimals] = await Promise.all([
     getBaseDecimals(context),
     getBoostDecimals(context),
@@ -124,12 +126,14 @@ export async function testContract(
   const baseBalanceDelta = caseBehaviour?.baseBalanceDelta ?? seedData.baseBalanceDelta;
   const boostBalanceDelta = caseBehaviour?.boostBalanceDelta ?? seedData.boostBalanceDelta;
 
-  depositRecords.forEach((record) => {
-    if (!record.transactionId) {
-      record.transactionId = uuidv4();
+  const formattedDepositRecord: FormattedDepositRecord[] = [];
+
+  depositRecords.forEach((depositRecord) => {
+    if (!depositRecord.transactionId) {
+      depositRecord.transactionId = uuidv4();
     }
-    if (!record.boost) {
-      record.boost = false;
+    if (!depositRecord.boost) {
+      depositRecord.boost = false;
     }
   });
 
@@ -138,11 +142,8 @@ export async function testContract(
     baseDecimals,
     boostDecimals,
   });
-  printDepositRecords(depositRecords, baseDecimals);
 
   await contractZeroCheck(context);
-
-  const depositResults: DepositResult[] = [];
 
   const uniqUsers = uniqBy(depositRecords, (record) => record.user).map((record) => record.user);
 
@@ -168,6 +169,7 @@ export async function testContract(
       userAddress,
       baseDeposit,
     );
+
     await transferToUserAndApproveForContract(
       context,
       owner2BoostToken,
@@ -184,9 +186,19 @@ export async function testContract(
 
   const timestampLimit = addSecondsToUnixTime(newStartDate, seedData.timeShift);
 
+  // Deposits
   for (const depositRecord of depositRecords) {
     const { user } = depositRecord;
-    const { baseDeposit, transactionId, boost, boostExchangeRate = seedData.zero } = depositRecord;
+    const {
+      baseDeposit,
+      transactionId,
+      boost,
+      boostExchangeRate = seedData.zero,
+      revertDeposit,
+      expectedTotalBaseNonBoostDeposited,
+      expectedTotalBaseBoostDeposited,
+      expectedTotalBaseDeposited,
+    } = depositRecord;
 
     const userEnvironment = getUserEnvironment(context, user);
     if (!userEnvironment) {
@@ -208,11 +220,42 @@ export async function testContract(
       boostExchangeRate,
       transactionId,
       timestampLimit,
-      revertDeposit: caseBehaviour?.revertDeposit,
+      revertDeposit,
     });
+
+    const [totalBaseNonBoostDeposited, totalBaseBoostDeposited, totalBaseDeposited] =
+      await Promise.all([
+        owner2SQRpProRata.totalBaseNonBoostDeposited(),
+        owner2SQRpProRata.totalBaseBoostDeposited(),
+        owner2SQRpProRata.totalBaseDeposited(),
+      ]);
+
+    formattedDepositRecord.push({
+      ...depositRecord,
+      totalBaseNonBoostDeposited,
+      totalBaseBoostDeposited,
+      totalBaseDeposited,
+    });
+
+    if (exist(expectedTotalBaseNonBoostDeposited)) {
+      expect(totalBaseNonBoostDeposited).closeTo(
+        expectedTotalBaseNonBoostDeposited,
+        baseBalanceDelta,
+      );
+    }
+
+    if (exist(expectedTotalBaseBoostDeposited)) {
+      expect(totalBaseBoostDeposited).closeTo(expectedTotalBaseBoostDeposited, baseBalanceDelta);
+    }
+
+    if (exist(expectedTotalBaseDeposited)) {
+      expect(totalBaseDeposited).closeTo(expectedTotalBaseDeposited, baseBalanceDelta);
+    }
   }
 
-  if (caseBehaviour?.revertDeposit) {
+  printDepositRecords(formattedDepositRecord, baseDecimals);
+
+  if (!caseBehaviour) {
     return;
   }
 
@@ -269,6 +312,8 @@ export async function testContract(
     await owner2SQRpProRata.withdrawExcessTokens();
   }
 
+  const accountInfoResults: AccountInfoResult[] = [];
+
   for (const uniqUser of uniqUsers) {
     const user = uniqUser as UserType;
     const userEnvironment = getUserEnvironment(context, user);
@@ -293,7 +338,7 @@ export async function testContract(
       share,
     } = await owner2SQRpProRata.fetchAccountInfo(userAddress);
 
-    depositResults.push({
+    accountInfoResults.push({
       user,
       baseDeposited,
       baseDeposit,
@@ -310,14 +355,15 @@ export async function testContract(
     });
   }
 
-  printDepositResults(depositResults, baseDecimals, boostDecimals);
+  // Account infos:
+  printAccountInfoResults(accountInfoResults, baseDecimals, boostDecimals);
 
   const balanceTable2 = await getBalances(context);
 
   printContractResults({
-    totalBaseAllocation: bigIntSum(depositResults, (result) => result.baseAllocation),
-    totalBaseRefund: bigIntSum(depositResults, (result) => result.baseRefunded),
-    totalBoostRefund: bigIntSum(depositResults, (result) => result.boostRefunded),
+    totalBaseAllocation: bigIntSum(accountInfoResults, (result) => result.baseAllocation),
+    totalBaseRefund: bigIntSum(accountInfoResults, (result) => result.baseRefunded),
+    totalBoostRefund: bigIntSum(accountInfoResults, (result) => result.boostRefunded),
     baseDecimals,
     boostDecimals,
   });
@@ -332,6 +378,7 @@ export async function testContract(
     boostDecimals,
   });
 
+  //Account diff balances:
   const diffBalances = getDiffBalances(balanceTable1, balanceTable2, baseDecimals, boostDecimals);
 
   if (!caseBehaviour) {

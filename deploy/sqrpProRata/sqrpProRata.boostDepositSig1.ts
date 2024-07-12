@@ -11,7 +11,7 @@ import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
 import { deployData, deployParams } from './deployData';
-import { getTokenInfo } from './utils';
+import { getBaseTokenInfo } from './utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
@@ -19,15 +19,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
     const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
-    const {
-      depositVerifier: verifier,
-      user1Address,
-      user1BaseToken,
-      user1SQRpProRata,
-      sqrpProRataFactory,
-    } = context;
+    const { depositVerifier, user1Address, user1BaseToken, user1SQRpProRata, sqrpProRataFactory } =
+      context;
 
-    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user1SQRpProRata);
+    const { decimals, tokenName } = await getBaseTokenInfo(await getUsers(), user1SQRpProRata);
 
     const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} token was allowed`);
@@ -45,7 +40,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     };
 
     params.signature = await signMessageForProRataDeposit(
-      verifier,
+      depositVerifier,
       params.account,
       params.amount,
       params.boost,

@@ -68,12 +68,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       boostDecimals,
       boostTokenName,
     );
-    // await printAccountInfo(
-    //   ownerSQRpProRata,
-    //   '0x2C5459BB28254cc96944c50090f4Bd0eF045A937',
-    //   decimals,
-    //   tokenName,
-    // );
+    await printAccountInfo(
+      ownerSQRpProRata,
+      '0x2c5459bb28254cc96944c50090f4bd0ef045a937',
+      baseDecimals,
+      baseTokenName,
+      boostDecimals,
+      boostTokenName,
+    );
   }, hre);
 };
 

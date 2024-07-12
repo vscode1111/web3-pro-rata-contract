@@ -780,5 +780,110 @@ export function shouldBehaveCorrectFundingPositiveCases(): void {
         },
       );
     });
+
+    it('14. check totalBaseNonBoostDeposited, totalBaseBoostDeposited and totalBaseDeposited', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(100),
+            boost: false,
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(100),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(0),
+            expectedTotalBaseDeposited: toBaseTokenWei(100),
+          },
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(200),
+            boost: false,
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(300),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(0),
+            expectedTotalBaseDeposited: toBaseTokenWei(300),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(50),
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(350),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(0),
+            expectedTotalBaseDeposited: toBaseTokenWei(350),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(100),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(300),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(150),
+            expectedTotalBaseDeposited: toBaseTokenWei(450),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(50),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(300),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(200),
+            expectedTotalBaseDeposited: toBaseTokenWei(500),
+          },
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(100),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+            expectedTotalBaseNonBoostDeposited: toBaseTokenWei(0),
+            expectedTotalBaseBoostDeposited: toBaseTokenWei(600),
+            expectedTotalBaseDeposited: toBaseTokenWei(600),
+          },
+        ],
+        {
+          userExpectations: {
+            user1: {
+              baseDeposited: toBaseTokenWei(400),
+              baseAllocation: toBaseTokenWei(66.667),
+              baseDeposit: toBaseTokenWei(0),
+              baseRefund: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(2000),
+              boostRefund: toBoostTokenWei(1666.667),
+              boostRefunded: toBoostTokenWei(1666.667),
+              nonce: 3,
+              boosted: true,
+              boostAverageExchangeRate: toWei(0.2),
+              diffBaseBalance: toBaseTokenWei(-400),
+              diffBoostBalance: toBoostTokenWei(1666.667),
+            },
+            user2: {
+              baseDeposited: toBaseTokenWei(200),
+              baseAllocation: toBaseTokenWei(33.333),
+              baseDeposit: toBaseTokenWei(0),
+              baseRefund: toBaseTokenWei(0),
+              baseRefunded: toBaseTokenWei(0),
+              boostDeposit: toBoostTokenWei(1000),
+              boostRefund: toBoostTokenWei(833.333),
+              boostRefunded: toBoostTokenWei(833.333),
+              nonce: 3,
+              boosted: true,
+              boostAverageExchangeRate: toWei(0.2),
+              diffBaseBalance: toBaseTokenWei(-200),
+              diffBoostBalance: toBoostTokenWei(833.333),
+            },
+            user3: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(600),
+              diffBoostBalance: toBoostTokenWei(-2500),
+            },
+          },
+        },
+      );
+    });
   });
 }

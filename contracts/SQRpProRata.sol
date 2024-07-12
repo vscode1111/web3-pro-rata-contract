@@ -79,7 +79,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "2.5";
+  string public constant VERSION = "2.5.1";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
@@ -531,6 +531,7 @@ contract SQRpProRata is
       uint256 baseDeposit = baseAmount;
       if (accountItem.baseDeposit > 0) {
         baseDeposit += accountItem.baseDeposit;
+        totalBaseNonBoostDeposited -= accountItem.baseDeposit;
         accountItem.baseDeposit = 0;
       }
 

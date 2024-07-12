@@ -19,7 +19,7 @@ export type UserType = 'user1' | 'user2' | 'user3' | 'owner2' | 'contract';
 
 // export type UserContractType = UserType | 'contract';
 
-export interface DepositResult {
+export interface AccountInfoResult {
   user: UserType;
   baseDeposited: bigint;
   baseAllocation: bigint;
@@ -41,6 +41,15 @@ export interface DepositRecord {
   transactionId?: string;
   boost?: boolean;
   boostExchangeRate?: bigint;
+  revertDeposit?: string;
+  expectedTotalBaseNonBoostDeposited?: bigint;
+  expectedTotalBaseBoostDeposited?: bigint;
+  expectedTotalBaseDeposited?: bigint;
+}
+export interface FormattedDepositRecord extends DepositRecord {
+  totalBaseNonBoostDeposited: bigint;
+  totalBaseBoostDeposited: bigint;
+  totalBaseDeposited: bigint;
 }
 
 export interface UserEnvironment {
@@ -89,7 +98,6 @@ export interface CaseBehaviour {
   };
   excessBoostAmount?: bigint;
   userExpectations?: Partial<Record<UserType, UserExpectation>>;
-  revertDeposit?: string;
   baseBalanceDelta?: bigint;
   boostBalanceDelta?: bigint;
 }

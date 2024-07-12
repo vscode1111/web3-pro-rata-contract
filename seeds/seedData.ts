@@ -53,8 +53,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     baseGoal: toBaseTokenWei(10_000),
     startDate: 0,
     // closeDate: 0,
-    // closeDate: toUnixTimeUtc(new Date(2025, 6, 8, 8, 40, 0)),
-    closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
+    closeDate: toUnixTimeUtc(new Date(2025, 6, 8, 8, 40, 0)),
+    // closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
@@ -159,6 +159,7 @@ export const seedData = {
   boostBalanceDelta: toBoostTokenWei(0.001),
   weiDelta: toWei(0.001),
   nowPlus1m: toUnixTime(now.add(1, 'minute').toDate()),
+  nowPlus1h: toUnixTime(now.add(1, 'hour').toDate()),
   startDatePlus1m: addSecondsToUnixTime(contractConfig.startDate, 1 * MINUTES),
   closeDatePlus1m: addSecondsToUnixTime(contractConfig.closeDate, 1 * MINUTES),
   timeShift: 10,

@@ -23,7 +23,7 @@ export function formatContractConfig(contractConfig: ContractConfig) {
   };
 }
 
-export async function getTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
+export async function getBaseTokenInfo(users: Users, userSQRpProRata: SQRpProRata) {
   const baseToken = await userSQRpProRata.baseToken();
   const { ownerERC20Token } = await getERC20TokenContext(users, baseToken);
   return {

@@ -3,8 +3,8 @@ import { Context } from 'mocha';
 import { formatToken, toNumberDecimals, toNumberDecimalsFixed } from '~common';
 import { printUserInfos } from './balance';
 import {
-  DepositRecord,
-  DepositResult,
+  AccountInfoResult,
+  FormattedDepositRecord,
   UserContractEnvironment,
   UserEnvironment,
   UserInfos,
@@ -115,28 +115,40 @@ export function getUserEnvironment(context: Context, user: UserType): UserEnviro
   return getUserEnvironmentMap(context)[user];
 }
 
-export function printDepositRecords(depositRecords: DepositRecord[], decimals: Numeric) {
+export function printDepositRecords(depositRecords: FormattedDepositRecord[], decimals: Numeric) {
   console.log('Deposits:');
   const formattedTable = depositRecords.map(
-    ({ user, baseDeposit, transactionId, boost, boostExchangeRate }) => ({
+    ({
+      user,
+      baseDeposit,
+      transactionId,
+      boost,
+      boostExchangeRate,
+      totalBaseNonBoostDeposited,
+      totalBaseBoostDeposited,
+      totalBaseDeposited,
+    }) => ({
       user,
       baseDeposit: Number(formatToken(baseDeposit, decimals)),
       transactionId,
       boost,
       boostExchangeRate: boostExchangeRate ? toNumberDecimals(boostExchangeRate) : 0,
+      totalBaseNonBoostDeposited: Number(formatToken(totalBaseNonBoostDeposited, decimals)),
+      totalBaseBoostDeposited: Number(formatToken(totalBaseBoostDeposited, decimals)),
+      totalBaseDeposited: Number(formatToken(totalBaseDeposited, decimals)),
     }),
   );
   console.table(formattedTable);
 }
 
-export function printDepositResults(
-  depositResults: DepositResult[],
+export function printAccountInfoResults(
+  accountInfoResults: AccountInfoResult[],
   baseDecimals: Numeric,
   boostDecimals: Numeric,
 ) {
   console.log('Account infos:');
 
-  const formattedTable = depositResults.map(
+  const formattedTable = accountInfoResults.map(
     ({
       user,
       baseDeposited,

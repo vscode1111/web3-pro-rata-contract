@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { toNumberDecimals } from '~common';
+import { toNumberDecimals, toNumberDecimalsFixed } from '~common';
 import {
   callWithTimerHre,
   formatContractDate,
@@ -9,9 +9,16 @@ import {
 } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
+import {
+  getAddressesFromHre,
+  getContext,
+  getUsers,
+  signMessageForProRataDeposit,
+  toBaseTokenWei,
+} from '~utils';
 import { deployParams } from './deployData';
-import { getTokenInfo } from './utils';
+import { DepositSigParams, DepositSigParamsForFront } from './types';
+import { getBaseTokenInfo } from './utils';
 
 const CHECK_REQUIRED = false;
 
@@ -21,15 +28,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
     const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
+
     const { depositVerifier, user1Address, user1BaseToken, user1SQRpProRata, sqrpProRataFactory } =
       context;
 
-    const { decimals, tokenName } = await getTokenInfo(await getUsers(), user1SQRpProRata);
+    const { decimals, tokenName } = await getBaseTokenInfo(await getUsers(), user1SQRpProRata);
 
     //From signature service
     const body = {
-      contractAddress: '0x8B5c0b1b6aEA174c56ec0D4f02207DA0AAfcAA63',
-      account: '0x4Ee463d6e90764A6C34880024305C2810866432D',
+      contractAddress: '0xd4533381d780905D24DAF0f7b8D43e58A74CDD57',
+      account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
       baseAmount: 0.12345678901234567890123,
       boost: true,
       boostExchangeRate: 0.16324984234867387534523,
@@ -47,11 +55,34 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       dateLimit: '2024-07-08T12:56:23.636Z',
     };
 
+    const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);
+    const params: DepositSigParams = {
+      account: body.account,
+      baseAmount: toBaseTokenWei(body.baseAmount),
+      nonce: Number(nonce),
+      boost: true,
+      boostExchangeRate: seedData.boostExchangeRate,
+      transactionId: seedData.transactionId1,
+      timestampLimit: seedData.nowPlus1h,
+      signature: '',
+    };
+
+    params.signature = await signMessageForProRataDeposit(
+      depositVerifier,
+      params.account,
+      params.baseAmount,
+      params.boost,
+      params.boostExchangeRate,
+      params.nonce,
+      params.transactionId,
+      params.timestampLimit,
+    );
+
+    const account = body.account.toLowerCase();
+
     //Checks
 
     if (CHECK_REQUIRED) {
-      const account = body.account.toLowerCase();
-
       if (body.account.toLowerCase() !== user1Address.toLowerCase()) {
         console.error(`Account is not correct`);
         return;
@@ -98,15 +129,46 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     //   signature: response.signature,
     // };
 
-    const params = {
-      baseAmount: 500000000000000000000000n,
-      boost: true,
-      boostExchangeRate: 130224000000000000n,
-      signature:
-        '0x995ae9240648301e31f1683a9413dc671987f1e73d376edcad37eada1a214ba44ef3d1699b32667a38035384a67c4d963e96489a04aaa5f29d6ec252ea3298bb1c',
-      timestampLimit: 1720446390,
-      transactionId: '1523b02d-6b59-44fa-8347-b5530ec0b3d6',
+    // const paramsFromFront = {
+    //   amount: 1,
+    //   boosted: true,
+    //   amountInWei: '1000000000000000000',
+    //   exchangeRateInWei: '110016000000000000',
+    //   contractAddress: '0xafa705d74e57f0ccfc58945ae245146aee504ccc',
+    //   userId: 'f1da1dbd-d6a4-42a7-8779-ee7919376ac5',
+    //   walletAddress: '0xc109d9a3fc3779db60af4821ae18747c708dfcc6',
+    //   transactionId: '69e935ac-fb79-4d15-b3de-3da39e03d656',
+    //   timeStampLimit: 1720711002,
+    //   signature:
+    //     '0x21be1dbafcd59ca19db3ed5195986240314f725f99f67942ed051b47226d0fbb564b1c0125201f08a74bc54afdc5a11ba8aaadf37fe22543ed5029a0c7ac4b601c',
+    // };
+
+    // const params = {
+    //   ...paramsFromFront,
+    //   boost: paramsFromFront.boosted,
+    //   baseAmount: BigInt(paramsFromFront.amountInWei),
+    //   boostExchangeRate: BigInt(paramsFromFront.exchangeRateInWei),
+    //   timestampLimit: paramsFromFront.timeStampLimit,
+    // };
+
+    const paramsForFront: DepositSigParamsForFront = {
+      ...params,
+      amount: toNumberDecimalsFixed(params.baseAmount, decimals),
+      contractAddress: sqrpProRataAddress,
+      boosted: params.boost,
+      amountInWei: String(params.baseAmount),
+      exchangeRateInWei: String(params.boostExchangeRate),
+      timeStampLimit: params.timestampLimit,
     };
+
+    delete paramsForFront.boost;
+    delete paramsForFront.baseAmount;
+    delete paramsForFront.boostExchangeRate;
+    delete paramsForFront.nonce;
+
+    console.log(111, paramsForFront);
+
+    return;
 
     const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);

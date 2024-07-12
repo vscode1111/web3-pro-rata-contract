@@ -15,6 +15,7 @@ export const customError = {
   usedTransactionId: 'UsedTransactionId',
   userMustAllowToUseFunds: 'UserMustAllowToUseFunds',
   userMustHaveFunds: 'UserMustHaveFunds',
+  userHasBoostedDeposit: 'UserHasBoostedDeposit',
   invalidNonce: 'InvalidNonce',
   tooEarly: 'TooEarly',
   tooLate: 'TooLate',

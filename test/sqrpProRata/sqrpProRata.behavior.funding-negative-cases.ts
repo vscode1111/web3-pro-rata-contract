@@ -1,5 +1,5 @@
 import { toUnixTime } from '~common';
-import { ContractConfig, contractConfig, now } from '~seeds';
+import { ContractConfig, contractConfig, now, seedData } from '~seeds';
 import { toBaseTokenWei } from '~utils';
 import { customError } from './testData';
 import { checkTotalSQRBalance, loadSQRpProRataFixture, testContract } from './utils';
@@ -22,21 +22,32 @@ export function shouldBehaveCorrectFundingNegativeCases(): void {
       await checkTotalSQRBalance(this);
     });
 
-    it('1. revert BoostExchangeRateNotZero error', async function () {
-      await testContract(
-        this,
-        caseContractConfig,
-        [
-          {
-            user: 'user1',
-            baseDeposit: toBaseTokenWei(20),
-            boost: true,
-          },
-        ],
+    it('1. throw error when exchange rate is zero', async function () {
+      await testContract(this, caseContractConfig, [
         {
+          user: 'user1',
+          baseDeposit: toBaseTokenWei(20),
+          boost: true,
           revertDeposit: customError.boostExchangeRateNotZero,
         },
-      );
+      ]);
+    });
+
+    it('2. throw error when user has has boosted deposit before', async function () {
+      await testContract(this, caseContractConfig, [
+        {
+          user: 'user1',
+          baseDeposit: toBaseTokenWei(20),
+          boost: true,
+          boostExchangeRate: seedData.boostExchangeRate,
+        },
+        {
+          user: 'user1',
+          baseDeposit: toBaseTokenWei(20),
+          boost: false,
+          revertDeposit: customError.userHasBoostedDeposit,
+        },
+      ]);
     });
   });
 }
