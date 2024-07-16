@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Numeric } from 'ethers';
-import { MS_IN_SEC } from './constants';
+import { BigNumberish, Numeric } from 'ethers';
+import { DEFAULT_DECIMALS, MS_IN_SEC } from './constants';
 import { toNumberDecimalsFixed } from './converts';
 
 export function formatDate(date: Date | Dayjs | number): string {
@@ -13,6 +13,10 @@ export function formatDate(date: Date | Dayjs | number): string {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 }
 
-export function formatToken(value: bigint, decimals: Numeric = 18, tokenName?: string): string {
+export function formatToken(
+  value: BigNumberish,
+  decimals: Numeric = DEFAULT_DECIMALS,
+  tokenName?: string,
+): string {
   return `${toNumberDecimalsFixed(value, decimals)}${tokenName ? ` ${tokenName}` : ``}`;
 }

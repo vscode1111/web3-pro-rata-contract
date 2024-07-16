@@ -1,21 +1,26 @@
 import { toUnixTime, toWei } from '~common';
-import { ContractConfig, contractConfig, now } from '~seeds';
-import { checkTotalSQRBalance, loadSQRpProRataFixture, testContract } from './utils';
+import { BaseContractConfigEx, contractConfig, now } from '~seeds';
+import {
+  checkTotalSQRBalance,
+  getBaseContactConfig,
+  loadSQRpProRataFixture,
+  testContract,
+} from './utils';
 
 export const BASE_DECIMALS = 4;
 export const BOOST_DECIMALS = 8;
 
-const caseContractConfig: ContractConfig = {
-  ...contractConfig,
-  baseGoal: toWei(100, BASE_DECIMALS),
-  baseDecimals: BASE_DECIMALS,
-  boostDecimals: BOOST_DECIMALS,
-  startDate: toUnixTime(now.add(50, 'days').toDate()),
-  closeDate: toUnixTime(now.add(52, 'days').toDate()),
-};
-
 export function shouldBehaveCorrectFundingDifferentDecimalsCase2(): void {
-  describe(`funding: base decimals: ${BASE_DECIMALS}, boost decimals: ${BOOST_DECIMALS} case`, () => {
+  describe(`funding: different decimals, base: ${BASE_DECIMALS}, boost: ${BOOST_DECIMALS} case`, () => {
+    const caseContractConfig: BaseContractConfigEx = {
+      ...getBaseContactConfig(contractConfig),
+      baseGoal: toWei(100, BASE_DECIMALS),
+      baseDecimals: BASE_DECIMALS,
+      boostDecimals: BOOST_DECIMALS,
+      startDate: toUnixTime(now.add(20, 'days').toDate()),
+      closeDate: toUnixTime(now.add(22, 'days').toDate()),
+    };
+
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, {
         baseTokenConfig: {

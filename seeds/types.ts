@@ -1,16 +1,22 @@
 import { BigNumberish, Numeric } from 'ethers';
 
-export interface ContractConfig {
-  newOwner: string;
-  baseToken: string;
+export interface BaseContractConfig {
   baseDecimals: number;
-  boostToken: string;
   boostDecimals: number;
   depositVerifier: string;
   baseGoal: bigint;
   startDate: number;
   closeDate: number;
+  externalRefund: boolean;
 }
+
+export interface ContractConfig extends BaseContractConfig {
+  newOwner: string;
+  baseToken: string;
+  boostToken: string;
+}
+
+export type BaseContractConfigEx = BaseContractConfig & Partial<ContractConfig>;
 
 export type DeployContractArgs = [
   {
@@ -23,6 +29,7 @@ export type DeployContractArgs = [
     baseGoal: BigNumberish;
     startDate: number;
     closeDate: number;
+    externalRefund: boolean;
   },
 ];
 

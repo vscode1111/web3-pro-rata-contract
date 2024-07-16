@@ -41,10 +41,11 @@ export async function deploySQRpProRataContractFixture(
 
   const finalContractConfig: ContractConfig = {
     ...contractConfig,
-    ...fixtureConfig?.contractConfig,
+    // ...fixtureConfig?.contractConfig,
     newOwner: owner2Address,
     baseToken: baseTokenAddress,
     boostToken: boostTokenAddress,
+    ...fixtureConfig?.contractConfig,
   };
   const sqrpProRataContext = await getSQRpProRataContext(users, finalContractConfig);
 

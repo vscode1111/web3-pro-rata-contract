@@ -27,6 +27,7 @@ export async function getBaseTokenInfo(users: Users, userSQRpProRata: SQRpProRat
   const baseToken = await userSQRpProRata.baseToken();
   const { ownerERC20Token } = await getERC20TokenContext(users, baseToken);
   return {
+    baseToken,
     decimals: Number(await ownerERC20Token.decimals()),
     tokenName: await ownerERC20Token.name(),
   };

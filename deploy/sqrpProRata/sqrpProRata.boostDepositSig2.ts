@@ -9,7 +9,13 @@ import {
 } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
+import {
+  getAddressesFromHre,
+  getContext,
+  getERC20TokenContext,
+  getUsers,
+  signMessageForProRataDeposit,
+} from '~utils';
 import { deployData, deployParams } from './deployData';
 import { getBaseTokenInfo } from './utils';
 
@@ -17,12 +23,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
+    const users = await getUsers();
     const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
-    const { user2Address, user2BaseToken, user2SQRpProRata, sqrpProRataFactory, depositVerifier } =
-      context;
+    const { user2Address, user2SQRpProRata, sqrpProRataFactory, depositVerifier } = context;
 
-    const { decimals, tokenName } = await getBaseTokenInfo(await getUsers(), user2SQRpProRata);
+    const { baseToken, decimals, tokenName } = await getBaseTokenInfo(users, user2SQRpProRata);
+    console.log(`base token: ${baseToken}`);
+    const { user2ERC20Token: user2BaseToken } = await getERC20TokenContext(users, baseToken);
 
     const currentAllowance = await user2BaseToken.allowance(user2Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);
@@ -55,7 +63,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       const askAllowance = seedData.allowance;
       await waitTx(user2BaseToken.approve(sqrpProRataAddress, askAllowance), 'approve');
       console.log(
-        `${toNumberDecimals(askAllowance, decimals)} SQR was approved to ${sqrpProRataAddress}`,
+        `${toNumberDecimals(askAllowance, decimals)} ${tokenName} was approved to ${sqrpProRataAddress}`,
       );
     }
 

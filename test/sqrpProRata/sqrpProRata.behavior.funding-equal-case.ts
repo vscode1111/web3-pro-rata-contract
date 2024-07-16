@@ -1,31 +1,32 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime } from '~common';
-import { ContractConfig, contractConfig, now, seedData, tokenConfig } from '~seeds';
+import { BaseContractConfigEx, contractConfig, now, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, toBaseTokenWei } from '~utils';
 import {
   checkTotalSQRBalance,
   contractZeroCheck,
   depositSig,
+  getBaseContactConfig,
   getBaseTokenBalance,
   loadSQRpProRataFixture,
   transferToUserAndApproveForContract,
 } from './utils';
 
-const caseContractConfig: ContractConfig = {
-  ...contractConfig,
-  baseGoal: toBaseTokenWei(15_000),
-  startDate: toUnixTime(now.add(10, 'days').toDate()),
-  closeDate: toUnixTime(now.add(12, 'days').toDate()),
-};
-
-const caseSettings = {
-  deposit1: toBaseTokenWei(8_000),
-  deposit2: toBaseTokenWei(7_000),
-};
-
 export function shouldBehaveCorrectFundingEqualCase(): void {
   describe('funding: equal case', () => {
+    const caseContractConfig: BaseContractConfigEx = {
+      ...getBaseContactConfig(contractConfig),
+      baseGoal: toBaseTokenWei(15_000),
+      startDate: toUnixTime(now.add(30, 'days').toDate()),
+      closeDate: toUnixTime(now.add(32, 'days').toDate()),
+    };
+
+    const caseSettings = {
+      deposit1: toBaseTokenWei(8_000),
+      deposit2: toBaseTokenWei(7_000),
+    };
+
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
       await checkTotalSQRBalance(this);

@@ -71,6 +71,7 @@ contract SQRpProRata is
     baseGoal = contractParams.baseGoal;
     startDate = contractParams.startDate;
     closeDate = contractParams.closeDate;
+    externalRefund = contractParams.externalRefund;
 
     (decimalsFactor1, decimalsFactor2) = calculateDecimalsFactors(baseDecimals, boostDecimals);
   }
@@ -90,6 +91,7 @@ contract SQRpProRata is
   uint256 public baseGoal;
   uint32 public startDate;
   uint32 public closeDate;
+  bool public externalRefund;
   uint256 public decimalsFactor1;
   uint256 public decimalsFactor2;
   uint256 public totalBaseDeposited;
@@ -116,6 +118,7 @@ contract SQRpProRata is
     uint256 baseGoal;
     uint32 startDate; //0 - skip
     uint32 closeDate;
+    bool externalRefund;
   }
 
   struct AccountItem {
@@ -182,6 +185,7 @@ contract SQRpProRata is
   error AllUsersProcessed();
   error NotRefunded();
   error NotWithdrawBaseGoal();
+  error ContractForExternalRefund();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
     if (block.timestamp > timestampLimit) {
@@ -438,7 +442,6 @@ contract SQRpProRata is
   function calculateExcessBoostAmount() external view returns (uint256) {
     uint256 contractBoostBalance = getBoostBalance();
     uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
-    console.log(111, contractBoostBalance, totalBoostRefundAmount);
     if (contractBoostBalance > totalBoostRefundAmount) {
       return contractBoostBalance - totalBoostRefundAmount;
     }
@@ -615,6 +618,10 @@ contract SQRpProRata is
   }
 
   function refund(uint32 _batchSize) public nonReentrant onlyOwner afterCloseDate {
+    if (externalRefund) {
+      revert ContractForExternalRefund();
+    }
+
     uint32 accountCount = getAccountCount();
     if (_batchSize > accountCount - _processedAccountIndex) {
       _batchSize = accountCount - _processedAccountIndex;
@@ -675,12 +682,14 @@ contract SQRpProRata is
   }
 
   function withdrawExcessTokens() external nonReentrant onlyOwner afterCloseDate {
-    if (calculateRemainProcessedAccountAmount() > 0) {
-      revert NotRefunded();
-    }
+    if (!externalRefund) {
+      if (calculateRemainProcessedAccountAmount() > 0) {
+        revert NotRefunded();
+      }
 
-    if (isReachedBaseGoal() && totalBaseWithdrew < baseGoal) {
-      revert NotWithdrawBaseGoal();
+      if (isReachedBaseGoal() && totalBaseWithdrew < baseGoal) {
+        revert NotWithdrawBaseGoal();
+      }
     }
 
     address to = owner();

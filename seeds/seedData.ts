@@ -45,8 +45,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     baseGoal: toBaseTokenWei(1_200) / priceDiv,
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
+    externalRefund: false,
   },
-  //0xCC2d63ff928996Ad8CdE064c80A1348f6809e043
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
@@ -88,6 +88,7 @@ export const contractConfig: ContractConfig = {
   baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
+  externalRefund: true,
   ...extContractConfig,
 };
 
@@ -102,6 +103,7 @@ export function getContractArgs(contractConfig: ContractConfig): DeployContractA
     baseGoal,
     startDate,
     closeDate,
+    externalRefund,
   } = contractConfig;
   return [
     {
@@ -114,6 +116,7 @@ export function getContractArgs(contractConfig: ContractConfig): DeployContractA
       baseGoal,
       startDate,
       closeDate,
+      externalRefund,
     },
   ];
 }

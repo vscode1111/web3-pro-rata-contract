@@ -34,19 +34,18 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner tries to deploy with zero base token address', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           baseToken: ZeroAddress,
+          boostToken: (await getUsers()).user1Address,
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.baseTokenNotZeroAddress);
     });
 
     it('owner tries to deploy when start date is later than close one', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           startDate: addSecondsToUnixTime(chainTime, 10),
           closeDate: addSecondsToUnixTime(chainTime, 9),
@@ -58,9 +57,7 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner deployed contract using specific deposit verifier', async function () {
-      const users = await getUsers();
-      const { user3Address } = users;
-
+      const { user3Address } = await getUsers();
       await loadSQRpProRataFixture(this, {
         contractConfig: {
           startDate: 0,
@@ -93,9 +90,8 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner tries to deploy with invalid start date', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           startDate: 1,
         }),
@@ -106,9 +102,8 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner tries to deploy with invalid close date', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           closeDate: 0,
         }),
@@ -119,9 +114,8 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner tries to deploy with zero verifier address', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           depositVerifier: ZeroAddress,
         }),
@@ -129,9 +123,8 @@ export function shouldBehaveCorrectDeployment(): void {
     });
 
     it('owner tries to deploy with zero deposit goal', async function () {
-      const users = await getUsers();
       await expect(
-        getSQRpProRataContext(users, {
+        getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           baseGoal: ZERO,
         }),

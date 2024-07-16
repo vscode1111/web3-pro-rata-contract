@@ -38,6 +38,34 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       );
     });
 
+    it('user1 tries to call withdrawBaseSwappedAmount without permission', async function () {
+      await expect(this.user1SQRpProRata.withdrawBaseSwappedAmount()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.ownableUnauthorizedAccount,
+      );
+    });
+
+    it('owner2 tries to call withdrawBaseSwappedAmount too early', async function () {
+      await expect(this.owner2SQRpProRata.withdrawBaseSwappedAmount()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.tooEarly,
+      );
+    });
+
+    it('user1 tries to call withdrawExcessTokens without permission', async function () {
+      await expect(this.user1SQRpProRata.withdrawExcessTokens()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.ownableUnauthorizedAccount,
+      );
+    });
+
+    it('user1 tries to call withdrawExcessTokens without too early', async function () {
+      await expect(this.owner2SQRpProRata.withdrawExcessTokens()).revertedWithCustomError(
+        this.owner2SQRpProRata,
+        customError.tooEarly,
+      );
+    });
+
     it('owner tries to call withdrawBaseGoal to early', async function () {
       await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
         this.owner2SQRpProRata,
@@ -462,6 +490,13 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               expect(await this.owner2SQRpProRata.isDepositReady()).eq(false);
             });
 
+            it('owner2 tries to call withdrawExcessTokens without refunding', async function () {
+              await expect(this.owner2SQRpProRata.withdrawExcessTokens()).revertedWithCustomError(
+                this.owner2SQRpProRata,
+                customError.notRefunded,
+              );
+            });
+
             it('owner2 tries to withdraw unreached goal when someone accidentally sent tokens', async function () {
               expect(await this.owner2SQRpProRata.calculateAccidentAmount()).eq(seedData.zero);
 
@@ -588,7 +623,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
             });
 
-            it('owner2 tries to refund tokens for first user to early', async function () {
+            it('owner2 tries to refund tokens for first user too early', async function () {
               await expect(this.owner2SQRpProRata.refund(1)).revertedWithCustomError(
                 this.owner2SQRpProRata,
                 customError.tooEarly,
@@ -793,6 +828,15 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   await expect(this.owner2SQRpProRata.refundAll()).revertedWithCustomError(
                     this.owner2SQRpProRata,
                     customError.allUsersProcessed,
+                  );
+                });
+
+                it('owner2 tries to call withdrawExcessTokens without withdrawing base goal', async function () {
+                  await expect(
+                    this.owner2SQRpProRata.withdrawExcessTokens(),
+                  ).revertedWithCustomError(
+                    this.owner2SQRpProRata,
+                    customError.notWithdrawBaseGoal,
                   );
                 });
 

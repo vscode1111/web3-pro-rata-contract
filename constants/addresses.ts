@@ -14,7 +14,7 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0x7Bb240378255E38cE8882Ce7B2661a446AD8b3B7', //Test
     // bsc: '0x47c2D03fFB3139fa8CD12deF325A9D374b0a5f58', //Test
     // bsc: '0xd4533381d780905D24DAF0f7b8D43e58A74CDD57', //Main - Base goal: 10К USDT
-    bsc: '0xC81B0692cc5c4664a5aDaBc1395257B07E3aE84E', //Main - Base goal: 10К USDT
+    // bsc: '0xC81B0692cc5c4664a5aDaBc1395257B07E3aE84E', //Main - Base goal: 10К USDT
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '0x491F8F96C7ab36df65C092917566eA87cAFf1757', //Main - Base goal: 10К USDT
     // bsc: '0x06951b4a5e034f8bF83407Bd35f60AA4a4A53eE5', //Main - Base goal: 10К USDT
@@ -25,6 +25,7 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0x8B5c0b1b6aEA174c56ec0D4f02207DA0AAfcAA63', //Main - Base goal: 10К USDT
     // bsc: '0x63a09eBf433B63b8f58d7f19148a391D6b248E9F', //Main - Base goal: 10К USDT
     // bsc: '0xafa705d74e57f0ccfc58945ae245146aee504ccc', //Main - Fedor
+    bsc: '0xcb40d75efe2aa43664773c0620955694096e41d7', //Main - Fedor
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '', //Stage
     //-------------------------------------------------------------------------------------------------------------

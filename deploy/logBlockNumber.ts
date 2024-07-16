@@ -16,9 +16,9 @@ const DELAY = 1000;
 const func: DeployFunction = async (_: HardhatRuntimeEnvironment): Promise<void> => {
   const logs: LogBlockNumberRecord[] = [];
 
-  const outputDir = getExchangeDir();
+  const exchangeDir = getExchangeDir();
 
-  checkFilePathSync(outputDir);
+  checkFilePathSync(exchangeDir);
 
   for (let i = 0; i < LENGTH; i++) {
     const blockNumber = await ethers.provider.getBlockNumber();
@@ -39,9 +39,9 @@ const func: DeployFunction = async (_: HardhatRuntimeEnvironment): Promise<void>
     String(blockNumber),
   ]);
 
-  const fileName = `${new Date().getTime()}.txt`;
+  const fileName = `block_number_logs_${new Date().getTime()}.txt`;
 
-  writeFileSync(`${outputDir}/${fileName}`, convertArray2DToContent(formattedData));
+  writeFileSync(`${exchangeDir}/${fileName}`, convertArray2DToContent(formattedData));
 };
 
 func.tags = ['log-block-numbers'];

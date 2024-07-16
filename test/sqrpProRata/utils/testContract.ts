@@ -4,7 +4,7 @@ import { uniqBy } from 'lodash';
 import { Context } from 'mocha';
 import { v4 as uuidv4 } from 'uuid';
 import { bigIntSum, exist } from '~common';
-import { ContractConfig, seedData } from '~seeds';
+import { BaseContractConfig, seedData } from '~seeds';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { addSecondsToUnixTime, signMessageForProRataDeposit } from '~utils';
@@ -79,16 +79,7 @@ export async function depositSig({
     timestampLimit,
   );
 
-  if (!revertDeposit) {
-    await userSQRpProRata.depositSig({
-      baseAmount: baseDeposit,
-      boost,
-      boostExchangeRate,
-      transactionId,
-      timestampLimit,
-      signature,
-    });
-  } else {
+  if (revertDeposit) {
     await expect(
       userSQRpProRata.depositSig({
         baseAmount: baseDeposit,
@@ -99,12 +90,21 @@ export async function depositSig({
         signature,
       }),
     ).revertedWithCustomError(context.owner2SQRpProRata, revertDeposit);
+  } else {
+    await userSQRpProRata.depositSig({
+      baseAmount: baseDeposit,
+      boost,
+      boostExchangeRate,
+      transactionId,
+      timestampLimit,
+      signature,
+    });
   }
 }
 
 export async function testContract(
   context: Context,
-  contractConfig: ContractConfig,
+  contractConfig: BaseContractConfig,
   depositRecords: DepositRecord[],
   caseBehaviour?: CaseBehaviour,
 ) {
@@ -259,6 +259,8 @@ export async function testContract(
     return;
   }
 
+  const { expectedRevertRefundAll: revertRefundAll } = caseBehaviour;
+
   const totalDeposit = bigIntSum(depositRecords, (record) => record.baseDeposit);
 
   const shouldReachedBaseGoal = totalDeposit >= contractConfig.baseGoal;
@@ -280,7 +282,14 @@ export async function testContract(
 
   await owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount);
 
-  await owner2SQRpProRata.refundAll();
+  if (revertRefundAll) {
+    await expect(owner2SQRpProRata.refundAll()).revertedWithCustomError(
+      context.owner2SQRpProRata,
+      revertRefundAll,
+    );
+  } else {
+    await owner2SQRpProRata.refundAll();
+  }
 
   if (shouldReachedBaseGoal) {
     await owner2SQRpProRata.withdrawBaseGoal();
@@ -300,9 +309,9 @@ export async function testContract(
 
   // await getBalances(context, baseDecimals, boostDecimals);
 
-  if (caseBehaviour?.excessBoostAmount) {
+  if (caseBehaviour?.expectedExcessBoostAmount) {
     expect(await ownerSQRpProRata.calculateExcessBoostAmount()).eq(
-      caseBehaviour?.excessBoostAmount,
+      caseBehaviour?.expectedExcessBoostAmount,
     );
   }
 

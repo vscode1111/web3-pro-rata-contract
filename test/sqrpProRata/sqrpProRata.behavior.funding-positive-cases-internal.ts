@@ -1,17 +1,22 @@
 import { toUnixTime, toWei } from '~common';
-import { ContractConfig, contractConfig, now, seedData } from '~seeds';
+import { BaseContractConfigEx, contractConfig, now, seedData } from '~seeds';
 import { toBaseTokenWei, toBoostTokenWei } from '~utils';
-import { checkTotalSQRBalance, loadSQRpProRataFixture, testContract } from './utils';
+import {
+  checkTotalSQRBalance,
+  getBaseContactConfig,
+  loadSQRpProRataFixture,
+  testContract,
+} from './utils';
 
-const caseContractConfig: ContractConfig = {
-  ...contractConfig,
-  baseGoal: toBaseTokenWei(100),
-  startDate: toUnixTime(now.add(30, 'days').toDate()),
-  closeDate: toUnixTime(now.add(32, 'days').toDate()),
-};
+export function shouldBehaveCorrectFundingPositiveCasesInternal(): void {
+  describe('funding: positive cases, internal refund', () => {
+    const caseContractConfig: BaseContractConfigEx = {
+      ...getBaseContactConfig(contractConfig),
+      baseGoal: toBaseTokenWei(100),
+      startDate: toUnixTime(now.add(70, 'days').toDate()),
+      closeDate: toUnixTime(now.add(72, 'days').toDate()),
+    };
 
-export function shouldBehaveCorrectFundingPositiveCases(): void {
-  describe('funding: different positive cases', () => {
     beforeEach(async function () {
       await loadSQRpProRataFixture(this, { contractConfig: caseContractConfig });
       await checkTotalSQRBalance(this);
@@ -40,7 +45,7 @@ export function shouldBehaveCorrectFundingPositiveCases(): void {
           },
         ],
         {
-          excessBoostAmount: toBoostTokenWei(0),
+          expectedExcessBoostAmount: toBoostTokenWei(0),
           userExpectations: {
             user1: {
               baseDeposited: toBaseTokenWei(10),
@@ -521,7 +526,7 @@ export function shouldBehaveCorrectFundingPositiveCases(): void {
           sendTokensToContract: {
             boostAmount: toBoostTokenWei(3456),
           },
-          excessBoostAmount: toBoostTokenWei(2456),
+          expectedExcessBoostAmount: toBoostTokenWei(2456),
           userExpectations: {
             user1: {
               baseAllocation: toBaseTokenWei(0),
@@ -582,7 +587,7 @@ export function shouldBehaveCorrectFundingPositiveCases(): void {
           sendTokensToContract: {
             boostAmount: toBoostTokenWei(3456),
           },
-          excessBoostAmount: toBoostTokenWei(2456),
+          expectedExcessBoostAmount: toBoostTokenWei(2456),
           userExpectations: {
             user1: {
               baseAllocation: toBaseTokenWei(0),

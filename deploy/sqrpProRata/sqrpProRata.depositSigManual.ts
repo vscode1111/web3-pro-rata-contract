@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { toNumberDecimals, toNumberDecimalsFixed } from '~common';
+import { toNumberDecimals } from '~common';
 import {
   callWithTimerHre,
   formatContractDate,
@@ -17,10 +17,12 @@ import {
   toBaseTokenWei,
 } from '~utils';
 import { deployParams } from './deployData';
-import { DepositSigParams, DepositSigParamsForFront } from './types';
+import { DepositSigParams } from './types';
 import { getBaseTokenInfo } from './utils';
 
 const CHECK_REQUIRED = false;
+
+const SIMULATE_FRONT = false;
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
@@ -36,27 +38,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From signature service
     const body = {
-      contractAddress: '0xd4533381d780905D24DAF0f7b8D43e58A74CDD57',
+      contractAddress: '0xcb40d75efe2aa43664773c0620955694096e41d7',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
-      baseAmount: 0.12345678901234567890123,
+      // "account": "0x4Ee463d6e90764A6C34880024305C2810866432D",
+      // "baseAmount": 0.012345678901234567890123,
+      baseAmount: 0.01,
       boost: true,
-      boostExchangeRate: 0.16324984234867387534523,
-      transactionId: '62813e9b-bde7-40bf-adde-4cf3c3d76002+31',
+      boostExchangeRate: 0.117729,
+      transactionId: '5401177e-fb2e-4c5d-9429-19b3b351e163+1',
     };
 
     const response = {
       signature:
-        '0x50538e1470e11991b330b8207c1ff97f31f355a326e7c538087e942f3255c2b4491aef704565f340c7070dc86a7bbc3820adae5df472b0672d3681268b7b9d721b',
-      baseAmountInWei: '123456789012345680',
-      boostExchangeRateInWei: '163249842348673870',
-      nonce: 12,
-      timestampNow: 1720442780,
-      timestampLimit: 1720443080,
-      dateLimit: '2024-07-08T12:56:23.636Z',
+        '0x5c50e352869473e056892b51b2b43641c8f9ac4127c4f3893237f70b4789091e58702d80f83a3d2a02340cf35dbe44a91e80e4108bd142bb02f9e2db1957949e1c',
+      baseAmountInWei: '10000000000000000',
+      boostExchangeRateInWei: '117729000000000000',
+      nonce: 9,
+      timestampNow: 1721047539,
+      timestampLimit: 1721047839,
+      dateLimit: '2024-07-15T12:55:41.697Z',
     };
 
     const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);
-    const params: DepositSigParams = {
+    let params: DepositSigParams = {
       account: body.account,
       baseAmount: toBaseTokenWei(body.baseAmount),
       nonce: Number(nonce),
@@ -119,56 +123,58 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       }
     }
 
-    // const params = {
-    //   account,
-    //   baseAmount: BigInt(response.baseAmountInWei),
-    //   boost: body.boost,
-    //   boostExchangeRate: BigInt(response.boostExchangeRateInWei),
-    //   transactionId: body.transactionId,
-    //   timestampLimit: response.timestampLimit,
-    //   signature: response.signature,
-    // };
+    if (SIMULATE_FRONT) {
+      // const params = {
+      //   account,
+      //   baseAmount: BigInt(response.baseAmountInWei),
+      //   boost: body.boost,
+      //   boostExchangeRate: BigInt(response.boostExchangeRateInWei),
+      //   transactionId: body.transactionId,
+      //   timestampLimit: response.timestampLimit,
+      //   signature: response.signature,
+      // };
 
-    // const paramsFromFront = {
-    //   amount: 1,
-    //   boosted: true,
-    //   amountInWei: '1000000000000000000',
-    //   exchangeRateInWei: '110016000000000000',
-    //   contractAddress: '0xafa705d74e57f0ccfc58945ae245146aee504ccc',
-    //   userId: 'f1da1dbd-d6a4-42a7-8779-ee7919376ac5',
-    //   walletAddress: '0xc109d9a3fc3779db60af4821ae18747c708dfcc6',
-    //   transactionId: '69e935ac-fb79-4d15-b3de-3da39e03d656',
-    //   timeStampLimit: 1720711002,
-    //   signature:
-    //     '0x21be1dbafcd59ca19db3ed5195986240314f725f99f67942ed051b47226d0fbb564b1c0125201f08a74bc54afdc5a11ba8aaadf37fe22543ed5029a0c7ac4b601c',
-    // };
+      const paramsFromFront = {
+        amount: 0.01,
+        boosted: true,
+        amountInWei: '10000000000000000',
+        exchangeRateInWei: '116453000000000000',
+        contractAddress: '0xcb40d75efe2aa43664773c0620955694096e41d7',
+        userId: 'f80f623b-4e53-4769-9fe7-93d0901c7261',
+        walletAddress: '0x4ee463d6e90764a6c34880024305c2810866432d',
+        transactionId: '44a309f5-e972-427d-bbf6-55ba75fffd32',
+        timeStampLimit: 1721045311,
+        signature:
+          '0x2b3cda0274637bac4a5d239fe744f767d9125f005d108a6a313a944f213f802b314a4b4ce202eaae98266d105a3e6f85bfee355ac5b0e85d1a2438aae4ff25db1b',
+      };
 
-    // const params = {
-    //   ...paramsFromFront,
-    //   boost: paramsFromFront.boosted,
-    //   baseAmount: BigInt(paramsFromFront.amountInWei),
-    //   boostExchangeRate: BigInt(paramsFromFront.exchangeRateInWei),
-    //   timestampLimit: paramsFromFront.timeStampLimit,
-    // };
+      params = {
+        ...paramsFromFront,
+        boost: paramsFromFront.boosted,
+        baseAmount: BigInt(paramsFromFront.amountInWei),
+        boostExchangeRate: BigInt(paramsFromFront.exchangeRateInWei),
+        timestampLimit: paramsFromFront.timeStampLimit,
+      } as any;
 
-    const paramsForFront: DepositSigParamsForFront = {
-      ...params,
-      amount: toNumberDecimalsFixed(params.baseAmount, decimals),
-      contractAddress: sqrpProRataAddress,
-      boosted: params.boost,
-      amountInWei: String(params.baseAmount),
-      exchangeRateInWei: String(params.boostExchangeRate),
-      timeStampLimit: params.timestampLimit,
-    };
+      // const paramsForFront: DepositSigParamsForFront = {
+      //   ...params,
+      //   amount: toNumberDecimalsFixed(params.baseAmount, decimals),
+      //   contractAddress: sqrpProRataAddress,
+      //   boosted: params.boost,
+      //   amountInWei: String(params.baseAmount),
+      //   exchangeRateInWei: String(params.boostExchangeRate),
+      //   timeStampLimit: params.timestampLimit,
+      // };
 
-    delete paramsForFront.boost;
-    delete paramsForFront.baseAmount;
-    delete paramsForFront.boostExchangeRate;
-    delete paramsForFront.nonce;
+      // delete paramsForFront.boost;
+      // delete paramsForFront.baseAmount;
+      // delete paramsForFront.boostExchangeRate;
+      // delete paramsForFront.nonce;
 
-    console.log(111, paramsForFront);
+      // console.log(111, paramsForFront);
 
-    return;
+      // return;
+    }
 
     const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} tokens was allowed`);

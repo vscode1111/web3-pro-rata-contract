@@ -9,7 +9,13 @@ import {
 } from '~common-contract';
 import { SQR_P_PRO_RATA_NAME, TX_OVERRIDES } from '~constants';
 import { contractConfig, seedData } from '~seeds';
-import { getAddressesFromHre, getContext, getUsers, signMessageForProRataDeposit } from '~utils';
+import {
+  getAddressesFromHre,
+  getContext,
+  getERC20TokenContext,
+  getUsers,
+  signMessageForProRataDeposit,
+} from '~utils';
 import { deployData, deployParams } from './deployData';
 import { getBaseTokenInfo } from './utils';
 
@@ -17,12 +23,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is depositing...`);
+    const users = await getUsers();
     const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
-    const { depositVerifier, user1Address, user1BaseToken, user1SQRpProRata, sqrpProRataFactory } =
-      context;
+    const { depositVerifier, user1Address, user1SQRpProRata, sqrpProRataFactory } = context;
 
-    const { decimals, tokenName } = await getBaseTokenInfo(await getUsers(), user1SQRpProRata);
+    const { baseToken, decimals, tokenName } = await getBaseTokenInfo(users, user1SQRpProRata);
+    console.log(`base token: ${baseToken}`);
+    const { user1ERC20Token: user1BaseToken } = await getERC20TokenContext(users, baseToken);
 
     const currentAllowance = await user1BaseToken.allowance(user1Address, sqrpProRataAddress);
     console.log(`${toNumberDecimals(currentAllowance, decimals)} token was allowed`);
@@ -57,7 +65,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
         'approve',
       );
       console.log(
-        `${toNumberDecimals(askAllowance, decimals)} SQR was approved to ${sqrpProRataAddress}`,
+        `${toNumberDecimals(askAllowance, decimals)} ${tokenName} was approved to ${sqrpProRataAddress}`,
       );
     }
 

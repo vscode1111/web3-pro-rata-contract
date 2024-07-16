@@ -21,4 +21,7 @@ export const customError = {
   tooLate: 'TooLate',
   unreachedGoal: 'UnreachedGoal',
   allUsersProcessed: 'AllUsersProcessed',
+  notRefunded: 'NotRefunded',
+  notWithdrawBaseGoal: 'NotWithdrawBaseGoal',
+  contractForExternalRefund: 'ContractForExternalRefund',
 };

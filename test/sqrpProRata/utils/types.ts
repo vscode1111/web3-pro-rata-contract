@@ -96,10 +96,11 @@ export interface CaseBehaviour {
     baseAmount?: bigint;
     boostAmount?: bigint;
   };
-  excessBoostAmount?: bigint;
+  expectedExcessBoostAmount?: bigint;
   userExpectations?: Partial<Record<UserType, UserExpectation>>;
   baseBalanceDelta?: bigint;
   boostBalanceDelta?: bigint;
+  expectedRevertRefundAll?: string;
 }
 
 export type UserInfos = Record<UserType, UserInfo>;

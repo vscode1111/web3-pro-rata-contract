@@ -8,7 +8,8 @@ import { shouldBehaveCorrectFundingDifferentDecimalsCase2 } from './sqrpProRata.
 import { shouldBehaveCorrectFundingEqualCase } from './sqrpProRata.behavior.funding-equal-case';
 import { shouldBehaveCorrectFundingLessCase } from './sqrpProRata.behavior.funding-less-case';
 import { shouldBehaveCorrectFundingNegativeCases } from './sqrpProRata.behavior.funding-negative-cases';
-import { shouldBehaveCorrectFundingPositiveCases } from './sqrpProRata.behavior.funding-positive-cases';
+import { shouldBehaveCorrectFundingPositiveCasesExternal } from './sqrpProRata.behavior.funding-positive-cases-external';
+import { shouldBehaveCorrectFundingPositiveCasesInternal } from './sqrpProRata.behavior.funding-positive-cases-internal';
 
 describe(SQR_P_PRO_RATA_NAME, function () {
   before(async function () {
@@ -18,10 +19,11 @@ describe(SQR_P_PRO_RATA_NAME, function () {
   shouldBehaveCorrectDeployment();
   shouldBehaveCorrectFetching();
   shouldBehaveCorrectFundingDefaultCase();
-  shouldBehaveCorrectFundingEqualCase();
-  shouldBehaveCorrectFundingLessCase();
-  shouldBehaveCorrectFundingPositiveCases();
   shouldBehaveCorrectFundingDifferentDecimalsCase1();
   shouldBehaveCorrectFundingDifferentDecimalsCase2();
+  shouldBehaveCorrectFundingEqualCase();
+  shouldBehaveCorrectFundingLessCase();
   shouldBehaveCorrectFundingNegativeCases();
+  shouldBehaveCorrectFundingPositiveCasesExternal();
+  shouldBehaveCorrectFundingPositiveCasesInternal();
 });
