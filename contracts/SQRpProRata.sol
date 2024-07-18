@@ -11,7 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IContractInfo} from "./IContractInfo.sol";
 import {IDepositRefund} from "./IDepositRefund.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract SQRpProRata is
   OwnableUpgradeable,
