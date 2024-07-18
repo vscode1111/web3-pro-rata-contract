@@ -47,6 +47,44 @@ export async function loadSQRpProRataFixture(
   await checkTotalSQRBalance(that);
 }
 
+export async function accountDepositRefundInfoZeroCheck(context: Context) {
+  expect(await context.ownerSQRpProRata.getDepositRefundAllocation(context.user1Address)).eq(
+    seedData.zero,
+  );
+  const {
+    baseDeposited: baseDeposited1,
+    boosted: boosted1,
+    baseAllocation: baseAllocation1,
+    baseRefund: baseRefund1,
+    boostRefund: boostRefund1,
+    nonce: nonce1,
+  } = await context.ownerSQRpProRata.getDepositRefundAccountInfo(context.user1Address);
+  expect(baseDeposited1).eq(seedData.zero);
+  expect(boosted1).eq(false);
+  expect(baseAllocation1).eq(seedData.zero);
+  expect(baseRefund1).eq(seedData.zero);
+  expect(boostRefund1).eq(seedData.zero);
+  expect(nonce1).eq(0);
+
+  expect(await context.ownerSQRpProRata.getDepositRefundAllocation(context.user2Address)).eq(
+    seedData.zero,
+  );
+  const {
+    baseDeposited: baseDeposited2,
+    boosted: boosted2,
+    baseAllocation: baseAllocation2,
+    baseRefund: baseRefund2,
+    boostRefund: boostRefund2,
+    nonce: nonce2,
+  } = await context.ownerSQRpProRata.getDepositRefundAccountInfo(context.user2Address);
+  expect(baseDeposited2).eq(seedData.zero);
+  expect(boosted2).eq(false);
+  expect(baseAllocation2).eq(seedData.zero);
+  expect(baseRefund2).eq(seedData.zero);
+  expect(boostRefund2).eq(seedData.zero);
+  expect(nonce2).eq(0);
+}
+
 export async function contractZeroCheck(context: Context) {
   expect(await getBaseTokenBalance(context, context.owner2Address)).eq(tokenConfig.initMint);
   expect(await getBaseTokenBalance(context, context.user1Address)).eq(seedData.zero);
@@ -69,11 +107,8 @@ export async function contractZeroCheck(context: Context) {
   );
   expect(await context.owner2SQRpProRata.getProcessedAccountIndex()).eq(0);
 
-  expect(await context.ownerSQRpProRata.getAccountDepositAmount(context.user1Address)).eq(
-    seedData.zero,
-  );
-  expect(await context.ownerSQRpProRata.getAccountDepositAmount(context.user2Address)).eq(
-    seedData.zero,
-  );
-  expect(await context.ownerSQRpProRata.getTotalDeposited()).eq(seedData.zero);
+  await accountDepositRefundInfoZeroCheck(context);
+
+  const { totalBaseDeposited } = await context.ownerSQRpProRata.getDepositRefundContractInfo();
+  expect(totalBaseDeposited).eq(seedData.zero);
 }

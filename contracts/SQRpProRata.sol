@@ -8,7 +8,8 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IDepositable} from "./IDepositable.sol";
+import {IContractInfo} from "./IContractInfo.sol";
+import {IDepositRefund} from "./IDepositRefund.sol";
 
 import "hardhat/console.sol";
 
@@ -16,7 +17,8 @@ contract SQRpProRata is
   OwnableUpgradeable,
   UUPSUpgradeable,
   ReentrancyGuardUpgradeable,
-  IDepositable
+  IContractInfo,
+  IDepositRefund
 {
   using SafeERC20 for IERC20;
   using MessageHashUtils for bytes32;
@@ -80,7 +82,7 @@ contract SQRpProRata is
 
   //Variables, structs, errors, modifiers, events------------------------
 
-  string public constant VERSION = "2.5.1";
+  string public constant VERSION = "2.6.1";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
@@ -253,6 +255,30 @@ contract SQRpProRata is
     return totalBaseDeposited >= baseGoal;
   }
 
+  function getContractName() external pure returns (string memory) {
+    return "Pro-rata";
+  }
+
+  function getContractVersion() external pure returns (string memory) {
+    return VERSION;
+  }
+
+  function getBaseGoal() external view returns (uint256) {
+    return baseGoal;
+  }
+
+  function getStartDate() external view returns (uint32) {
+    return startDate;
+  }
+
+  function getCloseDate() external view returns (uint32) {
+    return closeDate;
+  }
+
+  function getDepositRefundFetchReady() external view returns (bool) {
+    return isAfterCloseDate();
+  }
+
   function getAccountCount() public view returns (uint32) {
     return (uint32)(_accountAddresses.length);
   }
@@ -261,20 +287,33 @@ contract SQRpProRata is
     return _accountAddresses[index];
   }
 
-  function getAccountDepositAmount(address account) external view returns (uint256) {
-    if (!isAfterCloseDate() || !isReachedBaseGoal()) {
-      return 0;
-    }
-
-    return _accountItems[account].baseDeposit - calculateAccountBaseRefund(account);
+  function getDepositRefundTokensInfo() external view returns (DepositRefundTokensInfo memory) {
+    return
+      DepositRefundTokensInfo(address(baseToken), baseDecimals, address(boostToken), boostDecimals);
   }
 
-  function getTotalDeposited() external view returns (uint256) {
-    if (isReachedBaseGoal()) {
-      return baseGoal;
-    }
+  function getDepositRefundAllocation(address account) external view returns (uint256) {
+    return calculateAccountBaseAllocation(account);
+  }
 
-    return 0;
+  function getDepositRefundAccountInfo(
+    address account
+  ) external view returns (DepositRefundAccountInfo memory) {
+    AccountItem memory accountItem = _accountItems[account];
+
+    return
+      DepositRefundAccountInfo(
+        accountItem.baseDeposited,
+        accountItem.boosted,
+        calculateAccountBaseAllocation(account),
+        calculateAccountBaseRefund(account),
+        calculateAccountBoostRefund(account),
+        accountItem.nonce
+      );
+  }
+
+  function getDepositRefundContractInfo() external view returns (DepositRefundContractInfo memory) {
+    return DepositRefundContractInfo(totalBaseDeposited);
   }
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {

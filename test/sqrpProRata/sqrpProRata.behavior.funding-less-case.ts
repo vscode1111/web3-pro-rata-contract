@@ -91,12 +91,41 @@ export function shouldBehaveCorrectFundingLessCase(): void {
 
       expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(false);
 
-      expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user1Address)).eq(
+      expect(await this.ownerSQRpProRata.getDepositRefundAllocation(this.user1Address)).eq(
         seedData.zero,
       );
-      expect(await this.ownerSQRpProRata.getAccountDepositAmount(this.user2Address)).eq(
+      const {
+        baseDeposited: baseDeposited1,
+        boosted: boosted1,
+        baseAllocation: baseAllocation1,
+        baseRefund: baseRefund1,
+        boostRefund: boostRefund1,
+        nonce: nonce1,
+      } = await this.ownerSQRpProRata.getDepositRefundAccountInfo(this.user1Address);
+      expect(baseDeposited1).eq(caseSettings.deposit1);
+      expect(boosted1).eq(false);
+      expect(baseAllocation1).eq(seedData.zero);
+      expect(baseRefund1).eq(caseSettings.deposit1);
+      expect(boostRefund1).eq(seedData.zero);
+      expect(nonce1).eq(1);
+
+      expect(await this.ownerSQRpProRata.getDepositRefundAllocation(this.user2Address)).eq(
         seedData.zero,
       );
+      const {
+        baseDeposited: baseDeposited2,
+        boosted: boosted2,
+        baseAllocation: baseAllocation2,
+        baseRefund: baseRefund2,
+        boostRefund: boostRefund2,
+        nonce: nonce2,
+      } = await this.ownerSQRpProRata.getDepositRefundAccountInfo(this.user2Address);
+      expect(baseDeposited2).eq(caseSettings.deposit2);
+      expect(boosted2).eq(false);
+      expect(baseAllocation2).eq(seedData.zero);
+      expect(baseRefund2).eq(caseSettings.deposit2);
+      expect(boostRefund2).eq(seedData.zero);
+      expect(nonce2).eq(1);
 
       await this.owner2SQRpProRata.refundAll();
 

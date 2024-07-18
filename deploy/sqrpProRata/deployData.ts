@@ -4,7 +4,7 @@ import { toBaseTokenWei } from '~utils';
 export const verifyRequired = false;
 export const verifyArgsRequired = false;
 
-const isTiny = true;
+const isTiny = false;
 
 export const deployData = {
   now: toUnixTime(),
@@ -18,7 +18,3 @@ export const deployParams = {
   attempts: 1,
   delay: 0,
 };
-
-// export function getDeployParams(contractFactory?: ContractFactory) {
-//   return [TX_ATTEMPT, 0, contractFactory];
-// }
