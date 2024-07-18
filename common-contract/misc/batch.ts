@@ -4,8 +4,8 @@ import { Promisable } from '~common';
 export async function runConcurrently(
   fn: (taskId: number) => Promisable<void>,
   taskCount: number,
-  concurrencyCount: number,
-  printStep: number,
+  concurrencyCount = 10,
+  printStep = 100,
 ) {
   const tasks = Array(taskCount)
     .fill(null)
