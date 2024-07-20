@@ -2,8 +2,8 @@ import { TransactionRequest } from 'ethers';
 import { TokenDescription } from '~types';
 import { BASE_DECIMALS, BOOST_DECIMALS } from './numbers';
 
-export const VERSION = '2.6.1';
 export const CONTRACT_NAME = 'Pro-rata';
+export const CONTRACT_VERSION = '2.6.1';
 
 export const TX_OVERRIDES: TransactionRequest = {
   // gasPrice: 3_000_000_000,

@@ -81,8 +81,6 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
-
-  string public constant VERSION = "2.6.1";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   IERC20 public baseToken;
@@ -106,8 +104,10 @@ contract SQRpProRata is
   uint256 public totalBoostSwapped;
 
   mapping(address account => AccountItem accountItem) private _accountItems;
-  mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
   address[] private _accountAddresses;
+
+  mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
+
   uint32 private _processedAccountIndex;
 
   struct ContractParams {
@@ -238,31 +238,16 @@ contract SQRpProRata is
   event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostDeposit);
 
   //Read methods-------------------------------------------
-
-  function isBeforeStartDate() public view returns (bool) {
-    return startDate > 0 && block.timestamp < startDate;
-  }
-
-  function isAfterCloseDate() public view returns (bool) {
-    return block.timestamp > closeDate;
-  }
-
-  function isDepositReady() public view returns (bool) {
-    return !isBeforeStartDate() && !isAfterCloseDate();
-  }
-
-  function isReachedBaseGoal() public view returns (bool) {
-    return totalBaseDeposited >= baseGoal;
-  }
-
+  //IContractInfo implementation
   function getContractName() external pure returns (string memory) {
     return "Pro-rata";
   }
 
   function getContractVersion() external pure returns (string memory) {
-    return VERSION;
+    return "2.6.1";
   }
 
+  //IDepositRefund implementation
   function getBaseGoal() external view returns (uint256) {
     return baseGoal;
   }
@@ -314,6 +299,23 @@ contract SQRpProRata is
 
   function getDepositRefundContractInfo() external view returns (DepositRefundContractInfo memory) {
     return DepositRefundContractInfo(totalBaseDeposited);
+  }
+
+  //Custom
+  function isBeforeStartDate() public view returns (bool) {
+    return startDate > 0 && block.timestamp < startDate;
+  }
+
+  function isAfterCloseDate() public view returns (bool) {
+    return block.timestamp > closeDate;
+  }
+
+  function isDepositReady() public view returns (bool) {
+    return !isBeforeStartDate() && !isAfterCloseDate();
+  }
+
+  function isReachedBaseGoal() public view returns (bool) {
+    return totalBaseDeposited >= baseGoal;
   }
 
   function fetchAccountInfo(address account) external view returns (AccountInfo memory) {
