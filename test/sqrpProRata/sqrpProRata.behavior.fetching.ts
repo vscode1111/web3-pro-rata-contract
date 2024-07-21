@@ -1,6 +1,6 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { BASE_DECIMALS, BOOST_DECIMALS, CONTRACT_NAME, CONTRACT_VERSION } from '~constants';
+import { CONTRACT_NAME, CONTRACT_VERSION } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import { addSecondsToUnixTime } from '~utils';
 import {
@@ -39,12 +39,9 @@ export function shouldBehaveCorrectFetching(): void {
 
       expect(await this.ownerSQRpProRata.calculateRemainDeposit()).eq(contractConfig.baseGoal);
 
-      const { baseToken, baseDecimals, boostToken, boostDecimals } =
-        await this.ownerSQRpProRata.getDepositRefundTokensInfo();
+      const { baseToken, boostToken } = await this.ownerSQRpProRata.getDepositRefundTokensInfo();
       expect(baseToken).eq(await this.ownerSQRpProRata.baseToken());
-      expect(baseDecimals).eq(BASE_DECIMALS);
       expect(boostToken).eq(await this.ownerSQRpProRata.boostToken());
-      expect(boostDecimals).eq(BOOST_DECIMALS);
 
       await accountDepositRefundInfoZeroCheck(this);
 

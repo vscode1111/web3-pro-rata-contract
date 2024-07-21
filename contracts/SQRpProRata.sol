@@ -273,8 +273,7 @@ contract SQRpProRata is
   }
 
   function getDepositRefundTokensInfo() external view returns (DepositRefundTokensInfo memory) {
-    return
-      DepositRefundTokensInfo(address(baseToken), baseDecimals, address(boostToken), boostDecimals);
+    return DepositRefundTokensInfo(address(baseToken), address(boostToken));
   }
 
   function getDepositRefundAllocation(address account) external view returns (uint256) {
