@@ -236,6 +236,7 @@ contract SQRpProRata is
   event WithdrawBaseGoal(address indexed account, uint256 baseAmount);
   event WithdrawSwappedAmount(address indexed account, uint256 baseAmount);
   event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostDeposit);
+  event ForceWithdraw(address indexed token, address indexed to, uint256 amount);
 
   //Read methods-------------------------------------------
   //IContractInfo implementation
@@ -244,7 +245,7 @@ contract SQRpProRata is
   }
 
   function getContractVersion() external pure returns (string memory) {
-    return "2.6.1";
+    return "2.6.2";
   }
 
   //IDepositRefund implementation
@@ -747,5 +748,11 @@ contract SQRpProRata is
     }
 
     emit WithdrawExcessTokens(to, baseBalance, boostBalance);
+  }
+
+  function forceWithdraw(address token, address to, uint256 amount) external onlyOwner {
+    IERC20 _token = IERC20(token);
+    _token.safeTransfer(to, amount);
+    emit ForceWithdraw(token, to, amount);
   }
 }

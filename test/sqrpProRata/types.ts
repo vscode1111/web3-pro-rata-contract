@@ -1,5 +1,6 @@
 import {
   DepositEvent,
+  ForceWithdrawEvent,
   RefundEvent,
   WithdrawBaseGoalEvent,
 } from '~typechain-types/contracts/SQRpProRata';
@@ -22,3 +23,5 @@ export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, boolean, 
 export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, boolean, number, number]>;
 
 export type WithdrawBaseGoalEventArgs = WithdrawBaseGoalEvent.Event & EventArgs<[string, number]>;
+
+export type ForceWithdrawEventArgs = ForceWithdrawEvent.Event & EventArgs<[string, string, number]>;

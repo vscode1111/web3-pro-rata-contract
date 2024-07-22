@@ -5,7 +5,12 @@ import { waitTx } from '~common-contract';
 import { contractConfig, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDeposit } from '~utils';
 import { customError } from './testData';
-import { DepositEventArgs, RefundEventArgs, WithdrawBaseGoalEventArgs } from './types';
+import {
+  DepositEventArgs,
+  ForceWithdrawEventArgs,
+  RefundEventArgs,
+  WithdrawBaseGoalEventArgs,
+} from './types';
 import {
   checkTotalSQRBalance,
   contractZeroCheck,
@@ -134,6 +139,20 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
         expect(await this.user1SQRpProRata.getAccountDepositNonce(this.user1Address)).eq(0);
         expect(await this.user2SQRpProRata.getAccountDepositNonce(this.user2Address)).eq(0);
         expect(await this.owner2SQRpProRata.calculateRemainDeposit()).eq(contractConfig.baseGoal);
+      });
+
+      it('user1 tries to call forceWithdraw without permission', async function () {
+        const contractAmount = await this.user1SQRpProRata.getBaseBalance();
+
+        await expect(
+          this.user1SQRpProRata.forceWithdraw(
+            this.baseTokenAddress,
+            this.user3Address,
+            contractAmount,
+          ),
+        )
+          .revertedWithCustomError(this.user1SQRpProRata, customError.ownableUnauthorizedAccount)
+          .withArgs(this.user1Address);
       });
 
       it('user1 tries to call depositSig with zero amount', async function () {
@@ -537,6 +556,44 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               await this.ownerSQRpProRata.getDepositRefundContractInfo();
             expect(totalBaseDeposited).eq(await this.ownerSQRpProRata.totalBaseDeposited());
             expect(await this.ownerSQRpProRata.isReachedBaseGoal()).eq(true);
+          });
+
+          it('owner2 call forceWithdraw (check event)', async function () {
+            expect(await getBaseTokenBalance(this, this.user3Address)).eq(seedData.zero);
+
+            const contractAmount = await this.owner2SQRpProRata.getBaseBalance();
+
+            const receipt = await waitTx(
+              this.owner2SQRpProRata.forceWithdraw(
+                this.baseTokenAddress,
+                this.user3Address,
+                contractAmount,
+              ),
+            );
+            const eventLog = findEvent<ForceWithdrawEventArgs>(receipt);
+
+            expect(eventLog).not.undefined;
+            const [token, to, amount] = eventLog?.args;
+            expect(token).eq(this.baseTokenAddress);
+            expect(to).eq(this.user3Address);
+            expect(amount).closeTo(contractAmount, seedData.baseBalanceDelta);
+
+            expect(await getBaseTokenBalance(this, this.user1Address)).eq(
+              seedData.userInitBalance - seedData.deposit1,
+            );
+            expect(await getBaseTokenBalance(this, this.user2Address)).eq(seedData.userInitBalance);
+            expect(await getBaseTokenBalance(this, this.user3Address)).eq(contractAmount);
+
+            expect(await this.owner2SQRpProRata.balanceOf(this.user1Address)).eql([
+              seedData.deposit1,
+              seedData.zero,
+            ]);
+            expect(await this.owner2SQRpProRata.balanceOf(this.user2Address)).eql([
+              seedData.zero,
+              seedData.zero,
+            ]);
+
+            expect(await this.owner2SQRpProRata.totalBaseDeposited()).eq(seedData.deposit1);
           });
 
           describe(`set time after close date when goal wasn't reached`, () => {
