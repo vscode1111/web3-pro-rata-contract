@@ -20,7 +20,7 @@ import { deployParams } from './deployData';
 import { DepositSigParams } from './types';
 import { getBaseTokenInfo } from './utils';
 
-const CHECK_REQUIRED = false;
+const CHECK_REQUIRED = true;
 
 const SIMULATE_FRONT = false;
 
@@ -38,25 +38,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From signature service
     const body = {
-      contractAddress: '0xcb40d75efe2aa43664773c0620955694096e41d7',
+      contractAddress: '0x741046cC8f0F680e716d99D1206DCF170FE9B5C2',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
       // "account": "0x4Ee463d6e90764A6C34880024305C2810866432D",
       // "baseAmount": 0.012345678901234567890123,
-      baseAmount: 0.01,
-      boost: true,
+      baseAmount: 0.01323423423423423423423423423,
+      boost: false,
       boostExchangeRate: 0.117729,
-      transactionId: '5401177e-fb2e-4c5d-9429-19b3b351e163+1',
+      transactionId: '5401177e-fb2e-4c5d-9429-19b3b351e163+2',
     };
 
     const response = {
       signature:
-        '0x5c50e352869473e056892b51b2b43641c8f9ac4127c4f3893237f70b4789091e58702d80f83a3d2a02340cf35dbe44a91e80e4108bd142bb02f9e2db1957949e1c',
-      baseAmountInWei: '10000000000000000',
+        '0x1bf5b0933f447f8a1cc16882599b6a92d70c969a6f3920e31faf52979110ec086ddfcdcfa6dc0a32843f2707dfcd46d8af132865fd255e120bb3e6a9ad9a4a2d1c',
+      baseAmountInWei: '13234234234234234',
       boostExchangeRateInWei: '117729000000000000',
-      nonce: 9,
-      timestampNow: 1721047539,
-      timestampLimit: 1721047839,
-      dateLimit: '2024-07-15T12:55:41.697Z',
+      nonce: 3,
+      timestampNow: 1721642808,
+      timestampLimit: 1721643108,
+      dateLimit: '2024-07-22T10:16:52.422Z',
     };
 
     const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);
@@ -87,6 +87,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     //Checks
 
     if (CHECK_REQUIRED) {
+      if (body.contractAddress.toLowerCase() !== sqrpProRataAddress.toLowerCase()) {
+        console.error(`Contract address is not correct`);
+        return;
+      }
+
       if (body.account.toLowerCase() !== user1Address.toLowerCase()) {
         console.error(`Account is not correct`);
         return;

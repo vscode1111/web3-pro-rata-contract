@@ -28,7 +28,8 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0xcb40d75efe2aa43664773c0620955694096e41d7', //Main - Fedor
     // bsc: '0x7136747eFBCb59117cB0785efA04D874755B4aD7', //Main - 10K USDT - external refund
     // bsc: '0xD3E849e143842E047495173B5190C581F005891D', //Main - 10K USDT - external refund
-    bsc: '0x9173f867D118257A54A28662884c4C6693F8be85', //Main - 10K USDT - external refund
+    // bsc: '0x9173f867D118257A54A28662884c4C6693F8be85', //Main - 10K USDT - external refund
+    bsc: '0x741046cC8f0F680e716d99D1206DCF170FE9B5C2', //Main - 10K USDT - external refund
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '', //Stage
     //-------------------------------------------------------------------------------------------------------------

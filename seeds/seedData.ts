@@ -54,7 +54,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: 0,
     // closeDate: 0,
     // closeDate: toUnixTimeUtc(new Date(2025, 6, 8, 8, 40, 0)),
-    closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
+    // closeDate: toUnixTime(now.add(5, 'minutes').toDate()),
+    closeDate: toUnixTime(now.add(5, 'days').toDate()),
   },
   stage: {
     newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
