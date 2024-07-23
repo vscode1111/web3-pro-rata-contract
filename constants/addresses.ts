@@ -29,7 +29,11 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0x7136747eFBCb59117cB0785efA04D874755B4aD7', //Main - 10K USDT - external refund
     // bsc: '0xD3E849e143842E047495173B5190C581F005891D', //Main - 10K USDT - external refund
     // bsc: '0x9173f867D118257A54A28662884c4C6693F8be85', //Main - 10K USDT - external refund
-    bsc: '0x741046cC8f0F680e716d99D1206DCF170FE9B5C2', //Main - 10K USDT - external refund
+    // bsc: '0x741046cC8f0F680e716d99D1206DCF170FE9B5C2', //Main - 10K USDT - external refund
+    // bsc: '0xe103aD53758A14026953806b7A19a88BBb3310A8', //Main - 10K USDT - external refund
+    // bsc: '0x9fE6E5093F76b891e5C2dEd5DEB01CB77EF602b7', //Main - 10K USDT - external refund
+    // bsc: '0xe436ae2f598219F739e15312B3fADfb473B091dF', //Main - 10K USDT - external refund
+    bsc: '0x023F33734716d8E9AAB67d49877a019e4a31FEb8', //Main - 10K USDT - external refund
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '', //Stage
     //-------------------------------------------------------------------------------------------------------------

@@ -38,16 +38,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       baseGoal: formatContractToken(await ownerSQRpProRata.baseGoal(), baseDecimals, baseTokenName),
       startDate: formatContractDate(await ownerSQRpProRata.startDate()),
       closeDate: formatContractDate(await ownerSQRpProRata.closeDate()),
+      externalRefund: await ownerSQRpProRata.externalRefund(),
       baseBalance: formatContractToken(
         await ownerSQRpProRata.getBaseBalance(),
         baseDecimals,
         baseTokenName,
       ),
       requiredBoostAmount: formatContractToken(
-        await ownerSQRpProRata.calculatedRequiredBoostAmount(),
+        await ownerSQRpProRata.calculateRequiredBoostAmount(),
         boostDecimals,
         boostTokenName,
       ),
+      isReachedBaseGoal: await ownerSQRpProRata.isReachedBaseGoal(),
+      isDepositReady: await ownerSQRpProRata.isDepositReady(),
+      getDepositRefundFetchReady: await ownerSQRpProRata.getDepositRefundFetchReady(),
     };
 
     console.table(result);

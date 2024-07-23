@@ -10,6 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IContractInfo} from "./IContractInfo.sol";
 import {IDepositRefund} from "./IDepositRefund.sol";
+import {UsefulMath} from "./UsefulMath.sol";
 
 // import "hardhat/console.sol";
 
@@ -102,13 +103,16 @@ contract SQRpProRata is
   uint256 public totalBoostWithdrew;
   uint256 public totalBoostRefunded;
   uint256 public totalBoostSwapped;
+  uint256 public totalBaseSwappedAmount;
 
   mapping(address account => AccountItem accountItem) private _accountItems;
   address[] private _accountAddresses;
 
   mapping(bytes32 hash => TransactionItem transactionItem) private _transactionIds;
 
-  uint32 private _processedAccountIndex;
+  uint32 private _processedRefundIndex;
+  uint32 private _processedBaseSwappedIndex;
+  bool private _isWithdrewBaseSwappedAmount;
 
   struct ContractParams {
     address newOwner;
@@ -184,10 +188,15 @@ contract SQRpProRata is
   error TooEarly();
   error TooLate();
   error UnreachedGoal();
-  error AllUsersProcessed();
+  error AllUsersProcessedRefund();
+  error AllUsersProcessedBaseSwapped();
+  error NotAllUsersProcessedBaseSwapped();
   error NotRefunded();
   error NotWithdrawBaseGoal();
   error ContractForExternalRefund();
+  error ContractHasNoEnoughBaseTokensForRefund();
+  error ContractHasNoEnoughBoostTokensForRefund();
+  error WithdrewBaseSwappedAmount();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
     if (block.timestamp > timestampLimit) {
@@ -235,8 +244,9 @@ contract SQRpProRata is
   );
   event WithdrawBaseGoal(address indexed account, uint256 baseAmount);
   event WithdrawSwappedAmount(address indexed account, uint256 baseAmount);
-  event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostDeposit);
+  event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostAmount);
   event ForceWithdraw(address indexed token, address indexed to, uint256 amount);
+  event CalculateBaseSwappedAmount(uint32 batchSize, uint32 endIndex);
 
   //Read methods-------------------------------------------
   //IContractInfo implementation
@@ -245,7 +255,7 @@ contract SQRpProRata is
   }
 
   function getContractVersion() external pure returns (string memory) {
-    return "2.6.2";
+    return "2.8.0";
   }
 
   //IDepositRefund implementation
@@ -383,10 +393,6 @@ contract SQRpProRata is
     return 0;
   }
 
-  function divisionRoundUp(uint256 x, uint256 y) private pure returns (uint256) {
-    return x / y + (x % y == 0 ? 0 : 1);
-  }
-
   function calculateAccountBaseAllocation(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (isReachedBaseGoal()) {
@@ -395,13 +401,14 @@ contract SQRpProRata is
           return accountItem.baseDeposited;
         } else {
           return
-            divisionRoundUp(
+            UsefulMath.divisionRoundUp(
               ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
               totalBaseNonBoostDeposited
             );
         }
       } else if (accountItem.boosted) {
-        return divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
+        return
+          UsefulMath.divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
       }
     }
     return 0;
@@ -457,11 +464,15 @@ contract SQRpProRata is
     return (transactionIdHash, _transactionIds[transactionIdHash]);
   }
 
-  function getProcessedAccountIndex() external view returns (uint32) {
-    return _processedAccountIndex;
+  function getProcessedRefundIndex() external view returns (uint32) {
+    return _processedRefundIndex;
   }
 
-  function calculatedTotalBoostRefundAmount() public view returns (uint256) {
+  function getProcessedBaseSwappedIndex() external view returns (uint32) {
+    return _processedBaseSwappedIndex;
+  }
+
+  function calculateTotalBoostRefundAmount() public view returns (uint256) {
     uint256 total = 0;
     uint32 accountCount = getAccountCount();
     for (uint32 i = 0; i < accountCount; i++) {
@@ -471,9 +482,9 @@ contract SQRpProRata is
     return total;
   }
 
-  function calculatedRequiredBoostAmount() external view returns (uint256) {
+  function calculateRequiredBoostAmount() external view returns (uint256) {
     uint256 contractBoostBalance = getBoostBalance();
-    uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
+    uint256 totalBoostRefundAmount = calculateTotalBoostRefundAmount();
     if (totalBoostRefundAmount > contractBoostBalance) {
       return totalBoostRefundAmount - contractBoostBalance;
     }
@@ -482,24 +493,11 @@ contract SQRpProRata is
 
   function calculateExcessBoostAmount() external view returns (uint256) {
     uint256 contractBoostBalance = getBoostBalance();
-    uint256 totalBoostRefundAmount = calculatedTotalBoostRefundAmount();
+    uint256 totalBoostRefundAmount = calculateTotalBoostRefundAmount();
     if (contractBoostBalance > totalBoostRefundAmount) {
       return contractBoostBalance - totalBoostRefundAmount;
     }
     return 0;
-  }
-
-  function calculatedBaseSwappedAmount() public view returns (uint256) {
-    uint256 total = 0;
-    uint32 accountCount = getAccountCount();
-    for (uint32 i = 0; i < accountCount; i++) {
-      address account = getAccountByIndex(i);
-      AccountItem memory accountItem = _accountItems[account];
-      if (accountItem.boosted) {
-        total += accountItem.baseDeposited - calculateAccountBaseAllocation(account);
-      }
-    }
-    return total;
   }
 
   function calculateDecimalsFactors(
@@ -513,9 +511,12 @@ contract SQRpProRata is
     }
   }
 
-  function calculateRemainProcessedAccountAmount() public view returns (uint256) {
-    uint32 accountCount = getAccountCount();
-    return accountCount - _processedAccountIndex;
+  function calculateRemainProcessedRefundIndex() public view returns (uint256) {
+    return getAccountCount() - _processedRefundIndex;
+  }
+
+  function calculateRemainProcessedBaseSwappedIndex() public view returns (uint256) {
+    return getAccountCount() - _processedBaseSwappedIndex;
   }
 
   //Write methods-------------------------------------------
@@ -664,21 +665,24 @@ contract SQRpProRata is
     }
 
     uint32 accountCount = getAccountCount();
-    if (_batchSize > accountCount - _processedAccountIndex) {
-      _batchSize = accountCount - _processedAccountIndex;
+    if (_batchSize > accountCount - _processedRefundIndex) {
+      _batchSize = accountCount - _processedRefundIndex;
     }
 
     if (_batchSize == 0) {
-      revert AllUsersProcessed();
+      revert AllUsersProcessedRefund();
     }
 
-    uint32 endIndex = _processedAccountIndex + _batchSize;
-    for (uint32 i = _processedAccountIndex; i < endIndex; i++) {
+    uint32 endIndex = _processedRefundIndex + _batchSize;
+    for (uint32 i = _processedRefundIndex; i < endIndex; i++) {
       address account = getAccountByIndex(i);
       uint256 boostAverageExchangeRate = calculateAccountBoostAverageExchangeRate(account);
 
       uint256 baseRefund = calculateAccountBaseRefund(account);
       if (baseRefund > 0) {
+        if (getBaseBalance() < baseRefund) {
+          revert ContractHasNoEnoughBaseTokensForRefund();
+        }
         AccountItem storage accountItem = _accountItems[account];
         accountItem.baseRefunded = baseRefund;
         baseToken.safeTransfer(account, baseRefund);
@@ -688,6 +692,9 @@ contract SQRpProRata is
 
       uint256 boostRefund = calculateAccountBoostRefund(account);
       if (boostRefund > 0) {
+        if (getBoostBalance() < boostRefund) {
+          revert ContractHasNoEnoughBoostTokensForRefund();
+        }
         AccountItem storage accountItem = _accountItems[account];
         accountItem.boostRefunded = boostRefund;
         boostToken.safeTransfer(account, boostRefund);
@@ -695,7 +702,7 @@ contract SQRpProRata is
         emit Refund(account, accountItem.boosted, 0, boostRefund, boostAverageExchangeRate);
       }
     }
-    _processedAccountIndex = endIndex;
+    _processedRefundIndex = endIndex;
   }
 
   function refundAll() external {
@@ -713,18 +720,55 @@ contract SQRpProRata is
     emit WithdrawBaseGoal(to, baseGoal);
   }
 
-  function withdrawBaseSwappedAmount() external nonReentrant onlyOwner afterCloseDate {
-    uint256 baseSwappedAmount = calculatedBaseSwappedAmount();
+  function calculateBaseSwappedAmount(uint32 _batchSize) public onlyOwner afterCloseDate {
+    uint32 accountCount = getAccountCount();
+    if (_batchSize > accountCount - _processedBaseSwappedIndex) {
+      _batchSize = accountCount - _processedBaseSwappedIndex;
+    }
+
+    if (_batchSize == 0) {
+      revert AllUsersProcessedBaseSwapped();
+    }
+
+    uint32 endIndex = _processedBaseSwappedIndex + _batchSize;
+    for (uint32 i = _processedBaseSwappedIndex; i < endIndex; i++) {
+      address account = getAccountByIndex(i);
+      AccountItem memory accountItem = _accountItems[account];
+      if (accountItem.boosted) {
+        totalBaseSwappedAmount +=
+          accountItem.baseDeposited -
+          calculateAccountBaseAllocation(account);
+      }
+    }
+    _processedBaseSwappedIndex = endIndex;
+
+    emit CalculateBaseSwappedAmount(_batchSize, endIndex);
+  }
+
+  function calculateBaseSwappedAmountAll() public {
+    calculateBaseSwappedAmount(getAccountCount());
+  }
+
+  function withdrawBaseSwappedAmount() public nonReentrant onlyOwner afterCloseDate {
+    if (_isWithdrewBaseSwappedAmount) {
+      revert WithdrewBaseSwappedAmount();
+    }
+
+    if (calculateRemainProcessedBaseSwappedIndex() > 0) {
+      revert NotAllUsersProcessedBaseSwapped();
+    }
+
+    _isWithdrewBaseSwappedAmount = true;
 
     address to = owner();
-    baseToken.safeTransfer(to, baseSwappedAmount);
-    totalBaseWithdrew += baseSwappedAmount;
-    emit WithdrawSwappedAmount(to, baseSwappedAmount);
+    baseToken.safeTransfer(to, totalBaseSwappedAmount);
+    totalBaseWithdrew += totalBaseSwappedAmount;
+    emit WithdrawSwappedAmount(to, totalBaseSwappedAmount);
   }
 
   function withdrawExcessTokens() external nonReentrant onlyOwner afterCloseDate {
     if (!externalRefund) {
-      if (calculateRemainProcessedAccountAmount() > 0) {
+      if (calculateRemainProcessedRefundIndex() > 0) {
         revert NotRefunded();
       }
 

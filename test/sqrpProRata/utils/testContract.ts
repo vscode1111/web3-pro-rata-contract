@@ -111,6 +111,7 @@ export async function testContract(
   console.log('----------------------------------------------------------------------------------');
 
   const {
+    owner2Address,
     owner2SQRpProRata,
     owner2BaseToken,
     owner2BoostToken,
@@ -259,7 +260,12 @@ export async function testContract(
     return;
   }
 
-  const { expectedRevertRefundAll: revertRefundAll } = caseBehaviour;
+  const {
+    expectedRevertRefundAll,
+    expectedRevertWithdrawBaseSwappedAmount,
+    expectedRevertWithdrawExcessTokens,
+    requiredBoostAmount,
+  } = caseBehaviour;
 
   const totalDeposit = bigIntSum(depositRecords, (record) => record.baseDeposit);
 
@@ -277,15 +283,45 @@ export async function testContract(
 
   expect(await ownerSQRpProRata.isReachedBaseGoal()).eq(shouldReachedBaseGoal);
 
-  const requiredBoostAmount = await ownerSQRpProRata.calculatedRequiredBoostAmount();
-  const baseSwappedAmount = await ownerSQRpProRata.calculatedBaseSwappedAmount();
+  const totalBaseSwappedAmount = await ownerSQRpProRata.totalBaseSwappedAmount();
 
-  await owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount);
+  const finalRequiredBoostAmount =
+    requiredBoostAmount ?? (await ownerSQRpProRata.calculateRequiredBoostAmount());
 
-  if (revertRefundAll) {
+  if (finalRequiredBoostAmount > seedData.zero) {
+    await owner2BoostToken.transfer(sqrpProRataAddress, finalRequiredBoostAmount);
+  }
+
+  // await getBalances(context, baseDecimals, boostDecimals);
+
+  if (caseBehaviour?.sendTokensToContract) {
+    const { baseAmount, boostAmount } = caseBehaviour.sendTokensToContract;
+    if (baseAmount) {
+      await owner2BaseToken.transfer(sqrpProRataAddress, baseAmount);
+    }
+    if (boostAmount) {
+      await owner2BoostToken.transfer(sqrpProRataAddress, boostAmount);
+    }
+  }
+
+  if (caseBehaviour?.withdrawTokensFromContract) {
+    const { baseAmount, boostAmount } = caseBehaviour.withdrawTokensFromContract;
+    if (baseAmount) {
+      const baseToken = await owner2SQRpProRata.baseToken();
+      await owner2SQRpProRata.forceWithdraw(baseToken, owner2Address, baseAmount);
+    }
+    if (boostAmount) {
+      const boostToken = await owner2SQRpProRata.boostToken();
+      await owner2SQRpProRata.forceWithdraw(boostToken, owner2Address, boostAmount);
+    }
+  }
+
+  // await getBalances(context, baseDecimals, boostDecimals);
+
+  if (expectedRevertRefundAll) {
     await expect(owner2SQRpProRata.refundAll()).revertedWithCustomError(
       context.owner2SQRpProRata,
-      revertRefundAll,
+      expectedRevertRefundAll,
     );
   } else {
     await owner2SQRpProRata.refundAll();
@@ -295,20 +331,6 @@ export async function testContract(
     await owner2SQRpProRata.withdrawBaseGoal();
   }
 
-  // await getBalances(context, baseDecimals, boostDecimals);
-
-  if (caseBehaviour?.sendTokensToContract) {
-    const { baseAmount, boostAmount } = caseBehaviour?.sendTokensToContract;
-    if (baseAmount) {
-      await owner2BaseToken.transfer(sqrpProRataAddress, baseAmount);
-    }
-    if (boostAmount) {
-      await owner2BoostToken.transfer(sqrpProRataAddress, boostAmount);
-    }
-  }
-
-  // await getBalances(context, baseDecimals, boostDecimals);
-
   if (caseBehaviour?.expectedExcessBoostAmount) {
     expect(await ownerSQRpProRata.calculateExcessBoostAmount()).eq(
       caseBehaviour?.expectedExcessBoostAmount,
@@ -316,9 +338,24 @@ export async function testContract(
   }
 
   if (caseBehaviour?.invokeWithdrawBaseSwappedAmount) {
-    await owner2SQRpProRata.withdrawBaseSwappedAmount();
+    if (expectedRevertWithdrawBaseSwappedAmount) {
+      await expect(owner2SQRpProRata.withdrawBaseSwappedAmount()).revertedWithCustomError(
+        context.owner2SQRpProRata,
+        expectedRevertWithdrawBaseSwappedAmount,
+      );
+    } else {
+      await owner2SQRpProRata.calculateBaseSwappedAmountAll();
+      await owner2SQRpProRata.withdrawBaseSwappedAmount();
+    }
   } else {
-    await owner2SQRpProRata.withdrawExcessTokens();
+    if (expectedRevertWithdrawExcessTokens) {
+      await expect(owner2SQRpProRata.withdrawExcessTokens()).revertedWithCustomError(
+        context.owner2SQRpProRata,
+        expectedRevertWithdrawExcessTokens,
+      );
+    } else {
+      await owner2SQRpProRata.withdrawExcessTokens();
+    }
   }
 
   const accountInfoResults: AccountInfoResult[] = [];
@@ -381,8 +418,8 @@ export async function testContract(
     totalDeposited: await owner2SQRpProRata.totalBaseDeposited(),
     totalBaseNonBoostDeposited: await owner2SQRpProRata.totalBaseNonBoostDeposited(),
     totalBaseBoostDeposited: await owner2SQRpProRata.totalBaseBoostDeposited(),
-    baseSwappedAmount,
-    requiredBoostAmount,
+    totalBaseSwappedAmount,
+    requiredBoostAmount: finalRequiredBoostAmount,
     baseDecimals,
     boostDecimals,
   });

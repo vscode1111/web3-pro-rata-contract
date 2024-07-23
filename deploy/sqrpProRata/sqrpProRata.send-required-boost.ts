@@ -14,7 +14,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const { owner2SQRpProRata, sqrpProRataFactory, owner2BoostToken } = context;
 
-    const requiredBoostAmount = await owner2SQRpProRata.calculatedRequiredBoostAmount();
+    const requiredBoostAmount = await owner2SQRpProRata.calculateRequiredBoostAmount();
 
     const [boostDecimals, boostTokenName] = await Promise.all([
       owner2BoostToken.decimals(),

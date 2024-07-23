@@ -1,7 +1,7 @@
 {
   "name": "sqr-p-pro-rata-contract",
   "description": "Solidity smart contracts for SQRp Pro-rata functionality",
-  "version": "0.0.44",
+  "version": "0.0.45",
   "scripts": {
     "clean": "shx rm -rf ./dist ./artifacts ./cache ./coverage ./typechain-types ./coverage.json && yarn typechain",
     "commit": "git-cz",
@@ -22,9 +22,13 @@
     "deploy:base-deposit-sig2": "hardhat deploy --tags SQRpProRata:base-deposit-sig2",
     "deploy:boost-deposit-sig2": "hardhat deploy --tags SQRpProRata:boost-deposit-sig2",
     "deploy:send-required-boost": "hardhat deploy --tags SQRpProRata:send-required-boost",
+    "deploy:refund": "hardhat deploy --tags SQRpProRata:refund",
     "deploy:refund-all": "hardhat deploy --tags SQRpProRata:refund-all",
+    "deploy:calculate-base-swapped-amount": "hardhat deploy --tags SQRpProRata:calculate-base-swapped-amount",
+    "deploy:calculate-base-swapped-amount-all": "hardhat deploy --tags SQRpProRata:calculate-base-swapped-amount-all",
     "deploy:withdraw-base-goal": "hardhat deploy --tags SQRpProRata:withdraw-base-goal",
     "deploy:withdraw-excess-tokens": "hardhat deploy --tags SQRpProRata:withdraw-excess-tokens",
+    "deploy:withdraw-base-swapped-amount": "hardhat deploy --tags SQRpProRata:withdraw-base-swapped-amount",
     "deploy:force-withdraw": "hardhat deploy --tags SQRpProRata:force-withdraw",
     "deploy:publish-abi": "hardhat deploy --tags SQRpProRata:publish-abi",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",

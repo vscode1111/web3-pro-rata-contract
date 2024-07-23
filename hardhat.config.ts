@@ -17,6 +17,8 @@ dotenvConfig({
 
 const isCoverage = toBoolean(process.env.COVERAGE);
 const gasReporterEnable = false;
+const forkingEnable = false;
+const forkingBlockNumber = 40704632;
 
 function getAccounts() {
   return [
@@ -64,9 +66,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        enabled: false, // <-- edit here
+        enabled: forkingEnable,
         url: getChainConfig(defaultNetwork).url ?? '',
-        blockNumber: 34349994, // <-- edit here
+        blockNumber: forkingBlockNumber,
       },
       initialBaseFeePerGas: 0,
       mining: {

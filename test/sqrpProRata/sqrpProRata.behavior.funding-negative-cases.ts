@@ -1,7 +1,7 @@
 import { ZeroAddress } from 'ethers';
 import { toUnixTime } from '~common';
 import { BaseContractConfigEx, contractConfig, now, seedData } from '~seeds';
-import { toBaseTokenWei } from '~utils';
+import { toBaseTokenWei, toBoostTokenWei } from '~utils';
 import { customError } from './testData';
 import {
   checkTotalSQRBalance,
@@ -16,8 +16,8 @@ export function shouldBehaveCorrectFundingNegativeCases(): void {
       const caseContractConfig: BaseContractConfigEx = {
         ...getBaseContactConfig(contractConfig),
         baseGoal: toBaseTokenWei(100),
-        startDate: toUnixTime(now.add(50, 'days').toDate()),
-        closeDate: toUnixTime(now.add(52, 'days').toDate()),
+        startDate: toUnixTime(now.add(60, 'days').toDate()),
+        closeDate: toUnixTime(now.add(62, 'days').toDate()),
       };
 
       beforeEach(async function () {
@@ -56,14 +56,96 @@ export function shouldBehaveCorrectFundingNegativeCases(): void {
           },
         ]);
       });
+
+      it('3. owner2 tries to call withdrawBaseSwappedAmount without calling calculateExcessBoostAmount method before', async function () {
+        await testContract(
+          this,
+          caseContractConfig,
+          [
+            {
+              user: 'user1',
+              baseDeposit: toBaseTokenWei(200),
+            },
+            {
+              user: 'user2',
+              baseDeposit: toBaseTokenWei(270),
+              boost: true,
+              boostExchangeRate: seedData.boostExchangeRate,
+            },
+            {
+              user: 'user3',
+              baseDeposit: toBaseTokenWei(30),
+              boost: true,
+              boostExchangeRate: seedData.boostExchangeRate,
+            },
+          ],
+          {
+            invokeWithdrawBaseSwappedAmount: true,
+            sendTokensToContract: {
+              boostAmount: toBoostTokenWei(3456),
+            },
+            expectedExcessBoostAmount: toBoostTokenWei(2456),
+            expectedRevertWithdrawBaseSwappedAmount: customError.notAllUsersProcessedBaseSwapped,
+          },
+        );
+      });
+
+      it('4. owner2 tries to call RevertRefundAll without enough base tokens', async function () {
+        await testContract(
+          this,
+          caseContractConfig,
+          [
+            {
+              user: 'user1',
+              baseDeposit: toBaseTokenWei(200),
+            },
+            {
+              user: 'user2',
+              baseDeposit: toBaseTokenWei(270),
+            },
+          ],
+          {
+            withdrawTokensFromContract: {
+              baseAmount: toBaseTokenWei(200),
+            },
+            requiredBoostAmount: seedData.zero,
+            expectedRevertRefundAll: customError.contractHasNoEnoughBaseTokensForRefund,
+            expectedRevertWithdrawExcessTokens: customError.notRefunded,
+          },
+        );
+      });
+
+      it('5. owner2 tries to call RevertRefundAll without enough boost tokens', async function () {
+        await testContract(
+          this,
+          caseContractConfig,
+          [
+            {
+              user: 'user1',
+              baseDeposit: toBaseTokenWei(200),
+            },
+            {
+              user: 'user2',
+              baseDeposit: toBaseTokenWei(270),
+              boost: true,
+              boostExchangeRate: seedData.boostExchangeRate,
+            },
+          ],
+          {
+            requiredBoostAmount: seedData.zero,
+            expectedRevertRefundAll: customError.contractHasNoEnoughBoostTokensForRefund,
+            expectedRevertWithdrawExcessTokens: customError.notRefunded,
+          },
+        );
+      });
     });
     describe('case 2', () => {
       const caseContractConfig: BaseContractConfigEx = {
         ...getBaseContactConfig(contractConfig),
         baseGoal: toBaseTokenWei(100),
         boostToken: ZeroAddress,
-        startDate: toUnixTime(now.add(53, 'days').toDate()),
-        closeDate: toUnixTime(now.add(55, 'days').toDate()),
+        startDate: toUnixTime(now.add(63, 'days').toDate()),
+        closeDate: toUnixTime(now.add(65, 'days').toDate()),
       };
 
       beforeEach(async function () {

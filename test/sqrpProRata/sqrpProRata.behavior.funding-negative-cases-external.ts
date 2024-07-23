@@ -9,13 +9,13 @@ import {
   testContract,
 } from './utils';
 
-export function shouldBehaveCorrectFundingPositiveCasesExternal(): void {
+export function shouldBehaveCorrectFundingNegativeCasesExternal(): void {
   describe('funding: positive cases, external refund', () => {
     const caseContractConfig: BaseContractConfigEx = {
       ...getBaseContactConfig(contractConfig),
       baseGoal: toBaseTokenWei(100),
-      startDate: toUnixTime(now.add(60, 'days').toDate()),
-      closeDate: toUnixTime(now.add(62, 'days').toDate()),
+      startDate: toUnixTime(now.add(50, 'days').toDate()),
+      closeDate: toUnixTime(now.add(52, 'days').toDate()),
       externalRefund: true,
     };
 

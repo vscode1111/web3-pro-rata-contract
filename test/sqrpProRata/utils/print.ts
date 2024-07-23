@@ -28,7 +28,7 @@ export function printContractStats({
   totalDeposited,
   totalBaseNonBoostDeposited,
   totalBaseBoostDeposited,
-  baseSwappedAmount,
+  totalBaseSwappedAmount,
   requiredBoostAmount,
   baseDecimals,
   boostDecimals,
@@ -36,7 +36,7 @@ export function printContractStats({
   totalDeposited: bigint;
   totalBaseNonBoostDeposited: bigint;
   totalBaseBoostDeposited: bigint;
-  baseSwappedAmount: bigint;
+  totalBaseSwappedAmount: bigint;
   requiredBoostAmount: bigint;
   baseDecimals: Numeric;
   boostDecimals: Numeric;
@@ -45,7 +45,7 @@ export function printContractStats({
     `Total deposited: ${toNumberDecimalsFixed(totalDeposited, baseDecimals)}, non-boost deposited: ${toNumberDecimalsFixed(totalBaseNonBoostDeposited, baseDecimals)}, boost deposited: ${toNumberDecimalsFixed(totalBaseBoostDeposited, baseDecimals)}`,
   );
   console.log(
-    `Swapped base: ${toNumberDecimalsFixed(baseSwappedAmount, baseDecimals)}, required boost: ${toNumberDecimalsFixed(requiredBoostAmount, boostDecimals)}, `,
+    `Swapped base: ${toNumberDecimalsFixed(totalBaseSwappedAmount, baseDecimals)}, required boost: ${toNumberDecimalsFixed(requiredBoostAmount, boostDecimals)}, `,
   );
 }
 

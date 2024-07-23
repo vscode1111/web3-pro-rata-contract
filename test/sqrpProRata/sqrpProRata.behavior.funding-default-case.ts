@@ -6,10 +6,13 @@ import { contractConfig, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDeposit } from '~utils';
 import { customError } from './testData';
 import {
+  CalculateBaseSwappedAmountEventArgs,
   DepositEventArgs,
   ForceWithdrawEventArgs,
   RefundEventArgs,
   WithdrawBaseGoalEventArgs,
+  WithdrawExcessTokensEventArgs,
+  WithdrawSwappedAmountEventArgs,
 } from './types';
 import {
   checkTotalSQRBalance,
@@ -64,11 +67,23 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       );
     });
 
-    it('user1 tries to call withdrawExcessTokens without too early', async function () {
+    it('user1 tries to call withdrawExcessTokens too early', async function () {
       await expect(this.owner2SQRpProRata.withdrawExcessTokens()).revertedWithCustomError(
         this.owner2SQRpProRata,
         customError.tooEarly,
       );
+    });
+
+    it('user1 tries to call calculateBaseSwappedAmount without permission', async function () {
+      await expect(
+        this.user1SQRpProRata.calculateBaseSwappedAmount(seedData.batchSize),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.ownableUnauthorizedAccount);
+    });
+
+    it('owner2 tries to call calculateBaseSwappedAmount too early', async function () {
+      await expect(
+        this.owner2SQRpProRata.calculateBaseSwappedAmount(seedData.batchSize),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.tooEarly);
     });
 
     it('owner tries to call withdrawBaseGoal to early', async function () {
@@ -869,6 +884,57 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 expect(user2.boosted).eq(false);
               });
 
+              it('owner2 is allowed to call calculateBaseSwappedAmount (check event)', async function () {
+                const receipt = await waitTx(
+                  this.owner2SQRpProRata.calculateBaseSwappedAmountAll(),
+                );
+                const eventLog = findEvent<CalculateBaseSwappedAmountEventArgs>(receipt);
+
+                expect(eventLog).not.undefined;
+                const [batchSize, endIndex] = eventLog?.args;
+                const accountCount = await this.owner2SQRpProRata.getAccountCount();
+                expect(batchSize).eq(accountCount);
+                expect(endIndex).eq(accountCount);
+
+                expect(await this.owner2SQRpProRata.getProcessedBaseSwappedIndex()).eq(
+                  accountCount,
+                );
+              });
+
+              describe('owner2 called calculateBaseSwappedAmountAll', () => {
+                beforeEach(async function () {
+                  await this.owner2SQRpProRata.calculateBaseSwappedAmountAll();
+                });
+
+                it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
+                  const accountCount = await this.owner2SQRpProRata.getAccountCount();
+                  expect(await this.owner2SQRpProRata.getProcessedBaseSwappedIndex()).eq(
+                    accountCount,
+                  );
+                });
+
+                it('owner2 is allowed to call withdrawBaseSwappedAmount (check event)', async function () {
+                  const receipt = await waitTx(this.owner2SQRpProRata.withdrawBaseSwappedAmount());
+                  const eventLog = findEvent<WithdrawSwappedAmountEventArgs>(receipt);
+
+                  expect(eventLog).not.undefined;
+                  const [account, baseAmount] = eventLog?.args;
+                  expect(account).eq(this.owner2Address);
+                  expect(baseAmount).eq(seedData.zero);
+                });
+
+                it('owner2 tries to call withdrawBaseSwappedAmount twice', async function () {
+                  await this.owner2SQRpProRata.withdrawBaseSwappedAmount();
+
+                  await expect(
+                    this.owner2SQRpProRata.withdrawBaseSwappedAmount(),
+                  ).revertedWithCustomError(
+                    this.owner2SQRpProRata,
+                    customError.withdrewBaseSwappedAmount,
+                  );
+                });
+              });
+
               it('owner is allowed to withdraw goal (check event)', async function () {
                 const receipt = await waitTx(this.owner2SQRpProRata.withdrawBaseGoal());
                 const eventLog = findEvent<WithdrawBaseGoalEventArgs>(receipt);
@@ -897,7 +963,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 expect(baseRefund).eq(refund1);
                 expect(boostRefund).eq(seedData.zero);
 
-                expect(await this.owner2SQRpProRata.getProcessedAccountIndex()).eq(1);
+                expect(await this.owner2SQRpProRata.getProcessedRefundIndex()).eq(1);
               });
 
               it('user1 tries to refund tokens for first user', async function () {
@@ -937,7 +1003,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 });
 
                 it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-                  expect(await this.owner2SQRpProRata.getProcessedAccountIndex()).eq(2);
+                  expect(await this.owner2SQRpProRata.getProcessedRefundIndex()).eq(2);
 
                   expect(await getBaseTokenBalance(this, this.sqrpProRataAddress)).closeTo(
                     contractConfig.baseGoal,
@@ -1026,7 +1092,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 it('owner2 tries to call withdrawBaseGoal again', async function () {
                   await expect(this.owner2SQRpProRata.refundAll()).revertedWithCustomError(
                     this.owner2SQRpProRata,
-                    customError.allUsersProcessed,
+                    customError.allUsersProcessedRefund,
                   );
                 });
 
@@ -1114,6 +1180,30 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                     expect(await this.ownerSQRpProRata.totalBaseWithdrew()).eq(
                       contractConfig.baseGoal,
                     );
+                  });
+
+                  it('owner is allowed to withdraw goal (check event)', async function () {
+                    await this.owner2BaseToken.transfer(
+                      this.sqrpProRataAddress,
+                      seedData.extraDeposit1,
+                    );
+                    await this.owner2BoostToken.transfer(
+                      this.sqrpProRataAddress,
+                      seedData.extraDeposit2,
+                    );
+
+                    const baseBalance = await this.owner2SQRpProRata.getBaseBalance();
+                    const boostBalance = await this.owner2SQRpProRata.getBoostBalance();
+
+                    const receipt = await waitTx(this.owner2SQRpProRata.withdrawExcessTokens());
+                    const eventLog = findEvent<WithdrawExcessTokensEventArgs>(receipt);
+
+                    expect(eventLog).not.undefined;
+                    const [account, baseAmount, boostDeposit] = eventLog?.args;
+                    expect(account).eq(this.owner2Address);
+
+                    expect(baseAmount).eq(baseBalance);
+                    expect(boostDeposit).eq(boostBalance);
                   });
                 });
               });

@@ -96,10 +96,17 @@ export interface CaseBehaviour {
     baseAmount?: bigint;
     boostAmount?: bigint;
   };
+  withdrawTokensFromContract?: {
+    baseAmount?: bigint;
+    boostAmount?: bigint;
+  };
   expectedExcessBoostAmount?: bigint;
+  expectedRevertWithdrawBaseSwappedAmount?: string;
+  expectedRevertWithdrawExcessTokens?: string;
   userExpectations?: Partial<Record<UserType, UserExpectation>>;
   baseBalanceDelta?: bigint;
   boostBalanceDelta?: bigint;
+  requiredBoostAmount?: bigint;
   expectedRevertRefundAll?: string;
 }
 
