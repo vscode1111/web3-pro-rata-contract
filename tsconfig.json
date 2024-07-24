@@ -16,7 +16,8 @@
     "experimentalDecorators": true,
     "paths": {
       "~*": ["./*"]
-    }
+    },
+    "typeRoots": ["./typings"]
   },
   "exclude": ["node_modules"],
   "files": ["./hardhat.config.ts"],

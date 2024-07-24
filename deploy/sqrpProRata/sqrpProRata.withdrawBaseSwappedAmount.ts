@@ -9,14 +9,16 @@ import { deployParams } from './deployData';
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
-    console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is withdrawing goal...`);
-    const baseTokenAddress = contractConfig.baseToken;
-    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    console.log(
+      `${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is calculating base swapped amount for all users...`,
+    );
+    const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
+    const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const { owner2SQRpProRata, sqrpProRataFactory } = context;
 
     await waitTx(
-      owner2SQRpProRata.withdrawGoal(TX_OVERRIDES),
-      'withdrawGoal',
+      owner2SQRpProRata.withdrawBaseSwappedAmount(TX_OVERRIDES),
+      'withdrawBaseSwappedAmount',
       deployParams.attempts,
       deployParams.delay,
       sqrpProRataFactory,
@@ -24,6 +26,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   }, hre);
 };
 
-func.tags = [`${SQR_P_PRO_RATA_NAME}:withdraw-goal`];
+func.tags = [`${SQR_P_PRO_RATA_NAME}:withdraw-base-swapped-amount`];
 
 export default func;

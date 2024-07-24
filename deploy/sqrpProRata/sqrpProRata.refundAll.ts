@@ -10,8 +10,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
   await callWithTimerHre(async () => {
     const { sqrpProRataAddress } = getAddressesFromHre(hre);
     console.log(`${SQR_P_PRO_RATA_NAME} ${sqrpProRataAddress} is refunding tokens for users...`);
-    const baseTokenAddress = contractConfig.baseToken;
-    const context = await getContext(baseTokenAddress, sqrpProRataAddress);
+    const { baseToken: baseTokenAddress, boostToken: boostTokenAddress } = contractConfig;
+    const context = await getContext(baseTokenAddress, boostTokenAddress, sqrpProRataAddress);
     const { owner2SQRpProRata, sqrpProRataFactory } = context;
 
     await waitTx(

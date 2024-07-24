@@ -6,6 +6,7 @@ import type { HardhatUserConfig } from 'hardhat/config';
 import type { HardhatNetworkAccountUserConfig, NetworkUserConfig } from 'hardhat/types';
 import { resolve } from 'path';
 import 'tsconfig-paths/register';
+import { toBoolean } from '~common';
 import { DeployNetworks } from '~types';
 import { getEnv } from './common/config';
 
@@ -14,7 +15,10 @@ dotenvConfig({
   path: resolve(__dirname, dotenvConfigPath),
 });
 
-const isCoverage = process.env.COVERAGE;
+const isCoverage = toBoolean(process.env.COVERAGE);
+const gasReporterEnable = false;
+const forkingEnable = false;
+const forkingBlockNumber = 40704632;
 
 function getAccounts() {
   return [
@@ -55,16 +59,16 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    enabled: false,
+    enabled: gasReporterEnable,
     currency: 'USD',
     excludeContracts: [],
   },
   networks: {
     hardhat: {
       forking: {
-        enabled: false, // <-- edit here
+        enabled: forkingEnable,
         url: getChainConfig(defaultNetwork).url ?? '',
-        blockNumber: 34349994, // <-- edit here
+        blockNumber: forkingBlockNumber,
       },
       initialBaseFeePerGas: 0,
       mining: {

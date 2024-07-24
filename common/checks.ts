@@ -1,5 +1,9 @@
 import { ethers } from 'ethers';
 
+export function exist(value: any): boolean {
+  return typeof value !== 'undefined';
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
