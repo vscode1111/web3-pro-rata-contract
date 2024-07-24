@@ -49,6 +49,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
         boostDecimals,
         boostTokenName,
       ),
+      totalBaseSwappedAmount: formatContractToken(
+        await ownerSQRpProRata.totalBaseSwappedAmount(),
+        baseDecimals,
+        baseTokenName,
+      ),
       isReachedBaseGoal: await ownerSQRpProRata.isReachedBaseGoal(),
       isDepositReady: await ownerSQRpProRata.isDepositReady(),
       getDepositRefundFetchReady: await ownerSQRpProRata.getDepositRefundFetchReady(),

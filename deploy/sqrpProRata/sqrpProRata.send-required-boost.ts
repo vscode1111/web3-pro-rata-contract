@@ -25,8 +25,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       `Amount: ${formatContractToken(requiredBoostAmount, boostDecimals, boostTokenName)}`,
     );
 
-    await owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount);
-
     await waitTx(
       owner2BoostToken.transfer(sqrpProRataAddress, requiredBoostAmount, TX_OVERRIDES),
       'transfer',

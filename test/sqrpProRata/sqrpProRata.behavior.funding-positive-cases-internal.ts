@@ -561,7 +561,7 @@ export function shouldBehaveCorrectFundingPositiveCasesInternal(): void {
       );
     });
 
-    it('10. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
+    it.only('10. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
       await testContract(
         this,
         caseContractConfig,
