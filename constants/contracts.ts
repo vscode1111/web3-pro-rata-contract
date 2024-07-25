@@ -3,7 +3,7 @@ import { TokenDescription } from '~types';
 import { BASE_DECIMALS, BOOST_DECIMALS } from './numbers';
 
 export const CONTRACT_NAME = 'Pro-rata';
-export const CONTRACT_VERSION = '2.8.0';
+export const CONTRACT_VERSION = '3.0.0';
 
 export const TX_OVERRIDES: TransactionRequest = {
   // gasPrice: 3_000_000_000,

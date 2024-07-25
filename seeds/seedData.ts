@@ -89,7 +89,7 @@ export const contractConfig: ContractConfig = {
   baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
-  externalRefund: true,
+  externalRefund: false,
   ...extContractConfig,
 };
 

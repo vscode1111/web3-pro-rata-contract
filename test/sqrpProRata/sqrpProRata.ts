@@ -11,6 +11,7 @@ import { shouldBehaveCorrectFundingLessCase } from './sqrpProRata.behavior.fundi
 import { shouldBehaveCorrectFundingNegativeCases } from './sqrpProRata.behavior.funding-negative-cases';
 import { shouldBehaveCorrectFundingNegativeCasesExternal } from './sqrpProRata.behavior.funding-negative-cases-external';
 import { shouldBehaveCorrectFundingPositiveCasesInternal } from './sqrpProRata.behavior.funding-positive-cases-internal';
+import { shouldBehaveCorrectFundingPositiveCasesInternalLinear } from './sqrpProRata.behavior.funding-positive-cases-internal-linear';
 
 describe(SQR_P_PRO_RATA_NAME, function () {
   before(async function () {
@@ -28,4 +29,5 @@ describe(SQR_P_PRO_RATA_NAME, function () {
   shouldBehaveCorrectFundingNegativeCases();
   shouldBehaveCorrectFundingPositiveCasesInternal();
   shouldBehaveCorrectForking();
+  shouldBehaveCorrectFundingPositiveCasesInternalLinear();
 });

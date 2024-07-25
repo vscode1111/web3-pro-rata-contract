@@ -12,7 +12,7 @@ import {IContractInfo} from "./IContractInfo.sol";
 import {IDepositRefund} from "./IDepositRefund.sol";
 import {UsefulMath} from "./UsefulMath.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract SQRpProRata is
   OwnableUpgradeable,
@@ -112,6 +112,7 @@ contract SQRpProRata is
 
   uint32 private _processedRefundIndex;
   uint32 private _processedBaseSwappedIndex;
+  bool private _isWithdrewBaseGoal;
   bool private _isWithdrewBaseSwappedAmount;
 
   struct ContractParams {
@@ -196,6 +197,7 @@ contract SQRpProRata is
   error ContractForExternalRefund();
   error ContractHasNoEnoughBaseTokensForRefund();
   error ContractHasNoEnoughBoostTokensForRefund();
+  error WithdrewBaseGoal();
   error WithdrewBaseSwappedAmount();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
@@ -255,7 +257,7 @@ contract SQRpProRata is
   }
 
   function getContractVersion() external pure returns (string memory) {
-    return "2.8.0";
+    return "3.0.0";
   }
 
   //IDepositRefund implementation
@@ -393,6 +395,27 @@ contract SQRpProRata is
     return 0;
   }
 
+  // function calculateAccountBaseAllocation(address account) public view returns (uint256) {
+  //   AccountItem memory accountItem = _accountItems[account];
+  //   if (isReachedBaseGoal()) {
+  //     if (baseGoal > totalBaseBoostDeposited) {
+  //       if (accountItem.boosted) {
+  //         return accountItem.baseDeposited;
+  //       } else {
+  //         return
+  //           UsefulMath.divisionRoundUp(
+  //             ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
+  //             totalBaseNonBoostDeposited
+  //           );
+  //       }
+  //     } else if (accountItem.boosted) {
+  //       return
+  //         UsefulMath.divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
+  //     }
+  //   }
+  //   return 0;
+  // }
+
   function calculateAccountBaseAllocation(address account) public view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (isReachedBaseGoal()) {
@@ -406,9 +429,18 @@ contract SQRpProRata is
               totalBaseNonBoostDeposited
             );
         }
-      } else if (accountItem.boosted) {
+      } else {
+        uint256 linearK = 5;
+
+        uint256 accountK = 1;
+        if (accountItem.boosted) {
+          accountK = linearK;
+        }
         return
-          UsefulMath.divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
+          UsefulMath.divisionRoundUp(
+            accountK * baseGoal * accountItem.baseDeposited,
+            totalBaseNonBoostDeposited + linearK * totalBaseBoostDeposited
+          );
       }
     }
     return 0;
@@ -710,9 +742,15 @@ contract SQRpProRata is
   }
 
   function withdrawBaseGoal() external nonReentrant onlyOwner afterCloseDate {
+    if (_isWithdrewBaseGoal) {
+      revert WithdrewBaseGoal();
+    }
+
     if (!isReachedBaseGoal()) {
       revert UnreachedGoal();
     }
+
+    _isWithdrewBaseGoal = true;
 
     address to = owner();
     baseToken.safeTransfer(to, baseGoal);
