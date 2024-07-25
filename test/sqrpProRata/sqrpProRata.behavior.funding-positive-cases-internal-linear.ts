@@ -499,6 +499,64 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
+    it.skip('++8. 1 extra simple, 1 extra boost, 1 boost. Invoke WithdrawBaseSwappedAmount method', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(500),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(30),
+            // boost: true,
+            // boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(10_000),
+          },
+        ],
+        {
+          // invokeWithdrawBaseSwappedAmount: true,
+          // userExpectations: {
+          //   user1: {
+          //     baseAllocation: toBaseTokenWei(20),
+          //     baseRefunded: toBaseTokenWei(180),
+          //     diffBaseBalance: toBaseTokenWei(-20),
+          //     diffBoostBalance: toBoostTokenWei(0),
+          //   },
+          //   user2: {
+          //     baseAllocation: toBaseTokenWei(30),
+          //     baseRefunded: toBaseTokenWei(0),
+          //     boostRefunded: toBoostTokenWei(150),
+          //     diffBaseBalance: toBaseTokenWei(-60),
+          //     diffBoostBalance: toBoostTokenWei(150),
+          //   },
+          //   user3: {
+          //     baseAllocation: toBaseTokenWei(50),
+          //     baseRefunded: toBaseTokenWei(0),
+          //     boostRefunded: toBoostTokenWei(250),
+          //     diffBaseBalance: toBaseTokenWei(-100),
+          //     diffBoostBalance: toBoostTokenWei(250),
+          //   },
+          //   contract: {
+          //     diffBaseBalance: toBaseTokenWei(0),
+          //     diffBoostBalance: toBoostTokenWei(0),
+          //   },
+          //   owner2: {
+          //     diffBaseBalance: toBaseTokenWei(180),
+          //     diffBoostBalance: toBoostTokenWei(-400),
+          //   },
+          // },
+        },
+      );
+    });
+
     it('9. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
       await testContract(
         this,

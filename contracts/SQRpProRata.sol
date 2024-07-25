@@ -75,6 +75,8 @@ contract SQRpProRata is
     startDate = contractParams.startDate;
     closeDate = contractParams.closeDate;
     externalRefund = contractParams.externalRefund;
+    linearAllocation = contractParams.linearAllocation;
+    linearBoostFactor = contractParams.linearBoostFactor;
 
     (decimalsFactor1, decimalsFactor2) = calculateDecimalsFactors(baseDecimals, boostDecimals);
   }
@@ -82,8 +84,10 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
+  string public constant VERSION = "3.0.0";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
+  //Contract params
   IERC20 public baseToken;
   uint8 public baseDecimals;
   IERC20 public boostToken;
@@ -93,6 +97,10 @@ contract SQRpProRata is
   uint32 public startDate;
   uint32 public closeDate;
   bool public externalRefund;
+  bool public linearAllocation;
+  uint256 public linearBoostFactor;
+
+  //Public variables
   uint256 public decimalsFactor1;
   uint256 public decimalsFactor2;
   uint256 public totalBaseDeposited;
@@ -126,6 +134,8 @@ contract SQRpProRata is
     uint32 startDate; //0 - skip
     uint32 closeDate;
     bool externalRefund;
+    bool linearAllocation;
+    uint256 linearBoostFactor;
   }
 
   struct AccountItem {
@@ -257,7 +267,7 @@ contract SQRpProRata is
   }
 
   function getContractVersion() external pure returns (string memory) {
-    return "3.0.0";
+    return VERSION;
   }
 
   //IDepositRefund implementation
@@ -395,28 +405,7 @@ contract SQRpProRata is
     return 0;
   }
 
-  // function calculateAccountBaseAllocation(address account) public view returns (uint256) {
-  //   AccountItem memory accountItem = _accountItems[account];
-  //   if (isReachedBaseGoal()) {
-  //     if (baseGoal > totalBaseBoostDeposited) {
-  //       if (accountItem.boosted) {
-  //         return accountItem.baseDeposited;
-  //       } else {
-  //         return
-  //           UsefulMath.divisionRoundUp(
-  //             ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
-  //             totalBaseNonBoostDeposited
-  //           );
-  //       }
-  //     } else if (accountItem.boosted) {
-  //       return
-  //         UsefulMath.divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
-  //     }
-  //   }
-  //   return 0;
-  // }
-
-  function calculateAccountBaseAllocation(address account) public view returns (uint256) {
+  function _calculateLinearAccountBaseAllocation(address account) private view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
     if (isReachedBaseGoal()) {
       if (baseGoal > totalBaseBoostDeposited) {
@@ -430,20 +419,49 @@ contract SQRpProRata is
             );
         }
       } else {
-        uint256 linearK = 5;
-
-        uint256 accountK = 1;
+        uint256 accountFactor = PRECISION_FACTOR;
         if (accountItem.boosted) {
-          accountK = linearK;
+          accountFactor = linearBoostFactor;
         }
         return
           UsefulMath.divisionRoundUp(
-            accountK * baseGoal * accountItem.baseDeposited,
-            totalBaseNonBoostDeposited + linearK * totalBaseBoostDeposited
+            (accountFactor * baseGoal * accountItem.baseDeposited) / PRECISION_FACTOR,
+            totalBaseNonBoostDeposited +
+              (linearBoostFactor * totalBaseBoostDeposited) /
+              PRECISION_FACTOR
           );
       }
     }
     return 0;
+  }
+
+  function _calculateQueueAccountBaseAllocation(address account) private view returns (uint256) {
+    AccountItem memory accountItem = _accountItems[account];
+    if (isReachedBaseGoal()) {
+      if (baseGoal > totalBaseBoostDeposited) {
+        if (accountItem.boosted) {
+          return accountItem.baseDeposited;
+        } else {
+          return
+            UsefulMath.divisionRoundUp(
+              ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
+              totalBaseNonBoostDeposited
+            );
+        }
+      } else if (accountItem.boosted) {
+        return
+          UsefulMath.divisionRoundUp(baseGoal * accountItem.baseDeposited, totalBaseBoostDeposited);
+      }
+    }
+    return 0;
+  }
+
+  function calculateAccountBaseAllocation(address account) public view returns (uint256) {
+    if (linearAllocation) {
+      return _calculateLinearAccountBaseAllocation(account);
+    } else {
+      return _calculateQueueAccountBaseAllocation(account);
+    }
   }
 
   function calculateAccountBaseRefund(address account) public view returns (uint256) {

@@ -225,6 +225,11 @@
       "address": "0xD6AC27b60810C10dB1f037dd6b9Be7422582292F",
       "txHash": "0x0507e3b31be7624de85b965a29c77c62a691046f68a50f963d43623174d037b4",
       "kind": "uups"
+    },
+    {
+      "address": "0x35B86Ed8428e2D704651133603c95D70e2697e11",
+      "txHash": "0x3a24f4c60fe1a3a64a31cbed0e9dd0412facbd9a3e7d4f837a0c9bdc0762d6ac",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -11986,6 +11991,435 @@
             "numberOfBytes": "192"
           },
           "t_struct(TransactionItem)5941_storage": {
+            "label": "struct SQRpProRata.TransactionItem",
+            "members": [
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:40",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "912a7575d7500568890d764d011f773b43645964d6b00b101b2077f85adcc7e8": {
+      "address": "0xC9C8Ca6bdF74069a99ffB4f55E26D91AbfB07a30",
+      "txHash": "0x229df765a252ae64ccef05307ec17b9822cb4e77dea701c31c2967ab5632dbcf",
+      "layout": {
+        "solcVersion": "0.8.21",
+        "storage": [
+          {
+            "label": "baseToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IERC20)1206",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:91"
+          },
+          {
+            "label": "baseDecimals",
+            "offset": 20,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:92"
+          },
+          {
+            "label": "boostToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)1206",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:93"
+          },
+          {
+            "label": "boostDecimals",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_uint8",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:94"
+          },
+          {
+            "label": "depositVerifier",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:95"
+          },
+          {
+            "label": "baseGoal",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:96"
+          },
+          {
+            "label": "startDate",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint32",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:97"
+          },
+          {
+            "label": "closeDate",
+            "offset": 4,
+            "slot": "4",
+            "type": "t_uint32",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:98"
+          },
+          {
+            "label": "externalRefund",
+            "offset": 8,
+            "slot": "4",
+            "type": "t_bool",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:99"
+          },
+          {
+            "label": "linearAllocation",
+            "offset": 9,
+            "slot": "4",
+            "type": "t_bool",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:100"
+          },
+          {
+            "label": "linearBoostFactor",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:101"
+          },
+          {
+            "label": "decimalsFactor1",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:104"
+          },
+          {
+            "label": "decimalsFactor2",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:105"
+          },
+          {
+            "label": "totalBaseDeposited",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:106"
+          },
+          {
+            "label": "totalBaseNonBoostDeposited",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:107"
+          },
+          {
+            "label": "totalBaseBoostDeposited",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:108"
+          },
+          {
+            "label": "totalBaseRefunded",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:109"
+          },
+          {
+            "label": "totalBaseWithdrew",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:110"
+          },
+          {
+            "label": "totalBoostWithdrew",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:111"
+          },
+          {
+            "label": "totalBoostRefunded",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:112"
+          },
+          {
+            "label": "totalBoostSwapped",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:113"
+          },
+          {
+            "label": "totalBaseSwappedAmount",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:114"
+          },
+          {
+            "label": "_accountItems",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_mapping(t_address,t_struct(AccountItem)4195_storage)",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:116"
+          },
+          {
+            "label": "_accountAddresses",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:117"
+          },
+          {
+            "label": "_transactionIds",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_bytes32,t_struct(TransactionItem)4236_storage)",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:119"
+          },
+          {
+            "label": "_processedRefundIndex",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_uint32",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:121"
+          },
+          {
+            "label": "_processedBaseSwappedIndex",
+            "offset": 4,
+            "slot": "20",
+            "type": "t_uint32",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:122"
+          },
+          {
+            "label": "_isWithdrewBaseGoal",
+            "offset": 8,
+            "slot": "20",
+            "type": "t_bool",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:123"
+          },
+          {
+            "label": "_isWithdrewBaseSwappedAmount",
+            "offset": 9,
+            "slot": "20",
+            "type": "t_bool",
+            "contract": "SQRpProRata",
+            "src": "contracts\\SQRpProRata.sol:124"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)64_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)190_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IERC20)1206": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_struct(AccountItem)4195_storage)": {
+            "label": "mapping(address => struct SQRpProRata.AccountItem)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(TransactionItem)4236_storage)": {
+            "label": "mapping(bytes32 => struct SQRpProRata.TransactionItem)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccountItem)4195_storage": {
+            "label": "struct SQRpProRata.AccountItem",
+            "members": [
+              {
+                "label": "baseDeposited",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "baseDeposit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "baseRefunded",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "boostDeposit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "boostRefunded",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "nonce",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "boosted",
+                "type": "t_bool",
+                "offset": 4,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(TransactionItem)4236_storage": {
             "label": "struct SQRpProRata.TransactionItem",
             "members": [
               {

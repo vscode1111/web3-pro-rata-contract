@@ -8,6 +8,8 @@ export interface BaseContractConfig {
   startDate: number;
   closeDate: number;
   externalRefund: boolean;
+  linearAllocation: boolean;
+  linearBoostFactor: bigint;
 }
 
 export interface ContractConfig extends BaseContractConfig {
@@ -30,6 +32,8 @@ export type DeployContractArgs = [
     startDate: number;
     closeDate: number;
     externalRefund: boolean;
+    linearAllocation: boolean;
+    linearBoostFactor: BigNumberish;
   },
 ];
 
