@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { MINUTES, toUnixTime, toUnixTimeUtc, toWei } from '~common';
-import { BASE_DECIMALS, BOOST_DECIMALS, Token } from '~constants';
+import { BASE_DECIMALS, BOOST_DECIMALS, LINEAR_BOOST_FACTOR, Token, ZERO } from '~constants';
 import { DeployNetworkKey, TokenAddressDescription } from '~types';
 import { addSecondsToUnixTime } from '~utils';
 import { getTokenDescription } from '~utils/contracts';
@@ -46,6 +46,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     startDate: toUnixTime(now.add(1, 'days').toDate()),
     closeDate: toUnixTime(now.add(2, 'days').toDate()),
     externalRefund: false,
+    linearAllocation: false,
+    linearBoostFactor: ZERO,
   },
   main: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
@@ -91,7 +93,7 @@ export const contractConfig: ContractConfig = {
   closeDate: toUnixTime(now.add(2, 'days').toDate()),
   externalRefund: false,
   linearAllocation: true,
-  linearBoostFactor: toWei(5),
+  linearBoostFactor: toWei(LINEAR_BOOST_FACTOR),
   ...extContractConfig,
 };
 

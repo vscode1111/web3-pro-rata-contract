@@ -9,6 +9,7 @@ export const customError = {
   startDateMustBeGreaterThanCurrentTime: 'StartDateMustBeGreaterThanCurrentTime',
   closeDateMustBeGreaterThanCurrentTime: 'CloseDateMustBeGreaterThanCurrentTime',
   closeDateMustBeGreaterThanStartDate: 'CloseDateMustBeGreaterThanStartDate',
+  linearBoostFactorNotZero: 'LinearBoostFactorNotZero',
   timeoutBlocker: 'TimeoutBlocker',
   baseAmountNotZero: 'BaseAmountNotZero',
   invalidSignature: 'InvalidSignature',
@@ -28,5 +29,6 @@ export const customError = {
   contractForExternalRefund: 'ContractForExternalRefund',
   contractHasNoEnoughBaseTokensForRefund: 'ContractHasNoEnoughBaseTokensForRefund',
   contractHasNoEnoughBoostTokensForRefund: 'ContractHasNoEnoughBoostTokensForRefund',
+  alreadyWithdrewBaseGoal: 'AlreadyWithdrewBaseGoal',
   withdrewBaseSwappedAmount: 'WithdrewBaseSwappedAmount',
 };

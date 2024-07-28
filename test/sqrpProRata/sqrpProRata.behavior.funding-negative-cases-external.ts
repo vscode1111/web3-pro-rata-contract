@@ -1,10 +1,9 @@
-import { toUnixTime } from '~common';
-import { BaseContractConfigEx, contractConfig, now, seedData } from '~seeds';
+import { BaseContractConfigEx, contractConfig, seedData } from '~seeds';
 import { toBaseTokenWei, toBoostTokenWei } from '~utils';
 import { customError } from './testData';
 import {
   checkTotalSQRBalance,
-  getBaseContactConfig,
+  getTestCaseContactConfig,
   loadSQRpProRataFixture,
   testContract,
 } from './utils';
@@ -12,10 +11,8 @@ import {
 export function shouldBehaveCorrectFundingNegativeCasesExternal(): void {
   describe('funding: positive cases, external refund', () => {
     const caseContractConfig: BaseContractConfigEx = {
-      ...getBaseContactConfig(contractConfig),
+      ...getTestCaseContactConfig(contractConfig),
       baseGoal: toBaseTokenWei(100),
-      startDate: toUnixTime(now.add(50, 'days').toDate()),
-      closeDate: toUnixTime(now.add(52, 'days').toDate()),
       externalRefund: true,
     };
 

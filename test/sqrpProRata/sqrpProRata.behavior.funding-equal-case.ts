@@ -1,14 +1,14 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { INITIAL_POSITIVE_CHECK_TEST_TITLE, toUnixTime } from '~common';
-import { BaseContractConfigEx, contractConfig, now, seedData, tokenConfig } from '~seeds';
+import { INITIAL_POSITIVE_CHECK_TEST_TITLE } from '~common';
+import { BaseContractConfigEx, contractConfig, seedData, tokenConfig } from '~seeds';
 import { addSecondsToUnixTime, toBaseTokenWei } from '~utils';
 import {
   checkTotalSQRBalance,
   contractZeroCheck,
   depositSig,
-  getBaseContactConfig,
   getBaseTokenBalance,
+  getTestCaseContactConfig,
   loadSQRpProRataFixture,
   transferToUserAndApproveForContract,
 } from './utils';
@@ -16,10 +16,8 @@ import {
 export function shouldBehaveCorrectFundingEqualCase(): void {
   describe('funding: equal case', () => {
     const caseContractConfig: BaseContractConfigEx = {
-      ...getBaseContactConfig(contractConfig),
+      ...getTestCaseContactConfig(contractConfig),
       baseGoal: toBaseTokenWei(15_000),
-      startDate: toUnixTime(now.add(30, 'days').toDate()),
-      closeDate: toUnixTime(now.add(32, 'days').toDate()),
     };
 
     const caseSettings = {

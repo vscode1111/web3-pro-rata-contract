@@ -130,5 +130,14 @@ export function shouldBehaveCorrectDeployment(): void {
         }),
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.goalNotZero);
     });
+
+    it('owner tries to deploy with zero linear boost factor', async function () {
+      await expect(
+        getSQRpProRataContext(await getUsers(), {
+          ...contractConfig,
+          linearAllocation: true,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.linearBoostFactorNotZero);
+    });
   });
 }

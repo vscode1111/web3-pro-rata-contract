@@ -63,6 +63,10 @@ contract SQRpProRata is
       revert CloseDateMustBeGreaterThanStartDate();
     }
 
+    if (contractParams.linearAllocation && contractParams.linearBoostFactor == 0) {
+      revert LinearBoostFactorNotZero();
+    }
+
     __Ownable_init(contractParams.newOwner);
     __UUPSUpgradeable_init();
 
@@ -188,6 +192,7 @@ contract SQRpProRata is
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanStartDate();
+  error LinearBoostFactorNotZero();
   error TimeoutBlocker();
   error BaseAmountNotZero();
   error BoostExchangeRateNotZero();
@@ -207,7 +212,7 @@ contract SQRpProRata is
   error ContractForExternalRefund();
   error ContractHasNoEnoughBaseTokensForRefund();
   error ContractHasNoEnoughBoostTokensForRefund();
-  error WithdrewBaseGoal();
+  error AlreadyWithdrewBaseGoal();
   error WithdrewBaseSwappedAmount();
 
   modifier timeoutBlocker(uint32 timestampLimit) {
@@ -761,7 +766,7 @@ contract SQRpProRata is
 
   function withdrawBaseGoal() external nonReentrant onlyOwner afterCloseDate {
     if (_isWithdrewBaseGoal) {
-      revert WithdrewBaseGoal();
+      revert AlreadyWithdrewBaseGoal();
     }
 
     if (!isReachedBaseGoal()) {

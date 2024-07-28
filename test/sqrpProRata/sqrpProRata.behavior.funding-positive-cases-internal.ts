@@ -1,9 +1,9 @@
-import { toUnixTime, toWei } from '~common';
-import { BaseContractConfigEx, contractConfig, now, seedData } from '~seeds';
+import { toWei } from '~common';
+import { BaseContractConfigEx, contractConfig, seedData } from '~seeds';
 import { toBaseTokenWei, toBoostTokenWei } from '~utils';
 import {
   checkTotalSQRBalance,
-  getBaseContactConfig,
+  getTestCaseContactConfig,
   loadSQRpProRataFixture,
   testContract,
 } from './utils';
@@ -11,10 +11,8 @@ import {
 export function shouldBehaveCorrectFundingPositiveCasesInternal(): void {
   describe('funding: positive cases, internal refund', () => {
     const caseContractConfig: BaseContractConfigEx = {
-      ...getBaseContactConfig(contractConfig),
+      ...getTestCaseContactConfig(contractConfig),
       baseGoal: toBaseTokenWei(100),
-      startDate: toUnixTime(now.add(70, 'days').toDate()),
-      closeDate: toUnixTime(now.add(72, 'days').toDate()),
     };
 
     beforeEach(async function () {

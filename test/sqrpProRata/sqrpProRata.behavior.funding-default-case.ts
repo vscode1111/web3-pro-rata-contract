@@ -19,6 +19,7 @@ import {
   contractZeroCheck,
   depositSig,
   findEvent,
+  getBaseContactConfig,
   getBaseTokenBalance,
   loadSQRpProRataFixture,
   transferToUserAndApproveForContract,
@@ -27,7 +28,11 @@ import {
 export function shouldBehaveCorrectFundingDefaultCase(): void {
   describe('funding: default case', () => {
     beforeEach(async function () {
-      await loadSQRpProRataFixture(this);
+      await loadSQRpProRataFixture(this, {
+        contractConfig: {
+          ...getBaseContactConfig(contractConfig),
+        },
+      });
       await checkTotalSQRBalance(this);
     });
 
@@ -884,7 +889,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 expect(user2.boosted).eq(false);
               });
 
-              it('owner2 is allowed to call calculateBaseSwappedAmount (check event)', async function () {
+              it('owner2 is allowed to call calculateBaseSwappedAmountAll (check event)', async function () {
                 const receipt = await waitTx(
                   this.owner2SQRpProRata.calculateBaseSwappedAmountAll(),
                 );
@@ -910,6 +915,15 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   const accountCount = await this.owner2SQRpProRata.getAccountCount();
                   expect(await this.owner2SQRpProRata.getProcessedBaseSwappedIndex()).eq(
                     accountCount,
+                  );
+                });
+
+                it('owner2 tries to call allUsersProcessedBaseSwapped which was processed', async function () {
+                  await expect(
+                    this.owner2SQRpProRata.calculateBaseSwappedAmount(seedData.batchSize),
+                  ).revertedWithCustomError(
+                    this.owner2SQRpProRata,
+                    customError.allUsersProcessedBaseSwapped,
                   );
                 });
 
@@ -1179,6 +1193,13 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                     expect(totalBaseDeposited).eq(await this.ownerSQRpProRata.totalBaseDeposited());
                     expect(await this.ownerSQRpProRata.totalBaseWithdrew()).eq(
                       contractConfig.baseGoal,
+                    );
+                  });
+
+                  it('owner2 tries to withdrew goal again', async function () {
+                    await expect(this.owner2SQRpProRata.withdrawBaseGoal()).revertedWithCustomError(
+                      this.owner2SQRpProRata,
+                      customError.alreadyWithdrewBaseGoal,
                     );
                   });
 

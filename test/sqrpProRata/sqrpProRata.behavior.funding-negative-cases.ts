@@ -1,11 +1,10 @@
 import { ZeroAddress } from 'ethers';
-import { toUnixTime } from '~common';
-import { BaseContractConfigEx, contractConfig, now, seedData } from '~seeds';
+import { BaseContractConfigEx, contractConfig, seedData } from '~seeds';
 import { toBaseTokenWei, toBoostTokenWei } from '~utils';
 import { customError } from './testData';
 import {
   checkTotalSQRBalance,
-  getBaseContactConfig,
+  getTestCaseContactConfig,
   loadSQRpProRataFixture,
   testContract,
 } from './utils';
@@ -14,10 +13,8 @@ export function shouldBehaveCorrectFundingNegativeCases(): void {
   describe('funding: negative cases', () => {
     describe('case 1', () => {
       const caseContractConfig: BaseContractConfigEx = {
-        ...getBaseContactConfig(contractConfig),
+        ...getTestCaseContactConfig(contractConfig),
         baseGoal: toBaseTokenWei(100),
-        startDate: toUnixTime(now.add(60, 'days').toDate()),
-        closeDate: toUnixTime(now.add(62, 'days').toDate()),
       };
 
       beforeEach(async function () {
@@ -141,11 +138,9 @@ export function shouldBehaveCorrectFundingNegativeCases(): void {
     });
     describe('case 2', () => {
       const caseContractConfig: BaseContractConfigEx = {
-        ...getBaseContactConfig(contractConfig),
+        ...getTestCaseContactConfig(contractConfig),
         baseGoal: toBaseTokenWei(100),
         boostToken: ZeroAddress,
-        startDate: toUnixTime(now.add(63, 'days').toDate()),
-        closeDate: toUnixTime(now.add(65, 'days').toDate()),
       };
 
       beforeEach(async function () {
