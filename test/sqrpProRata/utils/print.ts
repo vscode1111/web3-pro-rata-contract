@@ -175,7 +175,8 @@ export function printAccountInfoResults(
       boostRefund: toNumberDecimalsFixed(boostRefund, boostDecimals),
       boostRefunded: toNumberDecimalsFixed(boostRefunded, boostDecimals),
       nonce: Number(nonce),
-      boostAverageExchangeRate: toNumberDecimalsFixed(boostAverageExchangeRate, undefined),
+      // boostAverageExchangeRate: toNumberDecimalsFixed(boostAverageExchangeRate, undefined),
+      averageExchangeRate: toNumberDecimalsFixed(boostAverageExchangeRate, undefined),
       share: toNumberDecimalsFixed(share, undefined),
     }),
   );
