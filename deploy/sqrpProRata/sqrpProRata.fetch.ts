@@ -39,6 +39,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       startDate: formatContractDate(await ownerSQRpProRata.startDate()),
       closeDate: formatContractDate(await ownerSQRpProRata.closeDate()),
       externalRefund: await ownerSQRpProRata.externalRefund(),
+      linearAllocation: await ownerSQRpProRata.linearAllocation(),
+      linearBoostFactor: await ownerSQRpProRata.linearBoostFactor(),
       baseBalance: formatContractToken(
         await ownerSQRpProRata.getBaseBalance(),
         baseDecimals,
@@ -54,6 +56,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
         baseDecimals,
         baseTokenName,
       ),
+      totalBaseNonBoostDeposited: formatContractToken(
+        await ownerSQRpProRata.totalBaseNonBoostDeposited(),
+        baseDecimals,
+        baseTokenName,
+      ),
+      totalBaseBoostDeposited: formatContractToken(
+        await ownerSQRpProRata.totalBaseBoostDeposited(),
+        baseDecimals,
+        baseTokenName,
+      ),
+      totalBaseDeposited: formatContractToken(
+        await ownerSQRpProRata.totalBaseDeposited(),
+        baseDecimals,
+        baseTokenName,
+      ),
       isReachedBaseGoal: await ownerSQRpProRata.isReachedBaseGoal(),
       isDepositReady: await ownerSQRpProRata.isDepositReady(),
       getDepositRefundFetchReady: await ownerSQRpProRata.getDepositRefundFetchReady(),
@@ -61,9 +78,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table(result);
 
+    // await printAccountInfo(
+    //   ownerSQRpProRata,
+    //   users.user1Address,
+    //   baseDecimals,
+    //   baseTokenName,
+    //   boostDecimals,
+    //   boostTokenName,
+    // );
+    // await printAccountInfo(
+    //   ownerSQRpProRata,
+    //   users.user2Address,
+    //   baseDecimals,
+    //   baseTokenName,
+    //   boostDecimals,
+    //   boostTokenName,
+    // );
     await printAccountInfo(
       ownerSQRpProRata,
-      users.user1Address,
+      '0x65BdF8887fded456CC456C1be0907BD4369E466b',
       baseDecimals,
       baseTokenName,
       boostDecimals,
@@ -71,15 +104,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     );
     await printAccountInfo(
       ownerSQRpProRata,
-      users.user2Address,
-      baseDecimals,
-      baseTokenName,
-      boostDecimals,
-      boostTokenName,
-    );
-    await printAccountInfo(
-      ownerSQRpProRata,
-      '0x2c5459bb28254cc96944c50090f4bd0ef045a937',
+      '0xCafa4F8Eb68Da43331152D6662620d735825cb59',
       baseDecimals,
       baseTokenName,
       boostDecimals,

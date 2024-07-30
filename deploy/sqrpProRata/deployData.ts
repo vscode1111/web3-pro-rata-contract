@@ -4,7 +4,7 @@ import { toBaseTokenWei } from '~utils';
 export const verifyRequired = false;
 export const verifyArgsRequired = false;
 
-const isTiny = false;
+const isTiny = true;
 
 export const deployData = {
   now: toUnixTime(),

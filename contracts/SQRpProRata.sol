@@ -63,8 +63,8 @@ contract SQRpProRata is
       revert CloseDateMustBeGreaterThanStartDate();
     }
 
-    if (contractParams.linearAllocation && contractParams.linearBoostFactor == 0) {
-      revert LinearBoostFactorNotZero();
+    if (contractParams.linearAllocation && contractParams.linearBoostFactor < PRECISION_FACTOR) {
+      revert LinearBoostFactorMustBeMoreOne();
     }
 
     __Ownable_init(contractParams.newOwner);
@@ -88,7 +88,7 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
-  string public constant VERSION = "3.0.0";
+  string public constant VERSION = "3.1.0";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   //Contract params
@@ -192,7 +192,7 @@ contract SQRpProRata is
   error StartDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanCurrentTime();
   error CloseDateMustBeGreaterThanStartDate();
-  error LinearBoostFactorNotZero();
+  error LinearBoostFactorMustBeMoreOne();
   error TimeoutBlocker();
   error BaseAmountNotZero();
   error BoostExchangeRateNotZero();
@@ -412,18 +412,12 @@ contract SQRpProRata is
 
   function _calculateLinearAccountBaseAllocation(address account) private view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
+
     if (isReachedBaseGoal()) {
-      if (baseGoal > totalBaseBoostDeposited) {
-        if (accountItem.boosted) {
-          return accountItem.baseDeposited;
-        } else {
-          return
-            UsefulMath.divisionRoundUp(
-              ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
-              totalBaseNonBoostDeposited
-            );
-        }
-      } else {
+      uint256 totalBaseBoostLimit = (baseGoal * (linearBoostFactor - PRECISION_FACTOR)) /
+        linearBoostFactor;
+
+      if (totalBaseBoostDeposited > totalBaseBoostLimit) {
         uint256 accountFactor = PRECISION_FACTOR;
         if (accountItem.boosted) {
           accountFactor = linearBoostFactor;
@@ -435,6 +429,16 @@ contract SQRpProRata is
               (linearBoostFactor * totalBaseBoostDeposited) /
               PRECISION_FACTOR
           );
+      } else {
+        if (accountItem.boosted) {
+          return accountItem.baseDeposited;
+        } else {
+          return
+            UsefulMath.divisionRoundUp(
+              ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
+              totalBaseNonBoostDeposited
+            );
+        }
       }
     }
     return 0;

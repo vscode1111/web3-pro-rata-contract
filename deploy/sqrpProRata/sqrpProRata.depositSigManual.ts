@@ -38,7 +38,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     //From signature service
     const body = {
-      contractAddress: '0x741046cC8f0F680e716d99D1206DCF170FE9B5C2',
+      contractAddress: '0x1dA402bD37B479676CbaEAfAD52659eE3Db0F85A',
       account: '0xc109D9a3Fc3779db60af4821AE18747c708Dfcc6',
       // "account": "0x4Ee463d6e90764A6C34880024305C2810866432D",
       // "baseAmount": 0.012345678901234567890123,
@@ -50,13 +50,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     const response = {
       signature:
-        '0x1bf5b0933f447f8a1cc16882599b6a92d70c969a6f3920e31faf52979110ec086ddfcdcfa6dc0a32843f2707dfcd46d8af132865fd255e120bb3e6a9ad9a4a2d1c',
+        '0x73b045cbeed17f3fdf176d533c7eb668a15e9f3922b4a77955d9120291ce67f616df68c81d14ead1bbe5334889b8d7a1f128f18ebbacba38dafc728facdb8d6e1c',
       baseAmountInWei: '13234234234234234',
       boostExchangeRateInWei: '117729000000000000',
-      nonce: 3,
-      timestampNow: 1721642808,
-      timestampLimit: 1721643108,
-      dateLimit: '2024-07-22T10:16:52.422Z',
+      nonce: 2,
+      timestampNow: 1722332423,
+      timestampLimit: 1722332723,
+      dateLimit: '2024-07-30T09:50:29.502Z',
     };
 
     const nonce = await user1SQRpProRata.getAccountDepositNonce(user1Address);

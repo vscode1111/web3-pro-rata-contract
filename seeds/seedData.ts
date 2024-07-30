@@ -11,22 +11,26 @@ import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from
 
 type DeployType = 'test' | 'main' | 'stage' | 'prod';
 
-const deployType: DeployType = (process.env.ENV as DeployType) ?? 'main';
-
-const isSqr = ['test', 'main'].includes(deployType);
-// const isSqr = false;
+const deployType: DeployType = (process.env.ENV as DeployType) ?? 'prod';
 
 const isProd = deployType === ('prod' as any);
-if (isProd) {
-  throw 'Are you sure? It is PROD!';
-}
+// if (isProd) {
+//   throw 'Are you sure? It is PROD!';
+// }
 
-export const chainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
-  bsc: isSqr ? getTokenDescription(Token.tUSDT2) : getTokenDescription(Token.USDT), //SQR/USDT
+export const baseChainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
+  bsc: isProd ? getTokenDescription(Token.USDT) : getTokenDescription(Token.tUSDT2), //USDT/tUSDT2
 };
 
-export const { address: tokenAddress, decimals: tokenDecimals } =
-  chainTokenDescription[defaultNetwork];
+export const boostChainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
+  bsc: isProd ? getTokenDescription(Token.SQR) : getTokenDescription(Token.tSQR2), //SQR/tSQR2
+};
+
+export const { address: baseToken, decimals: baseDecimals } =
+  baseChainTokenDescription[defaultNetwork];
+
+export const { address: boostToken, decimals: boostDecimals } =
+  boostChainTokenDescription[defaultNetwork];
 
 const priceDiv = BigInt(1);
 const userDiv = BigInt(3);
@@ -35,7 +39,7 @@ export const now = dayjs();
 export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>> = {
   test: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-    baseToken: tokenAddress,
+    baseToken: baseToken,
     // baseDecimals: getTokenDescription(Token.tSQR).decimals,
     // boostDecimals: getTokenDescription(Token.tSQR).decimals,
     baseDecimals: BASE_DECIMALS,
@@ -69,13 +73,17 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     closeDate: toUnixTime(new Date(2026, 4, 28, 23, 0, 0)),
   },
   prod: {
-    newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
+    // newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
+    newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    baseGoal: toBaseTokenWei(10),
+    // baseGoal: toBaseTokenWei(50_000),
+    baseGoal: toBaseTokenWei(5),
+    baseToken: baseToken,
+    baseDecimals: baseDecimals,
     startDate: 0,
-    // startDate: toUnixTimeUtc(new Date(2024, 4, 27, 16, 0, 0)),
+    // startDate: toUnixTimeUtc(new Date(2024, 6, 30, 11, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 6, 30, 0, 0, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 7, 2, 11, 0, 0)),
   },
 };
 
@@ -83,10 +91,10 @@ const extContractConfig = contractConfigDeployMap[deployType];
 
 export const contractConfig: ContractConfig = {
   newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
-  baseToken: Token.tUSDT2,
-  baseDecimals: getTokenDescription(Token.tUSDT2).decimals,
-  boostToken: Token.tSQR2,
-  boostDecimals: getTokenDescription(Token.tSQR2).decimals,
+  baseToken: baseToken,
+  baseDecimals: baseDecimals,
+  boostToken: boostToken,
+  boostDecimals: boostDecimals,
   depositVerifier: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
   baseGoal: toBaseTokenWei(1_200) / priceDiv,
   startDate: toUnixTime(now.add(1, 'days').toDate()),
@@ -135,7 +143,7 @@ export const tokenConfig: TokenConfig = {
   symbol: 'empty',
   newOwner: '0x81aFFCB2FaCEcCaE727Fa4b1B2ef534a1Da67791',
   initMint: toBaseTokenWei(1_000_000_000),
-  decimals: tokenDecimals,
+  decimals: baseDecimals,
 };
 
 export function getTokenArgs(tokenConfig: TokenConfig): DeployTokenArgs {

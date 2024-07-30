@@ -502,6 +502,64 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
+    it('9. 1 extra simple, 2 boosts. Edge case', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(100),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(41),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(40),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+        ],
+        {
+          invokeWithdrawBaseSwappedAmount: true,
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(19.802),
+              baseRefunded: toBaseTokenWei(80.198),
+              diffBaseBalance: toBaseTokenWei(-19.802),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(40.594),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(2.03),
+              diffBaseBalance: toBaseTokenWei(-41),
+              diffBoostBalance: toBoostTokenWei(2.03),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(39.604),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(1.98),
+              diffBaseBalance: toBaseTokenWei(-40),
+              diffBoostBalance: toBoostTokenWei(1.98),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100.802),
+              diffBoostBalance: toBoostTokenWei(-4.01),
+            },
+          },
+        },
+      );
+    });
+
     it('9. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
       await testContract(
         this,

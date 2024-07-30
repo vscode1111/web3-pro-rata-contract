@@ -1,7 +1,7 @@
 import { Numeric } from 'ethers';
 import { toNumberDecimalsFixed } from '~common';
 import { formatContractDate, formatContractToken } from '~common-contract';
-import { ContractConfig, chainTokenDescription, contractConfig, getContractArgs } from '~seeds';
+import { ContractConfig, baseChainTokenDescription, contractConfig, getContractArgs } from '~seeds';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { Users } from '~types';
 import { getERC20TokenContext } from '~utils';
@@ -12,7 +12,7 @@ export function getContractArgsEx() {
 }
 
 export function formatContractConfig(contractConfig: ContractConfig) {
-  const { decimals, tokenName } = chainTokenDescription.bsc;
+  const { decimals, tokenName } = baseChainTokenDescription.bsc;
   const { baseGoal, startDate, closeDate } = contractConfig;
 
   return {

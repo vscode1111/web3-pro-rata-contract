@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { Dayjs } from 'dayjs';
 import { ZeroAddress } from 'ethers';
+import { toWei } from '~common';
 import { ZERO } from '~constants';
 import { contractConfig, seedData } from '~seeds';
 import {
@@ -136,8 +137,9 @@ export function shouldBehaveCorrectDeployment(): void {
         getSQRpProRataContext(await getUsers(), {
           ...contractConfig,
           linearAllocation: true,
+          linearBoostFactor: toWei(0.99),
         }),
-      ).revertedWithCustomError(this.owner2SQRpProRata, customError.linearBoostFactorNotZero);
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.linearBoostFactorMustBeMoreOne);
     });
   });
 }

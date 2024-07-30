@@ -9,7 +9,7 @@ export const customError = {
   startDateMustBeGreaterThanCurrentTime: 'StartDateMustBeGreaterThanCurrentTime',
   closeDateMustBeGreaterThanCurrentTime: 'CloseDateMustBeGreaterThanCurrentTime',
   closeDateMustBeGreaterThanStartDate: 'CloseDateMustBeGreaterThanStartDate',
-  linearBoostFactorNotZero: 'LinearBoostFactorNotZero',
+  linearBoostFactorMustBeMoreOne: 'LinearBoostFactorMustBeMoreOne',
   timeoutBlocker: 'TimeoutBlocker',
   baseAmountNotZero: 'BaseAmountNotZero',
   invalidSignature: 'InvalidSignature',
