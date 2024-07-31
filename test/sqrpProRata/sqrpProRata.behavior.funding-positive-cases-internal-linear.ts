@@ -502,7 +502,65 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
-    it('9. 1 extra simple, 2 boosts. Edge case', async function () {
+    it('9. 1 extra simple, 2 boosts. Boost reached 80% level, linear factor = 5', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(100),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(40),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+          {
+            user: 'user3',
+            baseDeposit: toBaseTokenWei(40),
+            boost: true,
+            boostExchangeRate: seedData.boostExchangeRate,
+          },
+        ],
+        {
+          invokeWithdrawBaseSwappedAmount: true,
+          userExpectations: {
+            user1: {
+              baseAllocation: toBaseTokenWei(20),
+              baseRefunded: toBaseTokenWei(80),
+              diffBaseBalance: toBaseTokenWei(-20),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user2: {
+              baseAllocation: toBaseTokenWei(40),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-40),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            user3: {
+              baseAllocation: toBaseTokenWei(40),
+              baseRefunded: toBaseTokenWei(0),
+              boostRefunded: toBoostTokenWei(0),
+              diffBaseBalance: toBaseTokenWei(-40),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            contract: {
+              diffBaseBalance: toBaseTokenWei(0),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+            owner2: {
+              diffBaseBalance: toBaseTokenWei(100),
+              diffBoostBalance: toBoostTokenWei(0),
+            },
+          },
+        },
+      );
+    });
+
+    it('10. 1 extra simple, 2 boosts. Boost reached 81% level, linear factor = 5', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -560,7 +618,7 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
-    it('9. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
+    it('11. 1 extra simple, 1 extra boost, 1 boost. Check calculateExcessBoostAmount method', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -622,7 +680,7 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
-    it('11. simple and boost from one user, unreached goal', async function () {
+    it('12. simple and boost from one user, unreached goal', async function () {
       await testContract(
         this,
         caseContractConfig,
@@ -677,7 +735,7 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
       );
     });
 
-    it('12. simple and boost from one user', async function () {
+    it('13. simple and boost from one user', async function () {
       await testContract(
         this,
         caseContractConfig,

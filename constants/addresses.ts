@@ -46,8 +46,8 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '', //Stage
     //-------------------------------------------------------------------------------------------------------------
-    // bsc: '0xD9eF052d04b6FF606A3Cb89Af86C8D0f61Ff14e7', //Prod - pro-rata | Base goal: 50K USDT
+    bsc: '0xD9eF052d04b6FF606A3Cb89Af86C8D0f61Ff14e7', //Prod - pro-rata | Base goal: 50K USDT
     // bsc: '0x1dA402bD37B479676CbaEAfAD52659eE3Db0F85A', //Prod - pro-rata | Base goal: 5 USDT - test
-    bsc: '0xa0FDE46DeF62854FBEb5b0707ccA61c2f65f61fb', //Prod - pro-rata | Base goal: 5 USDT - test on upgrade
+    // bsc: '0xa0FDE46DeF62854FBEb5b0707ccA61c2f65f61fb', //Prod - pro-rata | Base goal: 5 USDT - test on upgrade
   },
 };
