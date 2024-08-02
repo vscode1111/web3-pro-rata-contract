@@ -17,8 +17,8 @@ dotenvConfig({
 
 const isCoverage = toBoolean(process.env.COVERAGE);
 const gasReporterEnable = false;
-const forkingEnable = true;
-const forkingBlockNumber = 40966712;
+const forkingEnable = false;
+const forkingBlockNumber = 40976071;
 
 function getAccounts() {
   return [

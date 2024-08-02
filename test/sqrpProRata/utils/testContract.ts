@@ -315,8 +315,29 @@ export async function testContract(
       await owner2SQRpProRata.forceWithdraw(boostToken, owner2Address, boostAmount);
     }
   }
+  const { userExpectations = {} } = caseBehaviour;
 
   // await getBalances(context, baseDecimals, boostDecimals);
+
+  if (!expectedRevertRefundAll && !expectedRevertWithdrawBaseSwappedAmount) {
+    const userExpectationsValues = Object.values(userExpectations);
+
+    const totalBaseRefundUserExpectation = bigIntSum(
+      userExpectationsValues,
+      (result) => result.baseRefunded ?? seedData.zero,
+    );
+
+    const totalBoostRefundUserExpectation = bigIntSum(
+      userExpectationsValues,
+      (result) => result.boostRefunded ?? seedData.zero,
+    );
+
+    const [calculatedTotalBaseRefund, calculatedTotalBoostRefund] =
+      await ownerSQRpProRata.calculateTotalRefundTokensAll();
+
+    expect(calculatedTotalBaseRefund).closeTo(totalBaseRefundUserExpectation, baseBalanceDelta);
+    expect(calculatedTotalBoostRefund).closeTo(totalBoostRefundUserExpectation, boostBalanceDelta);
+  }
 
   if (expectedRevertRefundAll) {
     await expect(owner2SQRpProRata.refundAll()).revertedWithCustomError(
@@ -401,15 +422,19 @@ export async function testContract(
     });
   }
 
+  const totalBaseAllocation = bigIntSum(accountInfoResults, (result) => result.baseAllocation);
+  const totalBaseRefund = bigIntSum(accountInfoResults, (result) => result.baseRefunded);
+  const totalBoostRefund = bigIntSum(accountInfoResults, (result) => result.boostRefunded);
+
   // Account infos:
   printAccountInfoResults(accountInfoResults, baseDecimals, boostDecimals);
 
   const balanceTable2 = await getBalances(context);
 
   printContractResults({
-    totalBaseAllocation: bigIntSum(accountInfoResults, (result) => result.baseAllocation),
-    totalBaseRefund: bigIntSum(accountInfoResults, (result) => result.baseRefunded),
-    totalBoostRefund: bigIntSum(accountInfoResults, (result) => result.boostRefunded),
+    totalBaseAllocation,
+    totalBaseRefund,
+    totalBoostRefund,
     baseDecimals,
     boostDecimals,
   });
@@ -430,8 +455,6 @@ export async function testContract(
   if (!caseBehaviour) {
     return;
   }
-
-  const { userExpectations = {} } = caseBehaviour;
 
   for (const userKey of Object.keys(userExpectations)) {
     const user = userKey as UserType;

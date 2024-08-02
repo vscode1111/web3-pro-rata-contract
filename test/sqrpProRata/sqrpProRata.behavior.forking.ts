@@ -42,7 +42,7 @@ export function getFundsFileName(exchangeDir: string, contractAddress: string) {
 }
 
 export function shouldBehaveCorrectForking(): void {
-  describe.only('forking', () => {
+  describe.skip('forking', () => {
     it('incident: analyze real contract', async function () {
       await mine();
 

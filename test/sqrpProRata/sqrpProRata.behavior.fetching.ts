@@ -48,6 +48,10 @@ export function shouldBehaveCorrectFetching(): void {
       expect(await this.ownerSQRpProRata.calculateExcessBoostAmount()).eq(seedData.zero);
       const { totalBaseDeposited } = await this.ownerSQRpProRata.getDepositRefundContractInfo();
       expect(totalBaseDeposited).eq(seedData.zero);
+      expect(await this.ownerSQRpProRata.calculateTotalRefundTokens(seedData.batchSize)).eql([
+        seedData.zero,
+        seedData.zero,
+      ]);
     });
 
     it('should be correct balances', async function () {

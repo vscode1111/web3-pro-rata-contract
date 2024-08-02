@@ -887,6 +887,11 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 expect(user2.baseRefunded).eq(seedData.zero);
                 expect(user2.nonce).eq(1);
                 expect(user2.boosted).eq(false);
+
+                expect(await this.ownerSQRpProRata.calculateTotalRefundTokensAll()).eql([
+                  refund1 + refund2,
+                  seedData.zero,
+                ]);
               });
 
               it('owner2 is allowed to call calculateBaseSwappedAmountAll (check event)', async function () {

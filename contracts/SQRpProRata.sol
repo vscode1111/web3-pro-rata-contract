@@ -88,7 +88,7 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
-  string public constant VERSION = "3.1.0";
+  string public constant VERSION = "3.2.0";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   //Contract params
@@ -414,10 +414,10 @@ contract SQRpProRata is
     AccountItem memory accountItem = _accountItems[account];
 
     if (isReachedBaseGoal()) {
-      uint256 totalBaseBoostLimit = (baseGoal * (linearBoostFactor - PRECISION_FACTOR)) /
-        linearBoostFactor;
-
-      if (totalBaseBoostDeposited > totalBaseBoostLimit) {
+      if (
+        // baseGoal < totalBaseBoostDeposited
+        linearBoostFactor * totalBaseBoostDeposited > totalBaseNonBoostDeposited
+      ) {
         uint256 accountFactor = PRECISION_FACTOR;
         if (accountItem.boosted) {
           accountFactor = linearBoostFactor;
@@ -576,6 +576,34 @@ contract SQRpProRata is
 
   function calculateRemainProcessedBaseSwappedIndex() public view returns (uint256) {
     return getAccountCount() - _processedBaseSwappedIndex;
+  }
+
+  function calculateTotalRefundTokens(uint32 _batchSize) public view returns (uint256, uint256) {
+    uint32 accountCount = getAccountCount();
+    if (_batchSize > accountCount - _processedRefundIndex) {
+      _batchSize = accountCount - _processedRefundIndex;
+    }
+
+    if (_batchSize == 0) {
+      return (0, 0);
+    }
+
+    uint32 endIndex = _processedRefundIndex + _batchSize;
+
+    uint256 totalBaseRefund = 0;
+    uint256 totalBoostRefund = 0;
+
+    for (uint32 i = _processedRefundIndex; i < endIndex; i++) {
+      address account = getAccountByIndex(i);
+      totalBaseRefund += calculateAccountBaseRefund(account);
+      totalBoostRefund += calculateAccountBoostRefund(account);
+    }
+
+    return (totalBaseRefund, totalBoostRefund);
+  }
+
+  function calculateTotalRefundTokensAll() public view returns (uint256, uint256) {
+    return calculateTotalRefundTokens(getAccountCount());
   }
 
   //Write methods-------------------------------------------
