@@ -410,26 +410,30 @@ contract SQRpProRata is
     return 0;
   }
 
+  function calculateTotalBaseBoostLimit() public view returns (uint256) {
+    uint totalBaseBoostLimit = 0;
+
+    if (
+      (baseGoal * (linearBoostFactor - PRECISION_FACTOR)) + baseGoal * PRECISION_FACTOR >
+      totalBaseNonBoostDeposited * PRECISION_FACTOR
+    ) {
+      totalBaseBoostLimit =
+        ((baseGoal * (linearBoostFactor - PRECISION_FACTOR)) +
+          baseGoal *
+          PRECISION_FACTOR -
+          totalBaseNonBoostDeposited *
+          PRECISION_FACTOR) /
+        linearBoostFactor;
+    }
+
+    return totalBaseBoostLimit;
+  }
+
   function _calculateLinearAccountBaseAllocation(address account) private view returns (uint256) {
     AccountItem memory accountItem = _accountItems[account];
 
     if (isReachedBaseGoal()) {
-      uint totalBaseBoostLimit = 0;
-
-      if (
-        (baseGoal * (linearBoostFactor - PRECISION_FACTOR)) + baseGoal * PRECISION_FACTOR >
-        totalBaseNonBoostDeposited * PRECISION_FACTOR
-      ) {
-        totalBaseBoostLimit =
-          ((baseGoal * (linearBoostFactor - PRECISION_FACTOR)) +
-            baseGoal *
-            PRECISION_FACTOR -
-            totalBaseNonBoostDeposited *
-            PRECISION_FACTOR) /
-          linearBoostFactor;
-      }
-
-      if (totalBaseBoostDeposited < totalBaseBoostLimit) {
+      if (totalBaseBoostDeposited < calculateTotalBaseBoostLimit()) {
         if (accountItem.boosted) {
           return accountItem.baseDeposited;
         } else {

@@ -878,5 +878,25 @@ export function shouldBehaveCorrectFundingPositiveCasesInternalLinear(): void {
         },
       );
     });
+
+    it.skip('16. simple test', async function () {
+      await testContract(
+        this,
+        caseContractConfig,
+        [
+          {
+            user: 'user1',
+            baseDeposit: toBaseTokenWei(10000),
+          },
+          {
+            user: 'user2',
+            baseDeposit: toBaseTokenWei(50000),
+            boost: true,
+            boostExchangeRate: toWei(0.3),
+          },
+        ],
+        {},
+      );
+    });
   });
 }
