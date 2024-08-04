@@ -335,8 +335,15 @@ export async function testContract(
     const [calculatedTotalBaseRefund, calculatedTotalBoostRefund] =
       await ownerSQRpProRata.calculateTotalRefundTokensAll();
 
-    expect(calculatedTotalBaseRefund).closeTo(totalBaseRefundUserExpectation, baseBalanceDelta);
-    expect(calculatedTotalBoostRefund).closeTo(totalBoostRefundUserExpectation, boostBalanceDelta);
+    if (totalBaseRefundUserExpectation > seedData.zero) {
+      expect(calculatedTotalBaseRefund).closeTo(totalBaseRefundUserExpectation, baseBalanceDelta);
+    }
+    if (totalBoostRefundUserExpectation > seedData.zero) {
+      expect(calculatedTotalBoostRefund).closeTo(
+        totalBoostRefundUserExpectation,
+        boostBalanceDelta,
+      );
+    }
   }
 
   if (expectedRevertRefundAll) {

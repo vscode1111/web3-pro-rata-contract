@@ -88,7 +88,7 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
-  string public constant VERSION = "3.2.0";
+  string public constant VERSION = "3.3.0";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   //Contract params
@@ -414,10 +414,32 @@ contract SQRpProRata is
     AccountItem memory accountItem = _accountItems[account];
 
     if (isReachedBaseGoal()) {
+      uint totalBaseBoostLimit = 0;
+
       if (
-        // baseGoal < totalBaseBoostDeposited
-        linearBoostFactor * totalBaseBoostDeposited > totalBaseNonBoostDeposited
+        (baseGoal * (linearBoostFactor - PRECISION_FACTOR)) + baseGoal * PRECISION_FACTOR >
+        totalBaseNonBoostDeposited * PRECISION_FACTOR
       ) {
+        totalBaseBoostLimit =
+          ((baseGoal * (linearBoostFactor - PRECISION_FACTOR)) +
+            baseGoal *
+            PRECISION_FACTOR -
+            totalBaseNonBoostDeposited *
+            PRECISION_FACTOR) /
+          linearBoostFactor;
+      }
+
+      if (totalBaseBoostDeposited < totalBaseBoostLimit) {
+        if (accountItem.boosted) {
+          return accountItem.baseDeposited;
+        } else {
+          return
+            UsefulMath.divisionRoundUp(
+              ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
+              totalBaseNonBoostDeposited
+            );
+        }
+      } else {
         uint256 accountFactor = PRECISION_FACTOR;
         if (accountItem.boosted) {
           accountFactor = linearBoostFactor;
@@ -429,16 +451,6 @@ contract SQRpProRata is
               (linearBoostFactor * totalBaseBoostDeposited) /
               PRECISION_FACTOR
           );
-      } else {
-        if (accountItem.boosted) {
-          return accountItem.baseDeposited;
-        } else {
-          return
-            UsefulMath.divisionRoundUp(
-              ((baseGoal - totalBaseBoostDeposited) * accountItem.baseDeposited),
-              totalBaseNonBoostDeposited
-            );
-        }
       }
     }
     return 0;
