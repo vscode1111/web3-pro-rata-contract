@@ -1,7 +1,14 @@
 import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { MINUTES, toUnixTime, toUnixTimeUtc, toWei } from '~common';
-import { BASE_DECIMALS, BOOST_DECIMALS, LINEAR_BOOST_FACTOR, Token, ZERO } from '~constants';
+import {
+  BASE_DECIMALS,
+  BOOST_DECIMALS,
+  LINEAR_BOOST_FACTOR,
+  MATAN_WALLET,
+  Token,
+  ZERO,
+} from '~constants';
 import { DeployNetworkKey, TokenAddressDescription } from '~types';
 import { addSecondsToUnixTime } from '~utils';
 import { getTokenDescription } from '~utils/contracts';
@@ -11,7 +18,7 @@ import { ContractConfig, DeployContractArgs, DeployTokenArgs, TokenConfig } from
 
 type DeployType = 'test' | 'main' | 'stage' | 'prod';
 
-const deployType: DeployType = (process.env.ENV as DeployType) ?? 'prod';
+const deployType: DeployType = (process.env.ENV as DeployType) ?? 'stage';
 
 const isProd = deployType === ('prod' as any);
 // if (isProd) {
@@ -64,26 +71,27 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
     // closeDate: toUnixTime(now.add(5, 'days').toDate()),
   },
   stage: {
-    newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
+    // newOwner: MATAN_WALLET, //Matan
+    newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
     baseGoal: toBaseTokenWei(15),
-    // startDate: 0,
-    startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
+    startDate: 0,
+    // startDate: toUnixTime(new Date(2024, 4, 27, 19, 0, 0)),
     // closeDate: 0,
     closeDate: toUnixTime(new Date(2026, 4, 28, 23, 0, 0)),
   },
   prod: {
-    // newOwner: '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
-    newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
+    newOwner: MATAN_WALLET, //Matan
+    // newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
     depositVerifier: '0x99FbD0Bc026128e6258BEAd542ECB1cF165Bbb98', //My s-deposit
-    // baseGoal: toBaseTokenWei(50_000),
-    baseGoal: toBaseTokenWei(5),
+    baseGoal: toBaseTokenWei(75_000),
+    // baseGoal: toBaseTokenWei(5),
     baseToken: baseToken,
     baseDecimals: baseDecimals,
-    startDate: 0,
-    // startDate: toUnixTimeUtc(new Date(2024, 6, 30, 11, 0, 0)),
+    // startDate: 0,
+    startDate: toUnixTimeUtc(new Date(2024, 7, 8, 11, 0, 0)),
     // closeDate: 0,
-    closeDate: toUnixTimeUtc(new Date(2024, 7, 2, 11, 0, 0)),
+    closeDate: toUnixTimeUtc(new Date(2024, 7, 12, 11, 0, 0)),
   },
 };
 
@@ -174,6 +182,7 @@ export const seedData = {
   extraDeposit2: extraDeposit1 / userDiv,
   extraDeposit3: extraDeposit1 / userDiv / userDiv,
   accidentAmount,
+  newBaseGoal: toBaseTokenWei(100_000),
   allowance: toBaseTokenWei(1000000),
   baseBalanceDelta: toBaseTokenWei(0.001),
   boostBalanceDelta: toBoostTokenWei(0.001),

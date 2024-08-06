@@ -1,5 +1,6 @@
 import {
   CalculateBaseSwappedAmountEvent,
+  ChangeBaseGoalEvent,
   DepositEvent,
   ForceWithdrawEvent,
   RefundEvent,
@@ -21,19 +22,22 @@ export interface EventArgs<T> {
   args: T;
 }
 
-export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, boolean, number, number]>;
+export type DepositEventArgs = DepositEvent.Event & EventArgs<[string, boolean, bigint, bigint]>;
 
-export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, boolean, number, number]>;
+export type RefundEventArgs = RefundEvent.Event & EventArgs<[string, boolean, bigint, bigint]>;
 
-export type WithdrawBaseGoalEventArgs = WithdrawBaseGoalEvent.Event & EventArgs<[string, number]>;
+export type WithdrawBaseGoalEventArgs = WithdrawBaseGoalEvent.Event & EventArgs<[string, bigint]>;
 
 export type WithdrawSwappedAmountEventArgs = WithdrawSwappedAmountEvent.Event &
-  EventArgs<[string, number]>;
+  EventArgs<[string, bigint]>;
 
 export type WithdrawExcessTokensEventArgs = WithdrawExcessTokensEvent.Event &
-  EventArgs<[string, number, number]>;
+  EventArgs<[string, bigint, bigint]>;
 
-export type ForceWithdrawEventArgs = ForceWithdrawEvent.Event & EventArgs<[string, string, number]>;
+export type ForceWithdrawEventArgs = ForceWithdrawEvent.Event & EventArgs<[string, string, bigint]>;
 
 export type CalculateBaseSwappedAmountEventArgs = CalculateBaseSwappedAmountEvent.Event &
-  EventArgs<[number, number]>;
+  EventArgs<[bigint, bigint]>;
+
+export type ChangeBaseGoalEventArgs = ChangeBaseGoalEvent.Event &
+  EventArgs<[string, bigint, bigint]>;

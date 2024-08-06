@@ -7,10 +7,10 @@ import { addSecondsToUnixTime, calculateAccountRefund, signMessageForProRataDepo
 import { customError } from './testData';
 import {
   CalculateBaseSwappedAmountEventArgs,
-  ChangeBaseGoalEventArgs,
   DepositEventArgs,
   ForceWithdrawEventArgs,
   RefundEventArgs,
+  UpdateAccountItemEventArgs,
   WithdrawBaseGoalEventArgs,
   WithdrawExcessTokensEventArgs,
   WithdrawSwappedAmountEventArgs,
@@ -151,6 +151,66 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
       ).revertedWithCustomError(this.owner2SQRpProRata, customError.tooLate);
     });
 
+    it('user1 tries to call updateAccountItem without permission', async function () {
+      await expect(
+        this.user1SQRpProRata.updateAccountItem(this.user1Address, {
+          manual: seedData.manual,
+          baseAllocation: seedData.baseAllocation1,
+          baseRefund: seedData.baseRefund1,
+          boostRefund: seedData.boostRefund1,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.ownableUnauthorizedAccount);
+    });
+
+    it('user1 tries to call updateAccountItems without permission', async function () {
+      await expect(
+        this.user1SQRpProRata.updateAccountItems(
+          [this.user1Address],
+          [
+            {
+              manual: seedData.manual,
+              baseAllocation: seedData.baseAllocation1,
+              baseRefund: seedData.baseRefund1,
+              boostRefund: seedData.boostRefund1,
+            },
+          ],
+        ),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.ownableUnauthorizedAccount);
+    });
+
+    it('owner2 tries to call updateAccountItem without account item existence ', async function () {
+      await expect(
+        this.owner2SQRpProRata.updateAccountItem(this.user1Address, {
+          manual: seedData.manual,
+          baseAllocation: seedData.baseAllocation1,
+          baseRefund: seedData.baseRefund1,
+          boostRefund: seedData.boostRefund1,
+        }),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.nonExistAccountItem);
+    });
+
+    it('owner2 tries to call updateAccountItems without account item existence', async function () {
+      await expect(
+        this.owner2SQRpProRata.updateAccountItems(
+          [this.user1Address],
+          [
+            {
+              manual: seedData.manual,
+              baseAllocation: seedData.baseAllocation1,
+              baseRefund: seedData.baseRefund1,
+              boostRefund: seedData.boostRefund1,
+            },
+          ],
+        ),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.nonExistAccountItem);
+    });
+
+    it('owner2 tries to call updateAccountItems without correct array length', async function () {
+      await expect(
+        this.owner2SQRpProRata.updateAccountItems([this.user1Address], []),
+      ).revertedWithCustomError(this.owner2SQRpProRata, customError.arrayLengthsNotEqual);
+    });
+
     describe('set time after start date', () => {
       beforeEach(async function () {
         await time.increaseTo(addSecondsToUnixTime(contractConfig.startDate, seedData.timeShift));
@@ -172,12 +232,6 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             contractAmount,
           ),
         )
-          .revertedWithCustomError(this.user1SQRpProRata, customError.ownableUnauthorizedAccount)
-          .withArgs(this.user1Address);
-      });
-
-      it('user1 tries to call changeBaseGoal without permission', async function () {
-        await expect(this.user1SQRpProRata.changeBaseGoal(seedData.newBaseGoal))
           .revertedWithCustomError(this.user1SQRpProRata, customError.ownableUnauthorizedAccount)
           .withArgs(this.user1Address);
       });
@@ -442,11 +496,12 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             ]);
             expect(await this.owner2SQRpProRata.calculateOverfundAmount()).eq(seedData.zero);
 
-            expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
+            expect(await this.owner2SQRpProRata.getAccountBaseRefund(this.user1Address)).eq(
               seedData.deposit1,
             );
 
             const {
+              manual,
               baseDeposited,
               baseDeposit,
               baseAllocation,
@@ -455,6 +510,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
               nonce,
               boosted,
             } = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
+            expect(manual).eq(false);
             expect(baseDeposited).eq(seedData.deposit1);
             expect(baseDeposit).eq(seedData.deposit1);
             expect(baseAllocation).eq(seedData.zero);
@@ -623,21 +679,51 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             expect(await this.owner2SQRpProRata.totalBaseDeposited()).eq(seedData.deposit1);
           });
 
-          it('owner2 called changeBaseGoal (check event)', async function () {
-            const initialBaseGoal = await this.owner2SQRpProRata.baseGoal();
+          it('owner2 called updateAccountItem (check event)', async function () {
+            const initialAccountCount = await this.owner2SQRpProRata.getAccountCount();
+            const initialUpdateTimestamp = await time.latest();
+            expect(await this.owner2SQRpProRata.getAccountItemUpdateLogs()).eql([]);
 
             const receipt = await waitTx(
-              this.owner2SQRpProRata.changeBaseGoal(seedData.newBaseGoal),
+              this.owner2SQRpProRata.updateAccountItem(this.user1Address, {
+                manual: seedData.manual,
+                baseAllocation: seedData.baseAllocation1,
+                baseRefund: seedData.baseRefund1,
+                boostRefund: seedData.boostRefund1,
+              }),
             );
-            const eventLog = findEvent<ChangeBaseGoalEventArgs>(receipt);
+            const eventLog = findEvent<UpdateAccountItemEventArgs>(receipt);
 
             expect(eventLog).not.undefined;
-            const [owner, oldBaseGoal, newBaseGoal] = eventLog?.args;
-            expect(owner).eq(this.owner2Address);
-            expect(oldBaseGoal).eq(initialBaseGoal);
-            expect(newBaseGoal).eq(seedData.newBaseGoal);
+            const [account, manual, baseAllocation, baseRefund, boostRefund] = eventLog?.args;
+            expect(account).eq(this.user1Address);
+            expect(manual).eq(seedData.manual);
+            expect(baseAllocation).eq(seedData.baseAllocation1);
+            expect(baseRefund).eq(seedData.baseRefund1);
+            expect(boostRefund).eq(seedData.boostRefund1);
 
-            expect(await this.owner2SQRpProRata.baseGoal()).eq(seedData.newBaseGoal);
+            const accountInfo1 = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
+            expect(accountInfo1.baseDeposited).eq(seedData.deposit1);
+            expect(accountInfo1.baseDeposit).eq(seedData.deposit1);
+            expect(accountInfo1.manual).eq(seedData.manual);
+            expect(accountInfo1.baseAllocation).eq(seedData.baseAllocation1);
+            expect(accountInfo1.baseRefund).eq(seedData.baseRefund1);
+            expect(accountInfo1.baseRefunded).eq(seedData.zero);
+            expect(accountInfo1.boostRefund).eq(seedData.boostRefund1);
+            expect(accountInfo1.boostRefunded).eq(seedData.zero);
+            expect(accountInfo1.nonce).eq(1);
+
+            expect(await this.owner2SQRpProRata.getAccountCount()).eq(initialAccountCount);
+
+            const updateLogs = await this.owner2SQRpProRata.getAccountItemUpdateLogs();
+            expect(updateLogs).not.undefined;
+            expect(updateLogs.length).eq(1);
+
+            const firstLog = updateLogs[0];
+
+            expect(firstLog.account).eq(this.owner2Address);
+            expect(firstLog.timestamp).closeTo(initialUpdateTimestamp, seedData.timeShift);
+            expect(firstLog.updatedCount).eq(1);
           });
 
           describe(`set time after close date when goal wasn't reached`, () => {
@@ -648,10 +734,10 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
             });
 
             it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
-              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
+              expect(await this.owner2SQRpProRata.getAccountBaseRefund(this.user1Address)).eq(
                 seedData.deposit1,
               );
-              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user2Address)).eq(
+              expect(await this.owner2SQRpProRata.getAccountBaseRefund(this.user2Address)).eq(
                 seedData.zero,
               );
 
@@ -747,7 +833,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 seedData.deposit12,
               );
 
-              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address)).eq(
+              expect(await this.owner2SQRpProRata.getAccountBaseRefund(this.user1Address)).eq(
                 refund1,
               );
 
@@ -757,11 +843,12 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 seedData.deposit12,
               );
 
-              expect(await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user2Address)).eq(
+              expect(await this.owner2SQRpProRata.getAccountBaseRefund(this.user2Address)).eq(
                 refund2,
               );
 
               const {
+                manual,
                 baseDeposited,
                 baseDeposit,
                 baseAllocation,
@@ -770,6 +857,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                 nonce,
                 boosted,
               } = await this.user1SQRpProRata.fetchAccountInfo(this.user1Address);
+              expect(manual).eq(false);
               expect(baseDeposited).eq(seedData.deposit1);
               expect(baseDeposit).eq(seedData.deposit1);
               expect(baseAllocation).eq(seedData.deposit1 - refund1);
@@ -852,7 +940,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
 
               it(INITIAL_POSITIVE_CHECK_TEST_TITLE, async function () {
                 expect(
-                  await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user1Address),
+                  await this.owner2SQRpProRata.getAccountBaseRefund(this.user1Address),
                 ).closeTo(
                   calculateAccountRefund(
                     contractConfig.baseGoal,
@@ -862,7 +950,7 @@ export function shouldBehaveCorrectFundingDefaultCase(): void {
                   seedData.baseBalanceDelta,
                 );
                 expect(
-                  await this.owner2SQRpProRata.calculateAccountBaseRefund(this.user2Address),
+                  await this.owner2SQRpProRata.getAccountBaseRefund(this.user2Address),
                 ).closeTo(
                   calculateAccountRefund(
                     contractConfig.baseGoal,

@@ -1,6 +1,11 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { callWithTimerHre, formatContractDate, formatContractToken } from '~common-contract';
+import {
+  callWithTimerHre,
+  formatContractDate,
+  formatContractToken,
+  printToken,
+} from '~common-contract';
 import { SQR_P_PRO_RATA_NAME } from '~constants';
 import { getAddressesFromHre, getERC20TokenContext, getSQRpProRataContext, getUsers } from '~utils';
 import { printAccountInfo } from './utils';
@@ -40,7 +45,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
       closeDate: formatContractDate(await ownerSQRpProRata.closeDate()),
       externalRefund: await ownerSQRpProRata.externalRefund(),
       linearAllocation: await ownerSQRpProRata.linearAllocation(),
-      linearBoostFactor: await ownerSQRpProRata.linearBoostFactor(),
+      linearBoostFactor: printToken(await ownerSQRpProRata.linearBoostFactor()),
       baseBalance: formatContractToken(
         await ownerSQRpProRata.getBaseBalance(),
         baseDecimals,
@@ -78,25 +83,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
 
     console.table(result);
 
-    // await printAccountInfo(
-    //   ownerSQRpProRata,
-    //   users.user1Address,
-    //   baseDecimals,
-    //   baseTokenName,
-    //   boostDecimals,
-    //   boostTokenName,
-    // );
-    // await printAccountInfo(
-    //   ownerSQRpProRata,
-    //   users.user2Address,
-    //   baseDecimals,
-    //   baseTokenName,
-    //   boostDecimals,
-    //   boostTokenName,
-    // );
     await printAccountInfo(
       ownerSQRpProRata,
-      '0x65BdF8887fded456CC456C1be0907BD4369E466b',
+      users.user1Address,
       baseDecimals,
       baseTokenName,
       boostDecimals,
@@ -104,12 +93,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<voi
     );
     await printAccountInfo(
       ownerSQRpProRata,
-      '0xCafa4F8Eb68Da43331152D6662620d735825cb59',
+      users.user2Address,
       baseDecimals,
       baseTokenName,
       boostDecimals,
       boostTokenName,
     );
+    // await printAccountInfo(
+    //   ownerSQRpProRata,
+    //   '0x65BdF8887fded456CC456C1be0907BD4369E466b',
+    //   baseDecimals,
+    //   baseTokenName,
+    //   boostDecimals,
+    //   boostTokenName,
+    // );
+    // await printAccountInfo(
+    //   ownerSQRpProRata,
+    //   '0xCafa4F8Eb68Da43331152D6662620d735825cb59',
+    //   baseDecimals,
+    //   baseTokenName,
+    //   boostDecimals,
+    //   boostTokenName,
+    // );
   }, hre);
 };
 

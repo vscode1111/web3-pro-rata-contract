@@ -88,7 +88,7 @@ contract SQRpProRata is
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   //Variables, structs, errors, modifiers, events------------------------
-  string public constant VERSION = "3.3.0";
+  string public constant VERSION = "3.3.1";
   uint256 public constant PRECISION_FACTOR = 1e18;
 
   //Contract params
@@ -264,6 +264,7 @@ contract SQRpProRata is
   event WithdrawExcessTokens(address indexed account, uint256 baseAmount, uint256 boostAmount);
   event ForceWithdraw(address indexed token, address indexed to, uint256 amount);
   event CalculateBaseSwappedAmount(uint32 batchSize, uint32 endIndex);
+  event ChangeBaseGoal(address indexed account, uint256 oldBaseGoal, uint256 newBaseGoal);
 
   //Read methods-------------------------------------------
   //IContractInfo implementation
@@ -901,6 +902,12 @@ contract SQRpProRata is
     }
 
     emit WithdrawExcessTokens(to, baseBalance, boostBalance);
+  }
+
+  function changeBaseGoal(uint256 newBaseGoal) external onlyOwner {
+    uint256 oldBaseGoal = baseGoal;
+    baseGoal = newBaseGoal;
+    emit ChangeBaseGoal(_msgSender(), oldBaseGoal, newBaseGoal);
   }
 
   function forceWithdraw(address token, address to, uint256 amount) external onlyOwner {

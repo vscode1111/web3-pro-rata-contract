@@ -4,7 +4,7 @@ import { writeFileSync } from 'fs';
 import { ethers, upgrades } from 'hardhat';
 import { checkFilePathSync, convertArray2DToContent, toNumberDecimals } from '~common';
 import { runConcurrently } from '~common-contract';
-import { CONTRACTS, SQR_P_PRO_RATA_NAME } from '~constants';
+import { CONTRACTS, MATAN_WALLET, SQR_P_PRO_RATA_NAME } from '~constants';
 import { printAccountInfo } from '~deploy/sqrpProRata/utils';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { SQRpProRata__factory } from '~typechain-types/factories/contracts/SQRpProRata__factory';
@@ -54,7 +54,7 @@ export function shouldBehaveCorrectForking(): void {
 
       const owner2 = await ethers.getImpersonatedSigner(
         // '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF', //My s-owner2
-        '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb', //Matan
+        MATAN_WALLET,
       );
       const users = await getUsers();
 

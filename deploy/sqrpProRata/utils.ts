@@ -1,6 +1,6 @@
 import { Numeric } from 'ethers';
 import { toNumberDecimalsFixed } from '~common';
-import { formatContractDate, formatContractToken } from '~common-contract';
+import { formatContractDate, formatContractToken, printToken } from '~common-contract';
 import { ContractConfig, baseChainTokenDescription, contractConfig, getContractArgs } from '~seeds';
 import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
 import { Users } from '~types';
@@ -13,13 +13,14 @@ export function getContractArgsEx() {
 
 export function formatContractConfig(contractConfig: ContractConfig) {
   const { decimals, tokenName } = baseChainTokenDescription.bsc;
-  const { baseGoal, startDate, closeDate } = contractConfig;
+  const { baseGoal, startDate, closeDate, linearBoostFactor } = contractConfig;
 
   return {
     ...contractConfig,
     baseGoal: formatContractToken(baseGoal, decimals, tokenName),
     startDate: formatContractDate(startDate),
     closeDate: formatContractDate(closeDate),
+    linearBoostFactor: printToken(linearBoostFactor),
   };
 }
 

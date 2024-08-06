@@ -1,5 +1,5 @@
 import { BigNumberish, Numeric } from 'ethers';
-import { formatDate, formatToken } from '~common';
+import { DEFAULT_DECIMALS, formatDate, formatToken } from '~common';
 
 export function formatContractToken(
   value: BigNumberish,
@@ -14,7 +14,11 @@ export function formatContractDate(value: BigNumberish): string {
   return `${internalValue} (${formatDate(internalValue)})`;
 }
 
-export function printToken(value: BigNumberish, decimals: number, tokenName?: string): string {
+export function printToken(
+  value: BigNumberish,
+  decimals: number = DEFAULT_DECIMALS,
+  tokenName?: string,
+): string {
   return `${value} (${formatToken(value, decimals, tokenName)})`;
 }
 
