@@ -46,12 +46,15 @@ export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
     // bsc: '0x35B86Ed8428e2D704651133603c95D70e2697e11', //Main - 10K USDT - linear
     // bsc: '0x316e978b5c3d23A166b7cd16ef1a6bC6840B9b68', //Main - 10K USDT - linear
     //-------------------------------------------------------------------------------------------------------------
-    bsc: '0xc2c20E329bbd80b5006d5a2Aa01b51B2c63ef307', //Stage
+    // bsc: '0xc2c20E329bbd80b5006d5a2Aa01b51B2c63ef307', //Stage
     //-------------------------------------------------------------------------------------------------------------
     // bsc: '0xD9eF052d04b6FF606A3Cb89Af86C8D0f61Ff14e7', //Prod - pro-rata | Base goal: 50K USDT
     // bsc: '0x1dA402bD37B479676CbaEAfAD52659eE3Db0F85A', //Prod - pro-rata | Base goal: 5 USDT - test
     // bsc: '0xa0FDE46DeF62854FBEb5b0707ccA61c2f65f61fb', //Prod - pro-rata | Base goal: 5 USDT - test on upgrade
     // bsc: '0x4fD039Af1b10Db76E22eab106c6CeF65294883a1', //Prod - pro-rata | Base goal: 5 USDT - Fedor - problem
     // bsc: '0xF451E1f88C3EC2f14c2cA2a127548cA9E7a4a0A3', //Prod - pro-rata | Base goal: 5 USDT - test
+
+    //06.08.2024 - Fanton
+    bsc: '0x8321E7CFd146B9cbbC02a45bb8f52D43A785880e', //Prod - pro-rata | Base goal: 5 USDT - test
   },
 };
