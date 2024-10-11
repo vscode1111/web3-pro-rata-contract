@@ -4,9 +4,9 @@ import { CONTRACTS } from '~constants';
 import { Addresses, DeployNetworks } from '~types';
 
 export function getAddresses(network: keyof DeployNetworks): Addresses {
-  const sqrpProRataAddress = CONTRACTS.SQR_P_PRO_RATA[network];
+  const web3ProRataAddress = CONTRACTS.WEB3_P_PRO_RATA[network];
   return {
-    sqrpProRataAddress,
+    web3ProRataAddress,
   };
 }
 

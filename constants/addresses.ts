@@ -1,16 +1,16 @@
 import { DeployNetworks } from '~types';
 
-export const SQR_P_PRO_RATA_NAME = 'SQRpProRata';
+export const WEB3_P_PRO_RATA_NAME = 'WEB3ProRata';
 export const ERC20_TOKEN_NAME = 'ERC20Token';
 
 export const MATAN_WALLET = '0xA8B8455ad9a1FAb1d4a3B69eD30A52fBA82549Bb';
 
 export enum CONTRACT_LIST {
-  SQR_P_PRO_RATA = 'SQR_P_PRO_RATA',
+  WEB3_P_PRO_RATA = 'WEB3_P_PRO_RATA',
 }
 
 export const CONTRACTS: Record<CONTRACT_LIST, DeployNetworks> = {
-  SQR_P_PRO_RATA: {
+  WEB3_P_PRO_RATA: {
     // bsc: '0x020DFF89FF74f58731A1909942E402e46a82AE06', //Test
     // bsc: '0x810C026DCD486482589661306b25eDeF7F4216E9', //Test
     // bsc: '0x7Bb240378255E38cE8882Ce7B2661a446AD8b3B7', //Test

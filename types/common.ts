@@ -3,7 +3,7 @@ export interface DeployNetworks {
 }
 
 export interface Addresses {
-  sqrpProRataAddress: string;
+  web3ProRataAddress: string;
 }
 
 export type StringNumber = string | number;

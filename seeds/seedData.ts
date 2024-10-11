@@ -30,7 +30,7 @@ export const baseChainTokenDescription: Record<DeployNetworkKey, TokenAddressDes
 };
 
 export const boostChainTokenDescription: Record<DeployNetworkKey, TokenAddressDescription> = {
-  bsc: isProd ? getTokenDescription(Token.SQR) : getTokenDescription(Token.tSQR2), //SQR/tSQR2
+  bsc: isProd ? getTokenDescription(Token.WEB3) : getTokenDescription(Token.tWEB32), //WEB3/tWEB32
 };
 
 export const { address: baseToken, decimals: baseDecimals } =
@@ -47,8 +47,8 @@ export const contractConfigDeployMap: Record<DeployType, Partial<ContractConfig>
   test: {
     newOwner: '0x627Ab3fbC3979158f451347aeA288B0A3A47E1EF',
     baseToken: baseToken,
-    // baseDecimals: getTokenDescription(Token.tSQR).decimals,
-    // boostDecimals: getTokenDescription(Token.tSQR).decimals,
+    // baseDecimals: getTokenDescription(Token.tWEB3).decimals,
+    // boostDecimals: getTokenDescription(Token.tWEB3).decimals,
     baseDecimals: BASE_DECIMALS,
     boostDecimals: BOOST_DECIMALS,
     // boostToken: ZeroAddress,

@@ -1,7 +1,7 @@
 import { Signer } from 'ethers';
 import { ERC20Token } from '~typechain-types/contracts/ERC20Token';
-import { SQRpProRata } from '~typechain-types/contracts/SQRpProRata';
-import { SQRpProRata__factory } from '~typechain-types/factories/contracts/SQRpProRata__factory';
+import { WEB3ProRata } from '~typechain-types/contracts/WEB3ProRata';
+import { WEB3ProRata__factory } from '~typechain-types/factories/contracts/WEB3ProRata__factory';
 
 export interface Users {
   owner: Signer;
@@ -45,15 +45,15 @@ export interface BoostTokenContext {
   owner2BoostToken: ERC20Token;
 }
 
-export interface SQRpProRataContext {
-  sqrpProRataFactory: SQRpProRata__factory;
-  owner2SqrpProRataFactory: SQRpProRata__factory;
-  sqrpProRataAddress: string;
-  ownerSQRpProRata: SQRpProRata;
-  user1SQRpProRata: SQRpProRata;
-  user2SQRpProRata: SQRpProRata;
-  user3SQRpProRata: SQRpProRata;
-  owner2SQRpProRata: SQRpProRata;
+export interface WEB3ProRataContext {
+  web3ProRataFactory: WEB3ProRata__factory;
+  owner2Web3pProRataFactory: WEB3ProRata__factory;
+  web3ProRataAddress: string;
+  ownerWEB3ProRata: WEB3ProRata;
+  user1WEB3ProRata: WEB3ProRata;
+  user2WEB3ProRata: WEB3ProRata;
+  user3WEB3ProRata: WEB3ProRata;
+  owner2WEB3ProRata: WEB3ProRata;
 }
 
-export type ContextBase = Users & BaseTokenContext & BoostTokenContext & SQRpProRataContext;
+export type ContextBase = Users & BaseTokenContext & BoostTokenContext & WEB3ProRataContext;

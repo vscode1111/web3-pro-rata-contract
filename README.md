@@ -1,4 +1,4 @@
-# Solidity smart contracts for SQRp Pro-rata functionality
+# Solidity smart contracts for WEB3 Pro-rata functionality
 
 ## Getting Started
 

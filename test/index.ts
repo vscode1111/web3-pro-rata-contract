@@ -1,1 +1,1 @@
-export * from './sqrpProRata';
+export * from './web3ProRata';

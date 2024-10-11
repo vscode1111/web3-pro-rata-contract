@@ -13,9 +13,9 @@ export const TX_OVERRIDES: TransactionRequest = {
 
 export enum Token {
   tUSDT2 = '0xCC2d63ff928996Ad8CdE064c80A1348f6809e043',
-  tSQR2 = '0x8364a68c32E581332b962D88CdC8dBe8b3e0EE9c',
+  tWEB32 = '0x8364a68c32E581332b962D88CdC8dBe8b3e0EE9c',
   USDT = '0x55d398326f99059fF775485246999027B3197955',
-  SQR = '0x2B72867c32CF673F7b02d208B26889fEd353B1f8',
+  WEB3 = '0x2B72867c32CF673F7b02d208B26889fEd353B1f8',
 }
 
 export const TOKENS_DESCRIPTIONS: Record<string, TokenDescription> = {
@@ -23,16 +23,16 @@ export const TOKENS_DESCRIPTIONS: Record<string, TokenDescription> = {
     tokenName: 'tUSDT2',
     decimals: BASE_DECIMALS,
   },
-  [Token.tSQR2]: {
-    tokenName: 'tSQR2',
+  [Token.tWEB32]: {
+    tokenName: 'tWEB32',
     decimals: BOOST_DECIMALS,
   },
   [Token.USDT]: {
     tokenName: 'USDT',
     decimals: BASE_DECIMALS,
   },
-  [Token.SQR]: {
-    tokenName: 'SQR',
+  [Token.WEB3]: {
+    tokenName: 'WEB3',
     decimals: BOOST_DECIMALS,
   },
 };

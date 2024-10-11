@@ -1,6 +1,6 @@
-slither contracts/SQRpProRata.sol --solc-remaps '@openzeppelin=node_modules/@openzeppelin' --exclude naming-convention,external-function,low-level-calls
+slither contracts/WEB3ProRata.sol --solc-remaps '@openzeppelin=node_modules/@openzeppelin' --exclude naming-convention,external-function,low-level-calls
 
-(contracts/SQRpProRata.sol#112-161)  uses arbitrary from in transferFrom
+(contracts/WEB3ProRata.sol#112-161)  uses arbitrary from in transferFrom
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
 
 

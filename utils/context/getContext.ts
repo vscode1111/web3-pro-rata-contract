@@ -1,12 +1,12 @@
 import { ContextBase } from '~types';
-import { getSQRpProRataContext } from '.';
+import { getWEB3ProRataContext } from '.';
 import { getERC20TokenContext } from './getERC20TokenContext';
 import { getUsers } from './getUsers';
 
 export async function getContext(
   baseTokenAddress: string,
   boostTokenAddress: string,
-  sqrpProRataAddress: string,
+  web3ProRataAddress: string,
 ): Promise<ContextBase> {
   const users = await getUsers();
   const {
@@ -25,11 +25,11 @@ export async function getContext(
     owner2ERC20Token: owner2BoostToken,
   } = await getERC20TokenContext(users, boostTokenAddress);
 
-  const sqrpProRataContext = await getSQRpProRataContext(users, sqrpProRataAddress);
+  const web3ProRataContext = await getWEB3ProRataContext(users, web3ProRataAddress);
 
   return {
     ...users,
-    ...sqrpProRataContext,
+    ...web3ProRataContext,
     baseTokenAddress,
     ownerBaseToken,
     user1BaseToken,
